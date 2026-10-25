@@ -277,9 +277,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `docker compose up -d` deixa o Postgres 16 pronto na porta local
-- [ ] Volume nomeado
-- [ ] Healthcheck configurado
+- [x] `docker compose up -d` deixa o Postgres 16 pronto na porta local
+- [x] Volume nomeado
+- [x] Healthcheck configurado
 
 **Tests**: none
 **Gate**: build

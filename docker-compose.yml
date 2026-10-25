@@ -1,0 +1,22 @@
+# Só o Postgres 16 local. As roles owner, app e backup_ro nascem na migration 0001 (etapa 3).
+services:
+  postgres:
+    image: postgres:16
+    container_name: evolucao-segura-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: evolucao_segura
+    ports:
+      - '5433:5432'
+    volumes:
+      - evolucao_segura_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d evolucao_segura']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  evolucao_segura_pgdata:
