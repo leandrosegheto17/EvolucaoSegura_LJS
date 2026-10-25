@@ -628,8 +628,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Teste verde hoje
-- [ ] Teste vermelho se o comando aparecer em outro arquivo (verificado com um arquivo temporário)
+- [x] Teste verde hoje
+- [x] Teste vermelho se o comando aparecer em outro arquivo (verificado com um arquivo temporário)
 
 **Tests**: unit
 **Gate**: quick
