@@ -330,8 +330,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cada documento aponta para a spec e o design como fonte
-- [ ] Sem conteúdo que a spec não sustente
+- [x] Cada documento aponta para a spec e o design como fonte
+- [x] Sem conteúdo que a spec não sustente
 
 **Tests**: none
 **Gate**: build
