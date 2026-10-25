@@ -184,6 +184,7 @@ export interface DesafioAberto {
   id: string;
   codigoHmac: Buffer;
   erros: number;
+  criadoEm: Date;
 }
 
 // AUTH-03, AUTH-05: o desafio mais recente do usuário que ainda vale (não usado, não invalidado e
@@ -194,7 +195,7 @@ export async function travarDesafioAberto(
 ): Promise<DesafioAberto | null> {
   const linha = await trx
     .selectFrom('desafio_2fa')
-    .select(['id', 'codigo_hmac', 'erros'])
+    .select(['id', 'codigo_hmac', 'erros', 'criado_em'])
     .where('usuario_id', '=', usuarioId)
     .where('usado_em', 'is', null)
     .where('invalidado_em', 'is', null)
@@ -204,7 +205,12 @@ export async function travarDesafioAberto(
     .forUpdate()
     .executeTakeFirst();
   if (!linha) return null;
-  return { id: linha.id, codigoHmac: linha.codigo_hmac, erros: linha.erros };
+  return {
+    id: linha.id,
+    codigoHmac: linha.codigo_hmac,
+    erros: linha.erros,
+    criadoEm: linha.criado_em,
+  };
 }
 
 export async function registrarErro2fa(

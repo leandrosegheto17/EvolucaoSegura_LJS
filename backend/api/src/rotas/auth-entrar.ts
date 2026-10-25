@@ -42,7 +42,7 @@ class EnvioFalhou extends Error {
   }
 }
 
-function emailDoCodigo(para: string, codigo: string): MensagemEmail {
+export function emailDoCodigo(para: string, codigo: string): MensagemEmail {
   return {
     para,
     assunto: 'Seu código de acesso ao Evolução Segura',

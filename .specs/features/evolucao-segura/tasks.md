@@ -1046,9 +1046,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Corpo idêntico com e sem envio
-- [ ] Segundo pedido em 59 s não envia, em 61 s envia
-- [ ] Relógio do banco, não do Worker
+- [x] Corpo idêntico com e sem envio
+- [x] Segundo pedido em 59 s não envia, em 61 s envia
+- [x] Relógio do banco, não do Worker
 
 **Tests**: integration
 **Gate**: full
