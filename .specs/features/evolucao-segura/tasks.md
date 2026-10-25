@@ -788,9 +788,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Varre o catálogo do banco, então cobre tabelas futuras sozinho
-- [ ] Falha se uma tabela nova ficar sem RLS forçada
-- [ ] Integrado ao `pnpm test:isolamento` do CI
+- [x] Varre o catálogo do banco, então cobre tabelas futuras sozinho
+- [x] Falha se uma tabela nova ficar sem RLS forçada
+- [x] Integrado ao `pnpm test:isolamento` do CI
 
 **Tests**: integration
 **Gate**: full
