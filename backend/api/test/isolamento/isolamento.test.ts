@@ -8,12 +8,44 @@ import { comTransacao } from '../../src/db.ts';
 // public com coluna usuario_id (as de hoje e as que vierem), exige RLS ativa e forçada e prova,
 // pela transação real da API (comTransacao, role app), que o profissional B não lê, não altera,
 // não apaga e não cria linha em nome de A. Roda no `pnpm test` e no `pnpm test:isolamento` do CI.
+// A única saída é a lista EXCECOES_SEM_RLS, explícita e justificada tabela a tabela.
 //
 // A linha de A é semeada pelo superusuário de teste (HYPERDRIVE_ADMIN) com valores gerados pelo
 // tipo de cada coluna obrigatória. Coluna com CHECK que o valor genérico não atende ganha um valor
 // em VALORES_POR_TABELA; tabela nova que não puder ser semeada faz o teste falhar e pede o ajuste.
 
 const SEM_PERMISSAO_OU_RLS = '42501';
+
+// Exceções revisadas tabela a tabela (T40): tabelas de identidade com usuario_id que ficam SEM
+// RLS, conforme o design, porque são lidas ou gravadas antes de existir usuário na transação
+// (cadastro, confirmação, login, 2FA, recuperação e o próprio middleware de sessão). Em vez do
+// RLS, a app tem grants mínimos por coluna, sem DELETE nem TRUNCATE. Os privilégios exatos da app
+// ficam declarados aqui: mudar um grant, criar outra tabela sem RLS ou dar RLS a uma exceção faz
+// o teste falhar e obriga a revisar a lista.
+const EXCECOES_SEM_RLS: Record<string, { motivo: string; privilegiosApp: string[] }> = {
+  aceite_termos: {
+    motivo: 'gravado na confirmação do e-mail, rota pública que roda sem sessão',
+    privilegiosApp: ['INSERT', 'SELECT'],
+  },
+  credencial_senha: {
+    motivo:
+      'hash da senha; a app não tem privilégio algum, só as funções definir_senha e conferir_senha',
+    privilegiosApp: [],
+  },
+  desafio_2fa: {
+    motivo: 'criado no login e conferido no 2FA, os dois antes de existir sessão',
+    privilegiosApp: ['INSERT', 'SELECT', 'UPDATE'],
+  },
+  sessao: {
+    motivo: 'achada pelo hash do cookie no middleware, antes de saber o usuário',
+    privilegiosApp: ['INSERT', 'SELECT', 'UPDATE'],
+  },
+  token_email: {
+    motivo:
+      'achado pelo hash do link (confirmação, recuperação, exclusão, desistência), sem sessão',
+    privilegiosApp: ['INSERT', 'SELECT', 'UPDATE'],
+  },
+};
 
 // Expressões SQL fixas (escritas aqui, nunca vindas de entrada) por tabela e coluna.
 const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
@@ -134,11 +166,26 @@ const contarDeA = (usuarioId: string, tabela: string) =>
     return Number(rows[0]?.total);
   });
 
+// Privilégios da app na tabela, contando também os concedidos só em algumas colunas.
+const CONSULTA_PRIVILEGIOS_APP = `
+  select p as privilegio from unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE',
+    'REFERENCES', 'TRIGGER']) p
+  where has_table_privilege('app', $1::regclass, p)
+     or (p in ('SELECT', 'INSERT', 'UPDATE', 'REFERENCES')
+         and has_any_column_privilege('app', $1::regclass, p))
+  order by 1`;
+
+const semRlsForcada = (lista: TabelaComUsuario[]): string[] =>
+  lista.filter((t) => !t.rls || !t.forcada).map((t) => t.tabela);
+
+let todas: TabelaComUsuario[] = [];
+// Tabelas com usuario_id e RLS: todas menos as exceções declaradas.
 let tabelas: TabelaComUsuario[] = [];
 
 beforeAll(async () => {
   await admin.connect();
-  tabelas = await tabelasComUsuario(admin);
+  todas = await tabelasComUsuario(admin);
+  tabelas = todas.filter((t) => !(t.tabela in EXCECOES_SEM_RLS));
   for (const { tabela } of tabelas) await semearLinha(tabela, A);
 }, 60_000);
 
@@ -151,9 +198,32 @@ describe('harness de isolamento', () => {
     expect(tabelas.map((t) => t.tabela)).toContain('audit_log');
   });
 
-  it('toda tabela com usuario_id tem RLS ativa e forçada', () => {
-    const semRlsForcada = tabelas.filter((t) => !t.rls || !t.forcada).map((t) => t.tabela);
-    expect(semRlsForcada).toEqual([]);
+  it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
+    expect(semRlsForcada(todas)).toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
+  });
+
+  it('cada exceção existe, tem motivo e a app tem só os privilégios declarados', async () => {
+    for (const [tabela, { motivo, privilegiosApp }] of Object.entries(EXCECOES_SEM_RLS)) {
+      expect(
+        todas.map((t) => t.tabela),
+        tabela,
+      ).toContain(tabela);
+      expect(motivo.length, tabela).toBeGreaterThan(20);
+      const { rows } = await admin.query<{ privilegio: string }>(CONSULTA_PRIVILEGIOS_APP, [
+        `public.${tabela}`,
+      ]);
+      expect(
+        rows.map((r) => r.privilegio),
+        tabela,
+      ).toEqual(privilegiosApp);
+    }
+  });
+
+  it('nenhuma exceção dá DELETE ou TRUNCATE à app', () => {
+    for (const { privilegiosApp } of Object.values(EXCECOES_SEM_RLS)) {
+      expect(privilegiosApp).not.toContain('DELETE');
+      expect(privilegiosApp).not.toContain('TRUNCATE');
+    }
   });
 
   it('acusa uma tabela nova com usuario_id criada sem RLS forçada', async () => {
@@ -162,8 +232,9 @@ describe('harness de isolamento', () => {
       await admin.query('create table public.isolamento_sem_rls (usuario_id uuid not null)');
       await admin.query('alter table public.isolamento_sem_rls enable row level security');
       const encontradas = await tabelasComUsuario(admin);
-      const semRlsForcada = encontradas.filter((t) => !t.rls || !t.forcada).map((t) => t.tabela);
-      expect(semRlsForcada).toEqual(['isolamento_sem_rls']);
+      const novas = semRlsForcada(encontradas).filter((t) => !(t in EXCECOES_SEM_RLS));
+      expect(novas).toEqual(['isolamento_sem_rls']);
+      expect(semRlsForcada(encontradas)).not.toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
     } finally {
       await admin.query('rollback');
     }

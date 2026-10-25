@@ -876,9 +876,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Hash e conferência só no Postgres, com a senha como parâmetro
-- [ ] Tokens, sessão e código 2FA guardados só como hash
-- [ ] `app` não apaga linhas
+- [x] Hash e conferência só no Postgres, com a senha como parâmetro
+- [x] Tokens, sessão e código 2FA guardados só como hash
+- [x] `app` não apaga linhas
 
 **Tests**: integration
 **Gate**: full

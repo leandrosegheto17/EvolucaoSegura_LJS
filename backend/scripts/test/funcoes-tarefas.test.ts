@@ -7,7 +7,12 @@ import { type BancoDeTeste, criarBancoMigrado } from './banco.ts';
 // (em qualquer schema do projeto) tem search_path fixo; e a role app só executa as funções desta
 // lista explícita. Função nova liberada para a app entra aqui de propósito, na mesma tarefa.
 
-const EXECUTAVEIS_PELA_APP = ['public.app_usuario_id()'];
+const EXECUTAVEIS_PELA_APP = [
+  'public.app_usuario_id()',
+  // T40 / AUTH-12: hash e conferência de senha no Postgres (migration 0003).
+  'public.conferir_senha(p_email text, p_senha text)',
+  'public.definir_senha(p_usuario_id uuid, p_senha text)',
+];
 
 // Funções criadas pelas migrations (fora do catálogo do sistema e das extensões, como o pgcrypto).
 const FUNCOES_DO_PROJETO = `
