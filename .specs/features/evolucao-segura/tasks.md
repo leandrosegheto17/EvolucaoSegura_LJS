@@ -1118,10 +1118,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Rotas públicas pulam sessão e CSRF
-- [ ] Rota autenticada roda dentro de `comTransacao`
-- [ ] Teste de ordem dos middlewares
-- [ ] `GET /api/eu` devolve usuário e estado do perfil
+- [x] Rotas públicas pulam sessão e CSRF
+- [x] Rota autenticada roda dentro de `comTransacao`
+- [x] Teste de ordem dos middlewares
+- [x] `GET /api/eu` devolve usuário e estado do perfil
 
 **Tests**: integration
 **Gate**: full
