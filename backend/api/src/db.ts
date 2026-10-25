@@ -1,5 +1,6 @@
 import { waitUntil } from 'cloudflare:workers';
 import {
+  type Generated,
   Kysely,
   PostgresDialect,
   type PostgresPool,
@@ -15,9 +16,21 @@ import pg from 'pg';
 // SET LOCAL, que não aceita parâmetro). Sem usuário (rotas públicas), app_usuario_id() fica nulo
 // e o RLS não mostra nenhuma linha. Spike set-local-hyperdrive.
 
-// Tabelas vistas pelo Kysely; cada etapa acrescenta as suas.
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Banco {}
+// Tabelas vistas pelo Kysely; cada etapa acrescenta as suas (migrations em backend/scripts).
+export interface Banco {
+  audit_log: {
+    id: Generated<string>;
+    usuario_id: string;
+    ator: string;
+    acao: string;
+    alvo_tipo: string;
+    alvo_id: string | null;
+    campos_alterados: Generated<string[]>;
+    origem_ip: string | null;
+    origem_ua: string | null;
+    criado_em: Generated<Date>;
+  };
+}
 
 export type Trx = Transaction<Banco>;
 

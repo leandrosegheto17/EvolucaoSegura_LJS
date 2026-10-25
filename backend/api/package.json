@@ -15,6 +15,7 @@
     "wrangler": "4.152.0"
   },
   "dependencies": {
+    "@es/contrato": "workspace:*",
     "@sentry/cloudflare": "11.9.0",
     "hono": "4.13.13",
     "kysely": "0.29.7",

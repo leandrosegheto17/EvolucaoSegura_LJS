@@ -753,9 +753,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Falha ao gravar a auditoria desfaz a operação
-- [ ] IP e user-agent truncados como especificado
-- [ ] Sem conteúdo clínico no registro
+- [x] Falha ao gravar a auditoria desfaz a operação
+- [x] IP e user-agent truncados como especificado
+- [x] Sem conteúdo clínico no registro
 
 **Tests**: integration
 **Gate**: full
