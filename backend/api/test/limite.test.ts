@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { criarApp } from '../src/app.ts';
 import { grupoDaRota, limitePorIp } from '../src/middleware/limite.ts';
 
@@ -16,6 +16,16 @@ const novoIp = () => {
   ipSequencial += 1;
   return `198.51.${Math.floor(ipSequencial / 250)}.${ipSequencial % 250}`;
 };
+
+// O binding simulado do miniflare conta em janelas alinhadas ao relógio (epoch = Date.now() / 60 s)
+// e zera os contadores na virada do minuto. Rajada que atravessa a virada recomeça do zero e o 429
+// esperado vira 200 (falha intermitente). Perto da virada, cada teste espera o minuto seguinte.
+const FOLGA_ANTES_DA_VIRADA_MS = 5_000;
+beforeEach(async () => {
+  const restante = 60_000 - (Date.now() % 60_000);
+  if (restante < FOLGA_ANTES_DA_VIRADA_MS)
+    await new Promise((pronto) => setTimeout(pronto, restante + 50));
+});
 
 const app = new Hono<{ Bindings: Cloudflare.Env }>();
 app.use('/api/*', limitePorIp);
