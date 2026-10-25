@@ -1,0 +1,64 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
+
+// OPS-01: todo dia às 04:00 de Brasília (07:00 UTC), pg_dump -Fc pela role backup_ro, cifrado com
+// age e guardado como artefato por 30 dias; também manual. O teste só lê o YAML.
+
+interface Passo {
+  run?: string;
+  uses?: string;
+  env?: Record<string, string>;
+  with?: Record<string, unknown>;
+}
+interface Workflow {
+  on: { schedule?: { cron: string }[]; workflow_dispatch?: unknown };
+  jobs: Record<string, { steps: Passo[] }>;
+}
+
+const caminho = resolve(import.meta.dirname, '../../../.github/workflows/backup.yml');
+const texto = readFileSync(caminho, 'utf8');
+const workflow = parse(texto) as Workflow;
+const passos = Object.values(workflow.jobs).flatMap((trabalho) => trabalho.steps);
+const passoDoDump = passos.find((passo) => (passo.run ?? '').includes('pg_dump -Fc'));
+const passoDoArtefato = passos.find((passo) =>
+  (passo.uses ?? '').startsWith('actions/upload-artifact'),
+);
+
+describe('backup.yml (OPS-01)', () => {
+  it('roda às 07:00 UTC, que são 04:00 em Brasília', () => {
+    expect(workflow.on.schedule).toEqual([{ cron: '0 7 * * *' }]);
+  });
+
+  it('também pode ser disparado à mão', () => {
+    expect(workflow.on).toHaveProperty('workflow_dispatch');
+  });
+
+  it('faz pg_dump -Fc com a conexão da role backup_ro (NEON_URL_BACKUP)', () => {
+    expect(passoDoDump?.run).toContain('pg_dump -Fc "$NEON_URL_BACKUP"');
+    expect(passoDoDump?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
+  });
+
+  it('cifra o dump com age (chave pública em secret) sem gravá-lo em claro', () => {
+    expect(passoDoDump?.run).toMatch(/pg_dump -Fc .*\| age -r "\$AGE_PUBLIC_KEY" -o \S+\.age/);
+    expect(passoDoDump?.env?.['AGE_PUBLIC_KEY']).toBe('${{ secrets.AGE_PUBLIC_KEY }}');
+  });
+
+  it('guarda o artefato cifrado por 30 dias', () => {
+    expect(passoDoArtefato?.with?.['retention-days']).toBe(30);
+    expect(String(passoDoArtefato?.with?.['path'])).toMatch(/\.age$/);
+  });
+
+  it('usa conexão direta: o comando do dump não tem pooler e um passo recusa URL de pooler', () => {
+    expect(passoDoDump?.run).not.toContain('-pooler');
+    const guarda = passos.find((passo) => (passo.run ?? '').includes('*-pooler*'));
+    expect(guarda?.run).toContain('exit 1');
+  });
+
+  it('o artefato só é guardado depois do dump', () => {
+    expect(passos.indexOf(passoDoArtefato as Passo)).toBeGreaterThan(
+      passos.indexOf(passoDoDump as Passo),
+    );
+  });
+});

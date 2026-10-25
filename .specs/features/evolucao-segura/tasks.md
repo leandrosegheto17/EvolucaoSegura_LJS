@@ -645,9 +645,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Teste lê o YAML: cron `0 7 * * *` (UTC), `pg_dump -Fc`, `age`, `retention-days: 30`, `workflow_dispatch`
-- [ ] Conexão direta, sem `-pooler`
-- [ ] ADR-004 gravado
+- [x] Teste lê o YAML: cron `0 7 * * *` (UTC), `pg_dump -Fc`, `age`, `retention-days: 30`, `workflow_dispatch`
+- [x] Conexão direta, sem `-pooler`
+- [x] ADR-004 gravado
 
 **Tests**: unit
 **Gate**: quick

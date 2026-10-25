@@ -1,0 +1,50 @@
+name: Backup
+
+# OPS-01: todo dia às 04:00 de Brasília (07:00 UTC; o horário de Brasília não tem horário de
+# verão), pg_dump -Fc pela role backup_ro, cifrado com age (chave pública em secret) e guardado
+# como artefato por 30 dias. Também pode ser disparado à mão. Nada aqui roda sozinho antes de o
+# repositório estar no GitHub com os secrets configurados.
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: producao
+    steps:
+      - name: Instalar pg_dump 16 e age
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common age
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Exigir conexão direta
+        env:
+          NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
+        run: |
+          # O pg_dump precisa da conexão direta; o pooler do Neon não serve para dump.
+          case "$NEON_URL_BACKUP" in
+            *-pooler*) echo "NEON_URL_BACKUP aponta para o pooler; use a conexão direta."; exit 1 ;;
+          esac
+
+      - name: Dump cifrado
+        env:
+          NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
+          AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+        run: |
+          pg_dump -Fc "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o backup.dump.age
+
+      - name: Guardar o backup cifrado
+        uses: actions/upload-artifact@v7
+        with:
+          name: backup-${{ github.run_id }}
+          path: backup.dump.age
+          retention-days: 30
+          if-no-files-found: error
