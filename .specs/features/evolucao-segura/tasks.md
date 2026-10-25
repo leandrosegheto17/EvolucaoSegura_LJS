@@ -522,9 +522,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Falha ao inserir o domínio literal em `backend/` ou `frontend/`
-- [ ] Falha ao adicionar `bcrypt` ou `pdfmake` ao `package.json` da API
-- [ ] Única fonte da URL é `URL_PUBLICA`
+- [x] Falha ao inserir o domínio literal em `backend/` ou `frontend/`
+- [x] Falha ao adicionar `bcrypt` ou `pdfmake` ao `package.json` da API
+- [x] Única fonte da URL é `URL_PUBLICA`
 
 **Tests**: unit
 **Gate**: quick
