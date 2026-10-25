@@ -894,9 +894,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Estados `trial`, `ativa`, `atrasada`, `cancelada`, `free` por restrição
-- [ ] `event_id` único
-- [ ] Teste de isolamento passa a cobrir as tabelas
+- [x] Estados `trial`, `ativa`, `atrasada`, `cancelada`, `free` por restrição
+- [x] `event_id` único
+- [x] Teste de isolamento passa a cobrir as tabelas
 
 **Tests**: integration
 **Gate**: full

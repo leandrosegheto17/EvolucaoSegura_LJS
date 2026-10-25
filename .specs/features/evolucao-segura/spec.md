@@ -558,7 +558,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | INI-01 | P1: Início | Tasks | Pending |
 | INI-02 | P1: Início | Tasks | Pending |
 | INI-03 | P1: Início | Tasks | Pending |
-| PLANO-01 | P1: Planos e cobrança | Tasks | Pending |
+| PLANO-01 | P1: Planos e cobrança | Tasks | Implementing |
 | PLANO-02 | P1: Planos e cobrança | Tasks | Pending |
 | PLANO-03 | P1: Planos e cobrança | Tasks | Pending |
 | PLANO-04 | P1: Planos e cobrança | Tasks | Pending |

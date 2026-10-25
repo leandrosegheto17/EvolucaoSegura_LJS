@@ -50,6 +50,9 @@ const EXCECOES_SEM_RLS: Record<string, { motivo: string; privilegiosApp: string[
 // Expressões SQL fixas (escritas aqui, nunca vindas de entrada) por tabela e coluna.
 const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   audit_log: { ator: "'sistema'", acao: "'auth.login_ok'", alvo_tipo: "'conta'" },
+  assinatura: { plano: "'pro'", status: "'trial'" },
+  // event_id é único e o banco de teste acumula linhas entre execuções.
+  webhook_evento: { event_id: 'gen_random_uuid()::text' },
 };
 
 const admin = new pg.Client({
@@ -196,6 +199,12 @@ afterAll(async () => {
 describe('harness de isolamento', () => {
   it('encontra as tabelas com usuario_id pelo catálogo (inclui audit_log)', () => {
     expect(tabelas.map((t) => t.tabela)).toContain('audit_log');
+  });
+
+  it('cobre as tabelas de cobrança (T41: assinatura e webhook_evento)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['assinatura', 'webhook_evento']),
+    );
   });
 
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
