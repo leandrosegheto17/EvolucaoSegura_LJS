@@ -1,0 +1,103 @@
+name: Deploy
+
+# OPS-03: deploy manual, só pela main, no environment producao, um por vez e sem cancelar o que
+# está em andamento. Este é o único arquivo do repositório que roda `wrangler deploy` (OPS-04).
+# Nada aqui roda sozinho: o primeiro deploy é decisão do dono do produto.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: producao
+    env:
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+      - name: Instalar pg_dump 16 e age
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common age
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Build do web
+        env:
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
+        run: pnpm build:web
+
+      - name: Branch de restauração no Neon
+        id: restauracao
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: restauracao-${{ github.run_id }}
+          username: ${{ vars.NEON_ROLE_OWNER }}
+          database: ${{ vars.NEON_DATABASE }}
+      - name: Achar a branch de restauração excedente
+        id: excedente
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          MANTER_RESTAURACOES: '2'
+        run: |
+          # Lista as branches restauracao-*, da mais nova para a mais antiga, e separa a mais
+          # antiga que passar do limite. Como cada deploy cria uma, sobra no máximo uma por vez.
+          curl -sS --fail -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" > branches.json
+          ids=$(jq -r --argjson manter "$MANTER_RESTAURACOES" \
+            '[.branches[] | select(.name | startswith("restauracao-"))]
+             | sort_by(.created_at) | reverse | .[$manter:] | reverse | .[].id' branches.json)
+          echo "id=$(echo "$ids" | head -n 1)" >> "$GITHUB_OUTPUT"
+      - name: Apagar a branch de restauração excedente
+        if: steps.excedente.outputs.id != ''
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ steps.excedente.outputs.id }}
+
+      - name: Dump cifrado antes da migração
+        env:
+          NEON_URL_MIGRACAO: ${{ secrets.NEON_URL_MIGRACAO }}
+          AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+        run: |
+          pg_dump -Fc "$NEON_URL_MIGRACAO" | age -r "$AGE_PUBLIC_KEY" -o dump-pre-deploy.dump.age
+      - name: Guardar o dump cifrado
+        uses: actions/upload-artifact@v7
+        with:
+          name: dump-pre-deploy-${{ github.run_id }}
+          path: dump-pre-deploy.dump.age
+          retention-days: 30
+
+      - name: Migração com a role owner
+        env:
+          DATABASE_URL: ${{ secrets.NEON_URL_MIGRACAO }}
+        run: pnpm migrar
+
+      - name: Deploy do Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          URL_PUBLICA: ${{ vars.URL_PUBLICA }}
+        run: |
+          pnpm --filter @es/api exec wrangler deploy --config ../../wrangler.jsonc \
+            --var "URL_PUBLICA:$URL_PUBLICA" \
+            --var "SENTRY_RELEASE:${{ github.sha }}"

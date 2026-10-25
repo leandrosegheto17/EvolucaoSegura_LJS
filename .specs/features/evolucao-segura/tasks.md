@@ -610,9 +610,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Teste lê o YAML e confere a ordem: build web, branch de restauração Neon (mantendo as 2 mais recentes), dump cifrado, migração com `owner`, `wrangler deploy --var URL_PUBLICA`
-- [ ] Só `workflow_dispatch`
-- [ ] Execução real só com confirmação específica
+- [x] Teste lê o YAML e confere a ordem: build web, branch de restauração Neon (mantendo as 2 mais recentes), dump cifrado, migração com `owner`, `wrangler deploy --var URL_PUBLICA`
+- [x] Só `workflow_dispatch`
+- [x] Execução real só com confirmação específica
 
 **Tests**: unit
 **Gate**: quick
