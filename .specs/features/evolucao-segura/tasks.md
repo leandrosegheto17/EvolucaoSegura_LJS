@@ -3115,6 +3115,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 - [ ] Cada procedimento tem comandos verificados
 - [ ] Pré-requisitos da publicação listados (conta Asaas de produção, chave Pix, domínio, revisão jurídica)
+- [ ] Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon (nascem `NOLOGIN`), com a ordem em relação ao primeiro deploy (pendência do lote 3, ADR-005)
+- [ ] Teste de fumaça de vazamento de contexto entre conexões reaproveitadas do Hyperdrive, depois do primeiro deploy (ADR-005)
 
 **Tests**: none
 **Gate**: build

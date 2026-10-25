@@ -494,10 +494,10 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AUTH-17 | P1: Login e sessão | Tasks | Pending |
 | AUTH-18 | P1: Login e sessão | Tasks | Pending |
 | AUTH-19 | P1: Login e sessão | Tasks | Pending |
-| ISO-01 | P1: Isolamento | Tasks | Pending |
-| ISO-02 | P1: Isolamento | Tasks | Pending |
-| ISO-03 | P1: Isolamento | Tasks | Pending |
-| ISO-04 | P1: Isolamento | Tasks | Pending |
+| ISO-01 | P1: Isolamento | Tasks | Implementing |
+| ISO-02 | P1: Isolamento | Tasks | Implementing |
+| ISO-03 | P1: Isolamento | Tasks | Implementing |
+| ISO-04 | P1: Isolamento | Tasks | Implementing |
 | PERF-01 | P1: Perfil | Tasks | Pending |
 | PERF-02 | P1: Perfil | Tasks | Pending |
 | PERF-03 | P1: Perfil | Tasks | Pending |
@@ -586,8 +586,8 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | CONTA-04 | P1: Exclusão e LGPD | Tasks | Pending |
 | CONTA-05 | P1: Exclusão e LGPD | Tasks | Pending |
 | CONTA-06 | P1: Exclusão e LGPD | Tasks | Pending |
-| AUD-01 | P1: Auditoria | Tasks | Pending |
-| AUD-02 | P1: Auditoria | Tasks | Pending |
+| AUD-01 | P1: Auditoria | Tasks | Implementing |
+| AUD-02 | P1: Auditoria | Tasks | Implementing |
 | AUD-03 | P1: Auditoria | Tasks | Pending |
 | AUD-04 | P1: Auditoria | Tasks | Pending |
 | PUB-01 | P1: Landing e PWA | Tasks | Pending |
@@ -607,7 +607,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | OPS-10 | P1: Operação | Tasks | Pending |
 | OPS-11 | P1: Operação | Tasks | Pending |
 | OPS-12 | P1: Operação | Tasks | Pending |
-| OPS-13 | P1: Operação | Tasks | Pending |
+| OPS-13 | P1: Operação | Tasks | Implementing |
 | OPS-14 | P1: Operação | Tasks | Pending |
 | RAS-01 | P2: Rascunhos e modelos | Tasks | Pending |
 | RAS-02 | P2: Rascunhos e modelos | Tasks | Pending |
