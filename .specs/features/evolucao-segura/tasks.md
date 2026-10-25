@@ -469,8 +469,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 200 com corpo fixo
-- [ ] Teste com Hyperdrive que lança erro se usado, provando que não toca o banco
+- [x] 200 com corpo fixo
+- [x] Teste com Hyperdrive que lança erro se usado, provando que não toca o banco
 
 **Tests**: integration
 **Gate**: full

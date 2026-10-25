@@ -1,6 +1,7 @@
-// Ponto de entrada provisório do Worker; a API Hono entra na T17.
+import { criarApp } from './app.ts';
+
+const app = criarApp();
+
 export default {
-  fetch(): Response {
-    return new Response('Evolução Segura');
-  },
+  fetch: app.fetch,
 } satisfies ExportedHandler<Cloudflare.Env>;
