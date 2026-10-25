@@ -9,6 +9,8 @@
     "migrar": "node -e \"console.log('migrar: ainda sem migrations (o runner vem na T28)')\""
   },
   "devDependencies": {
+    "jsonc-parser": "3.3.1",
+    "wrangler": "4.152.0",
     "yaml": "2.9.1"
   }
 }

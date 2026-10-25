@@ -592,9 +592,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `/api/*` cai no Hono, demais rotas no front
-- [ ] Rota desconhecida do front devolve o `index.html`
-- [ ] Teste de integração dos três casos
+- [x] `/api/*` cai no Hono, demais rotas no front
+- [x] Rota desconhecida do front devolve o `index.html`
+- [x] Teste de integração dos três casos
 
 **Tests**: integration
 **Gate**: full
