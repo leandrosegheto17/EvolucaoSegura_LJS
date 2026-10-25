@@ -30,6 +30,25 @@ export interface Banco {
     origem_ua: string | null;
     criado_em: Generated<Date>;
   };
+  // Identidade (migration 0003): sem RLS, com grants por coluna; a app nunca lê credencial_senha.
+  usuario: {
+    id: Generated<string>;
+    email: string;
+    nome: string;
+    confirmado_em: Date | null;
+    bloqueado_exclusao_em: Date | null;
+    criado_em: Generated<Date>;
+  };
+  token_email: {
+    id: Generated<string>;
+    usuario_id: string;
+    tipo: 'confirmacao' | 'recuperacao' | 'exclusao' | 'desistencia';
+    token_hash: Buffer;
+    criado_em: Generated<Date>;
+    expira_em: Date;
+    usado_em: Date | null;
+    invalidado_em: Date | null;
+  };
 }
 
 export type Trx = Transaction<Banco>;

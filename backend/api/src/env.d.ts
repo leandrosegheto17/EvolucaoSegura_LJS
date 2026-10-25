@@ -11,6 +11,10 @@ declare namespace Cloudflare {
     LIMITE_ACESSO: RateLimit;
     LIMITE_PUBLICO: RateLimit;
     LIMITE_WEBHOOK: RateLimit;
+    // OPS-10: única fonte da URL do app (o deploy passa com --var).
+    URL_PUBLICA: string;
+    MAIL_FROM?: string;
+    RESEND_API_KEY?: string;
     SENTRY_DSN?: string;
     SENTRY_RELEASE?: string;
   }

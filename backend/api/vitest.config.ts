@@ -10,7 +10,11 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       wrangler: { configPath: resolve(import.meta.dirname, '../../wrangler.jsonc') },
-      miniflare: { hyperdrives: { HYPERDRIVE: urlBancoApp, HYPERDRIVE_ADMIN: urlBancoAdmin } },
+      miniflare: {
+        hyperdrives: { HYPERDRIVE: urlBancoApp, HYPERDRIVE_ADMIN: urlBancoAdmin },
+        // Sem MAIL_FROM nem RESEND_API_KEY: os testes injetam um e-mail simulado.
+        bindings: { URL_PUBLICA: 'http://localhost:8787' },
+      },
     }),
   ],
   resolve: { alias: aliasPg },

@@ -949,11 +949,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Mesmo corpo e status nos três casos
-- [ ] Conta confirmada recebe e-mail com link de recuperação
-- [ ] Reenvio substitui nome e senha pendentes e invalida o token anterior
-- [ ] Falha do Resend responde 202 e vai ao Sentry
-- [ ] Token de 256 bits, SHA-256 no banco, 30 min
+- [x] Mesmo corpo e status nos três casos
+- [x] Conta confirmada recebe e-mail com link de recuperação
+- [x] Reenvio substitui nome e senha pendentes e invalida o token anterior
+- [x] Falha do Resend responde 202 e vai ao Sentry
+- [x] Token de 256 bits, SHA-256 no banco, 30 min
 
 **Tests**: integration
 **Gate**: full
