@@ -734,10 +734,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Usar `set_config('app.usuario_id', $1, true)` com parâmetro (o `SET LOCAL` não aceita parâmetro); `app_usuario_id()` trata string vazia como ausente (spike set-local-hyperdrive)
-- [ ] Contexto do usuário não vaza para a requisição seguinte
-- [ ] Erro faz `ROLLBACK`
-- [ ] Sem usuário, nenhuma linha de tabela com RLS fica visível
+- [x] Usar `set_config('app.usuario_id', $1, true)` com parâmetro (o `SET LOCAL` não aceita parâmetro); `app_usuario_id()` trata string vazia como ausente (spike set-local-hyperdrive)
+- [x] Contexto do usuário não vaza para a requisição seguinte
+- [x] Erro faz `ROLLBACK`
+- [x] Sem usuário, nenhuma linha de tabela com RLS fica visível
 
 **Tests**: integration
 **Gate**: full

@@ -4,5 +4,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node", "@cloudflare/workers-types", "@cloudflare/vitest-plugin/types"]
   },
-  "include": ["src", "test", "vitest.config.ts", "vitest.alias-pg.ts"]
+  "include": ["src", "test", "vitest.config.ts", "vitest.alias-pg.ts", "vitest.urls.ts"]
 }
