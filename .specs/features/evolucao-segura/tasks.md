@@ -364,8 +364,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Três ADRs em `.md/adr/NNN-titulo.md`
-- [ ] AD-001 do `STATE.md` aponta para o ADR-003
+- [x] Três ADRs em `.md/adr/NNN-titulo.md`
+- [x] AD-001 do `STATE.md` aponta para o ADR-003
 
 **Tests**: none
 **Gate**: build

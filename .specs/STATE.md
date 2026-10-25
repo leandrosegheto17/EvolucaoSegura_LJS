@@ -15,5 +15,5 @@
 
 ## Decisions
 
-- **AD-001** (2026-10-24, active): testes do Worker com `@cloudflare/vitest-plugin`, sucessor do `@cloudflare/vitest-pool-workers` (descontinuado) citado no padrão LJS. Aprovado pelo usuário. Vira o ADR-003 em `.md/adr/` na etapa 1. Ver `features/evolucao-segura/design.md`.
+- **AD-001** (2026-10-24, active): testes do Worker com `@cloudflare/vitest-plugin`, sucessor do `@cloudflare/vitest-pool-workers` (descontinuado) citado no padrão LJS. Aprovado pelo usuário. Registrado no [ADR-003](../.md/adr/003-cloudflare-vitest-plugin.md). Ver `features/evolucao-segura/design.md`.
 - **AD-002** (2026-10-24, active): um commit atômico por tarefa (tlc); o "um commit por etapa" do padrão LJS vira um relatório ao fechar cada etapa (o que foi feito, como validar, o que vem a seguir). Aprovado pelo usuário.
