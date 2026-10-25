@@ -1082,9 +1082,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Escrita sem o cabeçalho ou com valor errado responde 403 sem executar
-- [ ] GET passa sem o cabeçalho
-- [ ] Rotas públicas ficam fora
+- [x] Escrita sem o cabeçalho ou com valor errado responde 403 sem executar
+- [x] GET passa sem o cabeçalho
+- [x] Rotas públicas ficam fora
 
 **Tests**: integration
 **Gate**: full
