@@ -7,6 +7,10 @@ declare namespace Cloudflare {
   }
   interface Env {
     HYPERDRIVE: Hyperdrive;
+    // OPS-07 (ADR-006): um namespace do binding ratelimits por grupo de rota.
+    LIMITE_ACESSO: RateLimit;
+    LIMITE_PUBLICO: RateLimit;
+    LIMITE_WEBHOOK: RateLimit;
     SENTRY_DSN?: string;
     SENTRY_RELEASE?: string;
   }

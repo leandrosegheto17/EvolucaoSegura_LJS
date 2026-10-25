@@ -930,10 +930,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Usar o binding `ratelimits`, que o spike rate-limit-free confirmou no Free (limite efetivo de ±1); o teste não depende do número exato de passes
-- [ ] 11ª requisição no minuto recebe 429
-- [ ] Contadores separados por grupo de rota
-- [ ] ADR-006 gravado com a decisão do spike
+- [x] Usar o binding `ratelimits`, que o spike rate-limit-free confirmou no Free (limite efetivo de ±1); o teste não depende do número exato de passes
+- [x] 11ª requisição no minuto recebe 429
+- [x] Contadores separados por grupo de rota
+- [x] ADR-006 gravado com a decisão do spike
 
 **Tests**: integration
 **Gate**: full

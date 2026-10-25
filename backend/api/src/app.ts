@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/cloudflare';
 import { Hono } from 'hono';
 import { cabecalhos } from './middleware/cabecalhos.ts';
+import { limitePorIp } from './middleware/limite.ts';
 import { health } from './rotas/health.ts';
 
 interface OpcoesApp {
@@ -11,6 +12,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   const capturarErro = opcoes.capturarErro ?? ((erro) => Sentry.captureException(erro));
   const app = new Hono<{ Bindings: Cloudflare.Env }>();
   app.use('*', cabecalhos);
+  app.use('/api/*', limitePorIp);
   app.route('/api', health);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {

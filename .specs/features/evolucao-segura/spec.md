@@ -601,7 +601,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | OPS-04 | P1: Operação | Tasks | Pending |
 | OPS-05 | P1: Operação | Tasks | Pending |
 | OPS-06 | P1: Operação | Tasks | Pending |
-| OPS-07 | P1: Operação | Tasks | Pending |
+| OPS-07 | P1: Operação | Tasks | Implementing |
 | OPS-08 | P1: Operação | Tasks | Pending |
 | OPS-09 | P1: Operação | Tasks | Pending |
 | OPS-10 | P1: Operação | Tasks | Pending |

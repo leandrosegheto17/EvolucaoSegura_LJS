@@ -13,6 +13,13 @@
     // Só /api/* passa pelo Worker (Hono); o resto vai direto para os arquivos do front.
     "run_worker_first": ["/api/*"],
   },
+  // OPS-07 (ADR-006): limite por IP, um namespace (contador) por grupo de rota. O período do
+  // binding só pode ser 10 ou 60 s; o limite efetivo medido no Free foi ±1 (spike rate-limit-free).
+  "ratelimits": [
+    { "name": "LIMITE_ACESSO", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "LIMITE_PUBLICO", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "LIMITE_WEBHOOK", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+  ],
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
