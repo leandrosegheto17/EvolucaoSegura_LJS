@@ -842,8 +842,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Menos de 12, mais de 128, senha comum (após NFKC, minúsculas, sem espaços) e caractere repetido recusados com `curta`, `longa`, `comum`
-- [ ] Testes do legado verdes aqui
+- [x] Menos de 12, mais de 128, senha comum (após NFKC, minúsculas, sem espaços) e caractere repetido recusados com `curta`, `longa`, `comum`
+- [x] Testes do legado verdes aqui
 
 **Tests**: unit
 **Gate**: quick
