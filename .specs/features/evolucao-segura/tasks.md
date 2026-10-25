@@ -969,10 +969,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Assinatura `trial` com `periodo_fim` igual à confirmação mais 14 dias
-- [ ] Token inválido, expirado ou usado responde 400 `link_invalido` sem alterar conta
-- [ ] Aceite grava data, hora e versões
-- [ ] Auditoria na mesma transação
+- [x] Assinatura `trial` com `periodo_fim` igual à confirmação mais 14 dias
+- [x] Token inválido, expirado ou usado responde 400 `link_invalido` sem alterar conta
+- [x] Aceite grava data, hora e versões
+- [x] Auditoria na mesma transação
 
 **Tests**: integration
 **Gate**: full

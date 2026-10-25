@@ -49,6 +49,25 @@ export interface Banco {
     usado_em: Date | null;
     invalidado_em: Date | null;
   };
+  aceite_termos: {
+    id: Generated<string>;
+    usuario_id: string;
+    versao_termos: string;
+    versao_privacidade: string;
+    aceito_em: Generated<Date>;
+  };
+  // Cobrança (migration 0004): RLS forçada.
+  assinatura: {
+    usuario_id: string;
+    plano: 'pro' | 'free';
+    status: 'trial' | 'ativa' | 'atrasada' | 'cancelada' | 'free';
+    asaas_customer_id: string | null;
+    asaas_subscription_id: string | null;
+    periodo_fim: Date;
+    vencimento_atraso: Date | null;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
@@ -60,6 +79,12 @@ function poolDeUmCliente(cliente: pg.Client): PostgresPool {
     release: () => {},
   };
   return { connect: async () => conexao, end: async () => {}, options: {} };
+}
+
+// Rotas públicas que descobrem o usuário no meio da transação (ex.: pelo token do link de
+// confirmação) passam a valer para o RLS a partir daqui, só nesta transação.
+export async function definirUsuarioDaTransacao(trx: Trx, usuarioId: string): Promise<void> {
+  await sql`select set_config('app.usuario_id', ${usuarioId}, true)`.execute(trx);
 }
 
 export async function comTransacao<T>(
@@ -78,8 +103,7 @@ export async function comTransacao<T>(
     });
     // O Kysely faz BEGIN, COMMIT no retorno e ROLLBACK quando fn lança.
     return await db.transaction().execute(async (trx) => {
-      if (usuarioId !== null)
-        await sql`select set_config('app.usuario_id', ${usuarioId}, true)`.execute(trx);
+      if (usuarioId !== null) await definirUsuarioDaTransacao(trx, usuarioId);
       return fn(trx);
     });
   } finally {

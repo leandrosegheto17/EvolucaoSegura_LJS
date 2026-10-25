@@ -88,3 +88,50 @@ export async function criarTokenEmail(
     })
     .execute();
 }
+
+// CAD-03, CAD-05: consome o token (uso único) se ele é do tipo pedido, não foi usado nem
+// invalidado e ainda vale (no instante exato de expira_em já não vale). O UPDATE ... RETURNING é
+// atômico: de dois pedidos simultâneos com o mesmo token, só um recebe o usuário.
+export async function consumirToken(
+  trx: Trx,
+  hash: Buffer,
+  tipo: TipoToken,
+): Promise<string | null> {
+  const linha = await trx
+    .updateTable('token_email')
+    .set({ usado_em: sql<Date>`now()` })
+    .where('token_hash', '=', hash)
+    .where('tipo', '=', tipo)
+    .where('usado_em', 'is', null)
+    .where('invalidado_em', 'is', null)
+    .where('expira_em', '>', sql<Date>`now()`)
+    .returning('usuario_id')
+    .executeTakeFirst();
+  return linha?.usuario_id ?? null;
+}
+
+// Marca a conta como confirmada; false se ela já estava confirmada.
+export async function confirmarConta(trx: Trx, usuarioId: string): Promise<boolean> {
+  const linha = await trx
+    .updateTable('usuario')
+    .set({ confirmado_em: sql<Date>`now()` })
+    .where('id', '=', usuarioId)
+    .where('confirmado_em', 'is', null)
+    .returning('id')
+    .executeTakeFirst();
+  return linha !== undefined;
+}
+
+export async function registrarAceite(
+  trx: Trx,
+  entrada: { usuarioId: string; versaoTermos: string; versaoPrivacidade: string },
+): Promise<void> {
+  await trx
+    .insertInto('aceite_termos')
+    .values({
+      usuario_id: entrada.usuarioId,
+      versao_termos: entrada.versaoTermos,
+      versao_privacidade: entrada.versaoPrivacidade,
+    })
+    .execute();
+}

@@ -25,6 +25,13 @@ export type Cadastro = z.infer<typeof esquemaCadastro>;
 export const RESPOSTA_CADASTRO = { status: 'aceito' } as const;
 
 export const esquemaConfirmarEmail = z.strictObject({ token });
+// CAD-04: a confirmação ativa a conta e não abre sessão (o profissional entra com senha e 2FA).
+export const RESPOSTA_CONFIRMACAO = { status: 'confirmada' } as const;
+
+// CAD-07, CONTA-06: versões dos termos de uso e da política de privacidade em vigor, gravadas no
+// aceite. Mudar o texto de /termos ou /privacidade exige versão nova aqui.
+export const VERSAO_TERMOS = '1.0';
+export const VERSAO_PRIVACIDADE = '1.0';
 
 export const esquemaEntrar = z.strictObject({ email: esquemaEmail, senha: senhaInformada });
 export const RESPOSTA_ENTRAR = { status: '2fa_required' } as const;

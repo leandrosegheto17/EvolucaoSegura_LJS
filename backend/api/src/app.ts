@@ -4,6 +4,7 @@ import { cabecalhos } from './middleware/cabecalhos.ts';
 import { limitePorIp } from './middleware/limite.ts';
 import { type ClienteEmail, criarClienteResend } from './integracoes/resend.ts';
 import { rotasCadastro } from './rotas/cadastro.ts';
+import { rotasConfirmar } from './rotas/confirmar.ts';
 import { health } from './rotas/health.ts';
 
 interface OpcoesApp {
@@ -23,6 +24,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.use('/api/*', limitePorIp);
   app.route('/api', health);
   app.route('/api', rotasCadastro({ email: opcoes.email ?? emailPadrao, capturarErro }));
+  app.route('/api', rotasConfirmar);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);
