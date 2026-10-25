@@ -22,7 +22,8 @@ export const esquemaAmbiente = z.object({
     .string()
     .regex(/^re_\S+$/, 'começa com re_')
     .optional(),
-  HMAC_2FA_SEGREDO: z.string().min(32).optional(),
+  // AUTH-03: obrigatória desde a T46 (chave do HMAC do código 2FA).
+  HMAC_2FA_SEGREDO: z.string().min(32),
   ASAAS_API_KEY: z.string().min(1).optional(),
   ASAAS_WEBHOOK_TOKEN: z.string().min(32).optional(),
   ASAAS_BASE_URL: z
