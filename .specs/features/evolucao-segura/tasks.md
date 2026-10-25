@@ -824,9 +824,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Nome 1 a 200, e-mail válido, aceite de termos obrigatório
-- [ ] Resposta de erro de login única para todos os motivos
-- [ ] Chave desconhecida recusada
+- [x] Nome 1 a 200, e-mail válido, aceite de termos obrigatório
+- [x] Resposta de erro de login única para todos os motivos
+- [x] Chave desconhecida recusada
 
 **Tests**: unit
 **Gate**: quick
