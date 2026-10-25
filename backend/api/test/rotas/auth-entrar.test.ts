@@ -13,6 +13,11 @@ import { comoAdmin, criarConta, emailSimulado, emailUnico, ipUnico, sha256 } fro
 // - Código: CSPRNG, guardado só como HMAC-SHA256, válido por 10 minutos, uso único.
 // - Falha do Resend: 503 mail_unavailable, sem contar falha de login.
 
+// Cada login confere bcrypt de custo 12 no banco, e criarConta grava outro; o cenário mais caro
+// soma 7 (3 contas e 4 logins), cerca de 3 s com a máquina parada e acima dos 5 s padrão com a
+// suíte inteira disputando o Postgres. Mesmo tempo dos outros arquivos de login desta fase.
+const LENTO = { timeout: 30_000 };
+
 const SEGREDO = (env as unknown as { HMAC_2FA_SEGREDO: string }).HMAC_2FA_SEGREDO;
 
 function montar() {
@@ -78,7 +83,7 @@ async function hmacEsperado(usuarioId: string, codigo: string): Promise<Buffer> 
   return Buffer.from(assinatura);
 }
 
-describe('credenciais corretas (AUTH-01)', () => {
+describe('credenciais corretas (AUTH-01)', LENTO, () => {
   it('responde 202 2fa_required sem criar sessão nem cookie', async () => {
     const { entrar } = montar();
     const conta = await criarConta();
@@ -113,7 +118,7 @@ describe('credenciais corretas (AUTH-01)', () => {
   });
 });
 
-describe('código guardado só como HMAC, 10 minutos, uso único (AUTH-03)', () => {
+describe('código guardado só como HMAC, 10 minutos, uso único (AUTH-03)', LENTO, () => {
   it('grava o HMAC-SHA256 do código, nunca o código nem o SHA-256 dele', async () => {
     const { entrar, correio } = montar();
     const conta = await criarConta();
@@ -151,7 +156,7 @@ describe('código guardado só como HMAC, 10 minutos, uso único (AUTH-03)', () 
   });
 });
 
-describe('recusa com 401 único (AUTH-02, CAD-09)', () => {
+describe('recusa com 401 único (AUTH-02, CAD-09)', LENTO, () => {
   it('senha errada responde 401 com o corpo único e não envia código', async () => {
     const { entrar, correio } = montar();
     const conta = await criarConta();
@@ -212,7 +217,7 @@ describe('recusa com 401 único (AUTH-02, CAD-09)', () => {
   });
 });
 
-describe('falha do e-mail do código (AUTH-08)', () => {
+describe('falha do e-mail do código (AUTH-08)', LENTO, () => {
   it('responde 503 mail_unavailable, vai ao Sentry e não deixa código válido', async () => {
     const { entrar, correio, capturarErro } = montar();
     const conta = await criarConta();
