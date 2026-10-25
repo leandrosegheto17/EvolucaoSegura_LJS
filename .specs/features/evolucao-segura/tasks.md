@@ -1027,10 +1027,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cookie com Path=/, Secure, HttpOnly, SameSite=Lax e sem Domain
-- [ ] 5 erros invalidam o desafio
-- [ ] Id de sessão novo e sessão anterior do navegador encerrada
-- [ ] Código usado não vale de novo
+- [x] Cookie com Path=/, Secure, HttpOnly, SameSite=Lax e sem Domain
+- [x] 5 erros invalidam o desafio
+- [x] Id de sessão novo e sessão anterior do navegador encerrada
+- [x] Código usado não vale de novo
 
 **Tests**: integration
 **Gate**: full

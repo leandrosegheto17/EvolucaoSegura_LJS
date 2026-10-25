@@ -15,3 +15,18 @@ export async function gerarToken(): Promise<TokenGerado> {
   const token = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
   return { token, hash: await hashDoToken(token) };
 }
+
+// AUTH-04, AUTH-17: token CSRF da sessão, derivado do próprio id da sessão por HMAC-SHA256 (o id,
+// de 256 bits, é a chave). Não precisa de coluna no banco: o middleware recalcula a partir do
+// cookie. Quem não lê o cookie (HttpOnly) não consegue calcular o token.
+export async function csrfDaSessao(sid: string): Promise<string> {
+  const chave = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(sid),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const assinatura = await crypto.subtle.sign('HMAC', chave, new TextEncoder().encode('csrf'));
+  return Buffer.from(assinatura).toString('base64url');
+}

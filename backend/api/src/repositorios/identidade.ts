@@ -170,3 +170,82 @@ export async function registrarAceite(
     })
     .execute();
 }
+
+export async function usuarioIdPorEmail(trx: Trx, email: string): Promise<string | null> {
+  const linha = await trx
+    .selectFrom('usuario')
+    .select('id')
+    .where('email', '=', email)
+    .executeTakeFirst();
+  return linha?.id ?? null;
+}
+
+export interface DesafioAberto {
+  id: string;
+  codigoHmac: Buffer;
+  erros: number;
+}
+
+// AUTH-03, AUTH-05: o desafio mais recente do usuário que ainda vale (não usado, não invalidado e
+// dentro da validade pelo relógio do banco), travado até o fim da transação.
+export async function travarDesafioAberto(
+  trx: Trx,
+  usuarioId: string,
+): Promise<DesafioAberto | null> {
+  const linha = await trx
+    .selectFrom('desafio_2fa')
+    .select(['id', 'codigo_hmac', 'erros'])
+    .where('usuario_id', '=', usuarioId)
+    .where('usado_em', 'is', null)
+    .where('invalidado_em', 'is', null)
+    .where('expira_em', '>', sql<Date>`now()`)
+    .orderBy('criado_em', 'desc')
+    .limit(1)
+    .forUpdate()
+    .executeTakeFirst();
+  if (!linha) return null;
+  return { id: linha.id, codigoHmac: linha.codigo_hmac, erros: linha.erros };
+}
+
+export async function registrarErro2fa(
+  trx: Trx,
+  desafioId: string,
+  resultado: { erros: number; invalidado: boolean },
+): Promise<void> {
+  await trx
+    .updateTable('desafio_2fa')
+    .set({
+      erros: resultado.erros,
+      ...(resultado.invalidado ? { invalidado_em: sql<Date>`now()` } : {}),
+    })
+    .where('id', '=', desafioId)
+    .execute();
+}
+
+export async function marcarDesafioUsado(trx: Trx, desafioId: string): Promise<void> {
+  await trx
+    .updateTable('desafio_2fa')
+    .set({ usado_em: sql<Date>`now()` })
+    .where('id', '=', desafioId)
+    .execute();
+}
+
+// AUTH-09: a sessão guarda só o SHA-256 do id do cookie.
+export async function criarSessao(trx: Trx, usuarioId: string, hash: Buffer): Promise<string> {
+  const linha = await trx
+    .insertInto('sessao')
+    .values({ usuario_id: usuarioId, token_hash: hash })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  return linha.id;
+}
+
+// Encerrar é UPDATE de data (a app não apaga). Sessão já encerrada fica como está.
+export async function encerrarSessaoPorHash(trx: Trx, hash: Buffer): Promise<void> {
+  await trx
+    .updateTable('sessao')
+    .set({ encerrada_em: sql<Date>`now()` })
+    .where('token_hash', '=', hash)
+    .where('encerrada_em', 'is', null)
+    .execute();
+}
