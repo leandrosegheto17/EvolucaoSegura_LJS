@@ -558,8 +558,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Página inicial renderiza em `/app`
-- [ ] `pnpm --filter @es/web build` gera `dist`
+- [x] Página inicial renderiza em `/app`
+- [x] `pnpm --filter @es/web build` gera `dist`
 
 **Tests**: unit
 **Gate**: build
