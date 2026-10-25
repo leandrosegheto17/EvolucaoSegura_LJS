@@ -663,9 +663,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Aplica do zero num banco vazio
-- [ ] Reaplicar não altera nada
-- [ ] Falha de uma migration desfaz tudo
+- [x] Aplica do zero num banco vazio
+- [x] Reaplicar não altera nada
+- [x] Falha de uma migration desfaz tudo
 
 **Tests**: integration
 **Gate**: full
