@@ -3,7 +3,7 @@
 - **Slug**: rate-limit-free · **Data**: 2026-10-24 · **Chamado por**: tarefa T13 (spike S2) de `.specs/features/evolucao-segura/tasks.md` · **Usar em**: tarefa T43 (`backend/api/src/middleware/limite.ts`) e ADR-006
 - **Veredito**: sim com ressalvas (o binding funciona no Free; o limite efetivo foi 11, não 10)
 - **Confiança**: média. Três rodadas idênticas e conta Free real pesam a favor. Pesam contra: uma só máquina e uma só localização, medição não reproduzida pela sessão (Worker já apagado) e o desvio de 1 requisição não investigado.
-- **Destino do código**: pendente
+- **Destino do código**: descartado (2026-10-24)
 
 ## Resposta
 

@@ -3,7 +3,7 @@
 - **Slug**: set-local-hyperdrive · **Data**: 2026-10-24 · **Chamado por**: tarefa T12 (spike S1) de `.specs/features/evolucao-segura/tasks.md` · **Usar em**: `design.md` (Risks & Concerns), tarefa T32 (`backend/api/src/db.ts`), ADR-005
 - **Veredito**: sim (nenhuma requisição enxergou o contexto de outra)
 - **Confiança**: alta para o cenário medido. Pesam a favor: Hyperdrive real, Neon Free na região do produto, 6.000 requisições com 0 divergências, medição repetida pela sessão e confirmada pelo PgBouncer local. Pesam contra: dados falsos, carga de 20 simultâneas (menor que um pico real) e ausência de captura de rede dos comandos.
-- **Destino do código**: pendente
+- **Destino do código**: descartado (2026-10-24)
 
 ## Resposta
 

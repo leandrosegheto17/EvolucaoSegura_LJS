@@ -3,7 +3,7 @@
 - **Slug**: cpu-exportacao · **Data**: 2026-10-24 · **Chamado por**: tarefa T12 (spike S1, parte de CPU) de `.specs/features/evolucao-segura/tasks.md` · **Usar em**: `design.md` (Risks & Concerns), tarefa T122 (exportação completa), ADR-008
 - **Veredito**: não (deu errado pelo critério congelado: mediana acima de 10 ms e 18 a 19 de 20 execuções encerradas por limite de CPU)
 - **Confiança**: alta de que a exportação completa em uma resposta não cabe. Pesam a favor: CPU lida de fonte real, duas abordagens diferentes com o mesmo resultado, valores relidos pela sessão nos arquivos brutos, volume realista. Pesam contra: volume falso (PREMISSA), causa do corte imediato após as 2 primeiras execuções não investigada.
-- **Destino do código**: pendente
+- **Destino do código**: descartado (2026-10-24)
 
 ## Resposta
 

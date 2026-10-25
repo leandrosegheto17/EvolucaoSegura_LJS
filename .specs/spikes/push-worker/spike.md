@@ -23,7 +23,7 @@ Rodando no runtime do Worker (workerd, `wrangler dev`), a biblioteca `@block65/w
 ## Prazo e método
 
 - **Prazo**: 2 horas e 3 tentativas, o que vier primeiro
-- **Início**: <gravado ao despachar> · **Limite**: <início + 2 h>
+- **Início**: 2026-10-24 22:21 · **Limite**: 2026-10-25 00:21
 - **Extensão**: nenhuma
 - **Método**: (1) Gerar par VAPID. (2) Página local com service worker que se inscreve e mostra o push. (3) Worker com rota que envia ao endpoint inscrito. (4) Usuário abre a página e permite notificações; enviar 5 vezes.
 - **Onde roda**: `.specs/spikes/push-worker/codigo/`

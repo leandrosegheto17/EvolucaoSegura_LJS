@@ -381,9 +381,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Pergunta, critério de sucesso e limite de tempo definidos antes (skill `spike`)
-- [ ] Veredito com nível de confiança em `registro.md`
-- [ ] Código descartado, fora do git
+- [x] Pergunta, critério de sucesso e limite de tempo definidos antes (skill `spike`)
+- [x] Veredito com nível de confiança em `registro.md`
+- [x] Código descartado, fora do git
 
 **Tests**: none (spike descartável, isento pelo CLAUDE.md)
 **Gate**: build (sem código de produto)
@@ -399,8 +399,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Veredito registrado
-- [ ] Mecanismo escolhido fica anotado para o ADR-006
+- [x] Veredito registrado
+- [x] Mecanismo escolhido fica anotado para o ADR-006
 
 **Tests**: none (spike descartável, isento pelo CLAUDE.md)
 **Gate**: build (sem código de produto)
@@ -434,9 +434,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Envio recebido num navegador de teste
-- [ ] Custo de CPU por envio anotado
-- [ ] Veredito registrado
+- [x] Envio recebido num navegador de teste
+- [x] Custo de CPU por envio anotado
+- [x] Veredito registrado
 
 **Tests**: none (spike descartável, isento pelo CLAUDE.md)
 **Gate**: build (sem código de produto)
@@ -734,6 +734,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
+- [ ] Usar `set_config('app.usuario_id', $1, true)` com parâmetro (o `SET LOCAL` não aceita parâmetro); `app_usuario_id()` trata string vazia como ausente (spike set-local-hyperdrive)
 - [ ] Contexto do usuário não vaza para a requisição seguinte
 - [ ] Erro faz `ROLLBACK`
 - [ ] Sem usuário, nenhuma linha de tabela com RLS fica visível
@@ -929,6 +930,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
+- [ ] Usar o binding `ratelimits`, que o spike rate-limit-free confirmou no Free (limite efetivo de ±1); o teste não depende do número exato de passes
 - [ ] 11ª requisição no minuto recebe 429
 - [ ] Contadores separados por grupo de rota
 - [ ] ADR-006 gravado com a decisão do spike
@@ -2725,6 +2727,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
+- [ ] Assinar o JWT VAPID por conta própria, sem a claim `iat` (o FCM recusa JWT com `iat`, como o da biblioteca 2.0.0), e usar só a cifra da biblioteca; teste que confere as claims (spike push-worker)
 - [ ] JWT assinado com `crypto.subtle`
 - [ ] 404 e 410 removem a assinatura
 - [ ] Lotes com `ctx.waitUntil`
