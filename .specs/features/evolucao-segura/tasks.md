@@ -260,8 +260,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `{"comando": "pnpm lint && pnpm typecheck && pnpm test"}` gravado
-- [ ] `python .claude/scripts/trava-testes.py --rodar` roda e fica verde
+- [x] `{"comando": "pnpm lint && pnpm typecheck && pnpm test"}` gravado
+- [x] `python .claude/scripts/trava-testes.py --rodar` roda e fica verde
 
 **Tests**: none
 **Gate**: build
