@@ -295,8 +295,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `gitleaks detect` passa no repositório
-- [ ] Regras de allowlist só para exemplos do `.env.example`
+- [x] `gitleaks detect` passa no repositório
+- [x] Regras de allowlist só para exemplos do `.env.example`
 
 **Tests**: none
 **Gate**: build

@@ -1,0 +1,15 @@
+title = "Evolução Segura: gitleaks"
+
+[extend]
+useDefault = true
+
+# Exemplos do .env.example (valores de modelo, nunca segredos reais).
+[[allowlists]]
+description = "Exemplos do .env.example"
+paths = ['''(^|/)\.env\.example$''']
+
+# Falso positivo: hashes de arquivos no manifesto de instalação dos fluxos.
+[[allowlists]]
+description = "Manifesto de hashes dos fluxos (.claude/.instalacao.json)"
+targetRules = ["generic-api-key"]
+paths = ['''^\.claude/\.instalacao\.json$''']
