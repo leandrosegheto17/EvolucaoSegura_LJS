@@ -1008,10 +1008,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] A 5ª falha bloqueia, a 4ª não
-- [ ] Bloqueio por e-mail e por IP independentes
-- [ ] `Retry-After` em segundos
-- [ ] Sucesso não zera o bloqueio vigente
+- [x] A 5ª falha bloqueia, a 4ª não
+- [x] Bloqueio por e-mail e por IP independentes
+- [x] `Retry-After` em segundos
+- [x] Sucesso não zera o bloqueio vigente
 
 **Tests**: integration
 **Gate**: full
