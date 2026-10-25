@@ -1100,9 +1100,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 204 e cookie limpo
-- [ ] Requisição seguinte com o mesmo cookie recebe 401
-- [ ] Auditoria gravada
+- [x] 204 e cookie limpo
+- [x] Requisição seguinte com o mesmo cookie recebe 401
+- [x] Auditoria gravada
 
 **Tests**: integration
 **Gate**: full

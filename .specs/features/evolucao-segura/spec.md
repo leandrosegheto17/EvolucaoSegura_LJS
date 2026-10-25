@@ -490,7 +490,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AUTH-13 | P1: Login e sessão | Tasks | Pending |
 | AUTH-14 | P1: Login e sessão | Tasks | Pending |
 | AUTH-15 | P1: Login e sessão | Tasks | Pending |
-| AUTH-16 | P1: Login e sessão | Tasks | Pending |
+| AUTH-16 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-17 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-18 | P1: Login e sessão | Tasks | Pending |
 | AUTH-19 | P1: Login e sessão | Tasks | Pending |
