@@ -1,0 +1,18 @@
+{
+  // Worker único: assets do front (T24) e API Hono em /api/*.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "evolucao-segura",
+  "main": "backend/api/src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // PLACEHOLDER: o id real vem do `wrangler hyperdrive create` (T34), na decisão do primeiro deploy.
+      "id": "00000000000000000000000000000000",
+      // Postgres local do docker-compose (porta 5433 no host). Em CI, a variável
+      // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE substitui este valor.
+      "localConnectionString": "postgres://postgres:postgres@localhost:5433/evolucao_segura",
+    },
+  ],
+}

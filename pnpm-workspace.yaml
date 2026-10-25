@@ -4,3 +4,8 @@ packages:
   - backend/api
   - backend/scripts
   - frontend/web
+allowBuilds:
+  esbuild: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - '@cloudflare/workers-types@5.20261025.1'

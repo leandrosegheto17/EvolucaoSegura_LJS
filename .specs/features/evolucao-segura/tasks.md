@@ -452,8 +452,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Um teste de fumaça roda dentro do runtime do Worker
-- [ ] Conexão ao Postgres local funciona no teste
+- [x] Um teste de fumaça roda dentro do runtime do Worker
+- [x] Conexão ao Postgres local funciona no teste
 
 **Tests**: integration
 **Gate**: full
