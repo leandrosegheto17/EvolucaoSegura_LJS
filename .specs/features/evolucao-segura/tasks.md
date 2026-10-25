@@ -699,9 +699,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] UPDATE e DELETE bloqueados mesmo para `owner` por trigger
-- [ ] RLS `FORCE` ativa
-- [ ] Profissional só enxerga as próprias linhas
+- [x] UPDATE e DELETE bloqueados mesmo para `owner` por trigger
+- [x] RLS `FORCE` ativa
+- [x] Profissional só enxerga as próprias linhas
 
 **Tests**: integration
 **Gate**: full
