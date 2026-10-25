@@ -479,11 +479,11 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AUTH-02 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-03 | P1: Login e sessão | Tasks | Pending |
 | AUTH-04 | P1: Login e sessão | Tasks | Pending |
-| AUTH-05 | P1: Login e sessão | Tasks | Pending |
-| AUTH-06 | P1: Login e sessão | Tasks | Pending |
-| AUTH-07 | P1: Login e sessão | Tasks | Pending |
+| AUTH-05 | P1: Login e sessão | Tasks | Implementing |
+| AUTH-06 | P1: Login e sessão | Tasks | Implementing |
+| AUTH-07 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-08 | P1: Login e sessão | Tasks | Pending |
-| AUTH-09 | P1: Login e sessão | Tasks | Pending |
+| AUTH-09 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-10 | P1: Login e sessão | Tasks | Pending |
 | AUTH-11 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-12 | P1: Login e sessão | Tasks | Pending |

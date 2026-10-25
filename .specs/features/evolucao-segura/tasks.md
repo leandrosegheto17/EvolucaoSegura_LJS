@@ -859,8 +859,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Todos os limites nos extremos (4 e 5 falhas, 59 e 61 s, 14:59 e 15:00)
-- [ ] Tempo sempre recebido por parâmetro
+- [x] Todos os limites nos extremos (4 e 5 falhas, 59 e 61 s, 14:59 e 15:00)
+- [x] Tempo sempre recebido por parâmetro
 
 **Tests**: unit
 **Gate**: quick
