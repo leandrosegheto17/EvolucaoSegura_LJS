@@ -23,7 +23,7 @@ Quanto tempo de CPU (ms, mediana e máximo) o Worker gasta para ler e serializar
 ## Prazo e método
 
 - **Prazo**: 2 horas e 2 tentativas, o que vier primeiro
-- **Início**: <gravado ao despachar> · **Limite**: <início + 2 h>
+- **Início**: 2026-10-24 22:07 · **Limite**: 2026-10-25 00:07
 - **Extensão**: nenhuma
 - **Método**: (1) Popular a branch do Neon do spike `set-local-hyperdrive` com o volume falso. (2) Rota que lê tudo por Kysely e devolve o JSON. (3) Chamar 20 vezes e ler a CPU por invocação. (4) Segunda tentativa, só se a primeira der errado: streaming do JSON por tabela.
 - **Onde roda**: `.specs/spikes/cpu-exportacao/codigo/`

@@ -2351,19 +2351,20 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T122: GET exportação completa
+### T122: GET exportação completa paginada
 
-**What**: Devolver todos os dados do profissional, sem credenciais nem sessões, com limite e rate limit.
+**What**: Entregar todos os dados do profissional, sem credenciais nem sessões, em páginas por tabela com cursor (D-32), com rate limit no início da exportação.
 **Where**: `backend/api/src/rotas/exportar-tudo.ts`
 **Depends on**: T121
 **Requirement**: EXP-03, EXP-04, EXP-05, EXP-06
 
 **Done when**:
 
-- [ ] Acima de 25 MB responde 413 sem auditar
-- [ ] Mais de 5 em 60 s responde 429
+- [ ] Primeiro, medir no Hyperdrive real a CPU de uma página de tamanho fixo (ex.: 300 evoluções de 1.500 caracteres) e fixar o tamanho máximo de página que cabe com folga em 10 ms; se nenhum tamanho útil couber, parar e abrir novo spike
+- [ ] Página acima do máximo ou cursor inválido responde 400 sem auditar
+- [ ] Mais de 5 exportações iniciadas em 60 s responde 429
 - [ ] Sem hash de senha nem sessão no corpo
-- [ ] CPU medida contra o spike S1
+- [ ] Audita `exportacao.concluida` só ao servir a última página
 
 **Tests**: integration
 **Gate**: full
@@ -2391,7 +2392,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ### T124: Zip da exportação completa e tela de exportação
 
-**What**: Montar `.zip` com `dados.json` e um PDF por paciente com fflate, e a tela de exportação.
+**What**: Juntar as páginas da exportação no navegador, montar `.zip` com `dados.json` e um PDF por paciente com fflate, e a tela de exportação.
 **Where**: `frontend/web/src/export/zip-completo.ts`
 **Depends on**: T123
 **Requirement**: EXP-03, EXP-02

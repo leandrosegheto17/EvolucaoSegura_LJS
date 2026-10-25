@@ -23,7 +23,7 @@ Um Worker no plano Free, com o binding `ratelimits` configurado em 10 requisiç�
 ## Prazo e método
 
 - **Prazo**: 1 hora e 2 tentativas, o que vier primeiro
-- **Início**: <gravado ao despachar> · **Limite**: <início + 1 h>
+- **Início**: 2026-10-24 21:55 · **Limite**: 2026-10-24 22:55
 - **Extensão**: nenhuma
 - **Método**: (1) Worker mínimo com o binding e uma rota que chama `limit({ key })`. (2) `wrangler deploy` do Worker de teste. (3) Script com 15 chamadas seguidas, 3 rodadas. (4) Apagar o Worker.
 - **Onde roda**: `.specs/spikes/rate-limit-free/codigo/`

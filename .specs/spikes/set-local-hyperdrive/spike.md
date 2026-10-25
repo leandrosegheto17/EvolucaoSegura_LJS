@@ -23,7 +23,7 @@ Com o Worker conectado ao Postgres pelo Hyperdrive (pooler em modo transação),
 ## Prazo e método
 
 - **Prazo**: 3 horas e 3 tentativas, o que vier primeiro
-- **Início**: <gravado ao despachar> · **Limite**: <início + 3 h>
+- **Início**: 2026-10-24 22:01 · **Limite**: 2026-10-25 01:01
 - **Extensão**: nenhuma
 - **Método**: (1) Worker mínimo com Hono, rota que abre transação, faz `SET LOCAL`, espera 0 a 50 ms aleatórios e devolve `current_setting`; outra rota que lê fora de transação. (2) Rodar localmente contra PgBouncer em modo transação. (3) Publicar o Worker de teste em `*.workers.dev` com Hyperdrive real e disparar a carga com um script Node. (4) Remover Worker, Hyperdrive e branch do Neon ao fim.
 - **Onde roda**: `.specs/spikes/set-local-hyperdrive/codigo/`

@@ -68,6 +68,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | Auditoria nova | Acrescenta `auth.login_ok`, `auth.logout`, `conta.cadastrada`, `conta.exclusao_*` e `assinatura.*` às ações do legado | Produto aberto precisa de trilha de acesso e de cobrança | n |
 | Lighthouse PWA ≥ 90 | Trocado por: Chrome reconhece o app como instalável, manifest e service worker válidos | O Lighthouse 12 (2024) removeu a categoria PWA; a nota não é mais medível. Verificar a versão na preparação | n |
 | Rate limit | Binding `ratelimits`; se o spike da preparação mostrar que não existe no Free, contador em tabela com os mesmos limites | `necessidade.md` §6 | n |
+| D-32 Exportação completa paginada | A API entrega a exportação completa em páginas por tabela com cursor; o navegador junta e monta `dados.json` e `.zip` | O spike `cpu-exportacao` (2026-10-24) mediu cerca de 1 s de CPU e 39,65 MB para o volume de 5 anos, contra 10 ms de CPU por requisição no Free | y (usuário, 2026-10-24) |
 | Prazo legal de guarda do prontuário | [A ESCLARECER: parecer jurídico sobre 5 anos (CFP 001/2009) × 20 anos (Lei 13.787/2018)] antes de abrir para usuários reais; não trava a construção | Afeta só os termos e o texto da exclusão | n |
 | Revisão jurídica de termos e privacidade | Textos-base escritos na construção; revisão por advogado antes de usuários reais | `necessidade.md` §6 | n |
 | Subdomínio do app | [A ESCLARECER: raiz `evolucaosegura.com.br` ou outro subdomínio, sem colidir com o legado em `app.`] até a implantação | Entra só por `URL_PUBLICA` e pela rota do `wrangler.jsonc` | n |
@@ -326,10 +327,10 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 **Acceptance Criteria**:
 1. [EXP-01] WHEN o prontuário de um paciente é pedido com período opcional (`de` ≤ `até`, YYYY-MM-DD) THEN a API SHALL devolver JSON com anamnese (versões e retificações com motivo, só campos da revisão vigente) e evoluções no período em America/Sao_Paulo.
 2. [EXP-02] WHEN o app recebe o JSON do prontuário THEN o app SHALL montar no navegador o PDF `prontuario-<8 primeiros caracteres do id>.pdf` com título "Prontuário", paciente, período, registro profissional e rodapé "Prontuário — documento confidencial".
-3. [EXP-03] WHEN a exportação completa é pedida THEN a API SHALL devolver todos os dados do profissional (sem credenciais nem sessões) e o app SHALL montar um `.zip` com `dados.json` e um PDF de prontuário por paciente.
-4. [EXP-04] IF os dados da exportação completa passam de 25 MB THEN a API SHALL responder 413 sem auditar.
-5. [EXP-05] IF o profissional pede mais de 5 exportações em 60 segundos THEN a API SHALL responder 429, com o contador guardado em tabela.
-6. [EXP-06] WHEN uma exportação é servida THEN a API SHALL auditar `exportacao.concluida` (alvo paciente ou exportação), sem conteúdo.
+3. [EXP-03] WHEN a exportação completa é pedida THEN a API SHALL entregar todos os dados do profissional (sem credenciais nem sessões) em páginas por tabela, com cursor e tamanho máximo de página, e o app SHALL juntar as páginas e montar um `.zip` com `dados.json` e um PDF de prontuário por paciente.
+4. [EXP-04] IF uma página da exportação pedida passa do tamanho máximo de página ou o cursor é inválido THEN a API SHALL responder 400 sem auditar; o tamanho máximo de página é definido pela medição de CPU da tarefa T122 (spike cpu-exportacao: a exportação inteira numa resposta custa cerca de 1 s de CPU contra o limite de 10 ms).
+5. [EXP-05] IF o profissional inicia mais de 5 exportações em 60 segundos (a primeira página de cada exportação conta como início) THEN a API SHALL responder 429, com o contador guardado em tabela.
+6. [EXP-06] WHEN uma exportação é servida (na exportação completa, ao servir a última página) THEN a API SHALL auditar `exportacao.concluida` (alvo paciente ou exportação), sem conteúdo.
 7. [EXP-07] IF o período é inválido ou o paciente é de outro profissional THEN a API SHALL responder 400 ou 404, respectivamente.
 
 **Independent Test**: exportar um paciente com anamnese retificada e abrir o PDF; exportar tudo e abrir o .zip.
