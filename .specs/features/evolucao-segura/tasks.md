@@ -806,9 +806,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Falha se uma função `tarefas.*` não tiver `SECURITY DEFINER` com `search_path` fixo
-- [ ] Lista de funções executáveis pela `app` é explícita
-- [ ] ADR-005 gravado
+- [x] Falha se uma função `tarefas.*` não tiver `SECURITY DEFINER` com `search_path` fixo
+- [x] Lista de funções executáveis pela `app` é explícita
+- [x] ADR-005 gravado
 
 **Tests**: integration
 **Gate**: full
