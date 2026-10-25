@@ -473,7 +473,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | CAD-05 | P1: Cadastro | Tasks | Pending |
 | CAD-06 | P1: Cadastro | Tasks | Pending |
 | CAD-07 | P1: Cadastro | Tasks | Pending |
-| CAD-08 | P1: Cadastro | Tasks | Pending |
+| CAD-08 | P1: Cadastro | Tasks | Implementing |
 | CAD-09 | P1: Cadastro | Tasks | Pending |
 | AUTH-01 | P1: Login e sessão | Tasks | Pending |
 | AUTH-02 | P1: Login e sessão | Tasks | Implementing |
@@ -482,7 +482,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AUTH-05 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-06 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-07 | P1: Login e sessão | Tasks | Implementing |
-| AUTH-08 | P1: Login e sessão | Tasks | Pending |
+| AUTH-08 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-09 | P1: Login e sessão | Tasks | Implementing |
 | AUTH-10 | P1: Login e sessão | Tasks | Pending |
 | AUTH-11 | P1: Login e sessão | Tasks | Implementing |

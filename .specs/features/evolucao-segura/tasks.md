@@ -912,9 +912,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Remetente `@evolucaosegura.com.br`
-- [ ] Falha e 429 viram erro tipado, sem vazar o e-mail no log
-- [ ] Teste com `fetch` simulado
+- [x] Remetente `@evolucaosegura.com.br`
+- [x] Falha e 429 viram erro tipado, sem vazar o e-mail no log
+- [x] Teste com `fetch` simulado
 
 **Tests**: integration
 **Gate**: full
