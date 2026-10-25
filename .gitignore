@@ -1,0 +1,19 @@
+# Cache e arquivos gerados pelos scripts dos fluxos
+.claude/.cache/
+__pycache__/
+
+# Dependências e saídas de build
+node_modules/
+dist/
+coverage/
+.wrangler/
+*.tsbuildinfo
+
+# Segredos locais (só o .env.example é versionado)
+.env*
+!.env.example
+.dev.vars*
+
+# Código descartável de spikes e evidências brutas
+.specs/spikes/*/codigo/
+evidencias/
