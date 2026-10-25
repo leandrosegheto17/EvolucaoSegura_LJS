@@ -347,8 +347,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] THREAT-MODEL cobre auth, isolamento, webhook, push, exportação e exclusão
-- [ ] GUARDRAILS inclui testes obrigatórios e proibição de `wrangler deploy` fora do `deploy.yml`
+- [x] THREAT-MODEL cobre auth, isolamento, webhook, push, exportação e exclusão
+- [x] GUARDRAILS inclui testes obrigatórios e proibição de `wrangler deploy` fora do `deploy.yml`
 
 **Tests**: none
 **Gate**: build
