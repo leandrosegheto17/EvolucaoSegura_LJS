@@ -717,8 +717,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Ação ou alvo fora da lista e chave extra são recusados
-- [ ] Lista do legado sem IA, relatório, Google e whitelist, com as ações novas de AUD-04
+- [x] Ação ou alvo fora da lista e chave extra são recusados
+- [x] Lista do legado sem IA, relatório, Google e whitelist, com as ações novas de AUD-04
 
 **Tests**: unit
 **Gate**: quick
