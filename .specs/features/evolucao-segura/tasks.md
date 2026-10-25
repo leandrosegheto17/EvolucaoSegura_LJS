@@ -242,9 +242,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `pnpm lint` passa na base atual
-- [ ] `.prettierrc` na raiz
-- [ ] Regra que proíbe `wrangler deploy` fora do workflow não é de lint (vem na etapa 2)
+- [x] `pnpm lint` passa na base atual
+- [x] `.prettierrc` na raiz
+- [x] Regra que proíbe `wrangler deploy` fora do workflow não é de lint (vem na etapa 2)
 
 **Tests**: none
 **Gate**: build

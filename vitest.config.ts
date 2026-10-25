@@ -4,6 +4,12 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     passWithNoTests: true,
-    projects: ['backend/contrato', 'backend/dominio', 'backend/api', 'backend/scripts', 'frontend/web'],
+    projects: [
+      'backend/contrato',
+      'backend/dominio',
+      'backend/api',
+      'backend/scripts',
+      'frontend/web',
+    ],
   },
 });
