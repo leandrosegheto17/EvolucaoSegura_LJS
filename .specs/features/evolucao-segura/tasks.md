@@ -575,8 +575,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Scrubbing remove e-mail, cookie e corpo
-- [ ] Teste unitário da função de filtragem
+- [x] Scrubbing remove e-mail, cookie e corpo
+- [x] Teste unitário da função de filtragem
 
 **Tests**: unit
 **Gate**: quick
