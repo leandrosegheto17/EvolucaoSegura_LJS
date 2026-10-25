@@ -206,9 +206,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Node 24 em `engines` e `.nvmrc`, pnpm 11, `type: module` em todos os pacotes
-- [ ] `tsconfig.base.json` estrito herdado por cada pacote
-- [ ] `pnpm install` e `pnpm typecheck` rodam
+- [x] Node 24 em `engines` e `.nvmrc`, pnpm 11, `type: module` em todos os pacotes
+- [x] `tsconfig.base.json` estrito herdado por cada pacote
+- [x] `pnpm install` e `pnpm typecheck` rodam
 
 **Tests**: none
 **Gate**: build
