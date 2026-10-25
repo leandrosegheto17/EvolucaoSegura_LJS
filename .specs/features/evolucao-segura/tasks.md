@@ -540,9 +540,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Função de scrubbing remove corpo, cookie e e-mail
-- [ ] Release vem de variável
-- [ ] Erro não tratado vira 500 genérico e é capturado
+- [x] Função de scrubbing remove corpo, cookie e e-mail
+- [x] Release vem de variável
+- [x] Erro não tratado vira 500 genérico e é capturado
 
 **Tests**: unit
 **Gate**: quick
