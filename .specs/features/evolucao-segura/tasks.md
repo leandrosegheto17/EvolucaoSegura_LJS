@@ -681,9 +681,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `app` não tem DELETE nem TRUNCATE por padrão
-- [ ] `backup_ro` só lê, sem escrita
-- [ ] `app_usuario_id()` devolve o valor de `app.usuario_id`
+- [x] `app` não tem DELETE nem TRUNCATE por padrão
+- [x] `backup_ro` só lê, sem escrita
+- [x] `app_usuario_id()` devolve o valor de `app.usuario_id`
 
 **Tests**: integration
 **Gate**: full
