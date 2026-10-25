@@ -1064,9 +1064,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cookie inválido, vencido ou de sessão encerrada responde 401
-- [ ] Último uso atualizado a cada requisição
-- [ ] Teste com relógio simulado nos dois limites
+- [x] Cookie inválido, vencido ou de sessão encerrada responde 401
+- [x] Último uso atualizado a cada requisição
+- [x] Teste com relógio simulado nos dois limites
 
 **Tests**: integration
 **Gate**: full
