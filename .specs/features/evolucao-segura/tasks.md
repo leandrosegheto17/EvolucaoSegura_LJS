@@ -312,9 +312,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Teste que lê o YAML e confere cada passo exigido pelo OPS-05
-- [ ] `pnpm test:isolamento` existe (pode ficar vazio até a etapa 3)
-- [ ] Primeiro push só com confirmação específica
+- [x] Teste que lê o YAML e confere cada passo exigido pelo OPS-05
+- [x] `pnpm test:isolamento` existe (pode ficar vazio até a etapa 3)
+- [x] Primeiro push só com confirmação específica
 
 **Tests**: unit
 **Gate**: quick

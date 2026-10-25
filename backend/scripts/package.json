@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "migrar": "node -e \"console.log('migrar: ainda sem migrations (o runner vem na T28)')\""
+  },
+  "devDependencies": {
+    "yaml": "2.9.1"
   }
 }
