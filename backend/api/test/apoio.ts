@@ -53,3 +53,28 @@ export function emailSimulado() {
 export async function sha256(texto: string): Promise<Buffer> {
   return Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto)));
 }
+
+// IP que nunca se repete entre execuções: o bloqueio por falhas (tentativa_login) fica no banco
+// de teste, que não é zerado, e novoIp() recomeça a sequência em cada arquivo.
+export function ipUnico(): string {
+  const grupos = Array.from(crypto.getRandomValues(new Uint16Array(6)), (g) => g.toString(16));
+  return `fd00:${grupos.join(':')}:1`;
+}
+
+export const SENHA_DE_TESTE = 'cavalo-bateria-grampo-7';
+
+// Conta semeada pelo superusuário, com a senha gravada pela função do banco (bcrypt 12).
+export async function criarConta(
+  opcoes: { email?: string; senha?: string; confirmada?: boolean; bloqueada?: boolean } = {},
+): Promise<{ id: string; email: string; senha: string }> {
+  const email = opcoes.email ?? emailUnico();
+  const senha = opcoes.senha ?? SENHA_DE_TESTE;
+  const [linha] = await comoAdmin<{ id: string }>(
+    `insert into usuario (email, nome, confirmado_em, bloqueado_exclusao_em)
+     values ($1, 'Ana Souza', case when $2 then now() end, case when $3 then now() end)
+     returning id`,
+    [email, opcoes.confirmada ?? true, opcoes.bloqueada ?? false],
+  );
+  await comoAdmin('select definir_senha($1, $2)', [linha!.id, senha]);
+  return { id: linha!.id, email, senha };
+}

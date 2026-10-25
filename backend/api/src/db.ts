@@ -49,6 +49,31 @@ export interface Banco {
     usado_em: Date | null;
     invalidado_em: Date | null;
   };
+  sessao: {
+    id: Generated<string>;
+    usuario_id: string;
+    token_hash: Buffer;
+    criada_em: Generated<Date>;
+    ultimo_uso_em: Generated<Date>;
+    encerrada_em: Date | null;
+  };
+  desafio_2fa: {
+    id: Generated<string>;
+    usuario_id: string;
+    codigo_hmac: Buffer;
+    criado_em: Generated<Date>;
+    expira_em: Date;
+    erros: Generated<number>;
+    usado_em: Date | null;
+    invalidado_em: Date | null;
+  };
+  tentativa_login: {
+    tipo: 'email' | 'ip';
+    chave_hash: Buffer;
+    falhas: Generated<number>;
+    janela_inicio: Date | null;
+    bloqueado_ate: Date | null;
+  };
   aceite_termos: {
     id: Generated<string>;
     usuario_id: string;

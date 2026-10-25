@@ -15,6 +15,8 @@ declare namespace Cloudflare {
     URL_PUBLICA: string;
     MAIL_FROM?: string;
     RESEND_API_KEY?: string;
+    // AUTH-03: chave do HMAC-SHA256 do código 2FA. Sem ela o login responde 500 (vai ao Sentry).
+    HMAC_2FA_SEGREDO?: string;
     SENTRY_DSN?: string;
     SENTRY_RELEASE?: string;
   }

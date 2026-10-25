@@ -988,11 +988,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 202 `2fa_required` sem criar sessão
-- [ ] E-mail inexistente também calcula o hash
-- [ ] Conta não confirmada ou bloqueada recebe o mesmo 401
-- [ ] Falha do Resend responde 503 `mail_unavailable` sem contar falha
-- [ ] Código guardado só como HMAC, válido por 10 min, uso único
+- [x] 202 `2fa_required` sem criar sessão
+- [x] E-mail inexistente também calcula o hash
+- [x] Conta não confirmada ou bloqueada recebe o mesmo 401
+- [x] Falha do Resend responde 503 `mail_unavailable` sem contar falha
+- [x] Código guardado só como HMAC, válido por 10 min, uso único
 
 **Tests**: integration
 **Gate**: full

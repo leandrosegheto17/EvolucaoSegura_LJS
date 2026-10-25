@@ -122,6 +122,41 @@ export async function confirmarConta(trx: Trx, usuarioId: string): Promise<boole
   return linha !== undefined;
 }
 
+// AUTH-02, CAD-09: só entra conta confirmada e não bloqueada para exclusão.
+export async function contaPodeEntrar(trx: Trx, usuarioId: string): Promise<boolean> {
+  const linha = await trx
+    .selectFrom('usuario')
+    .select('id')
+    .where('id', '=', usuarioId)
+    .where('confirmado_em', 'is not', null)
+    .where('bloqueado_exclusao_em', 'is', null)
+    .executeTakeFirst();
+  return linha !== undefined;
+}
+
+// AUTH-03: abre um desafio 2FA novo e invalida os anteriores ainda abertos (um código válido por
+// vez). A validade conta pelo relógio do banco.
+export async function abrirDesafio2fa(
+  trx: Trx,
+  entrada: { usuarioId: string; hmac: Buffer; validadeMinutos: number },
+): Promise<void> {
+  await trx
+    .updateTable('desafio_2fa')
+    .set({ invalidado_em: sql<Date>`now()` })
+    .where('usuario_id', '=', entrada.usuarioId)
+    .where('usado_em', 'is', null)
+    .where('invalidado_em', 'is', null)
+    .execute();
+  await trx
+    .insertInto('desafio_2fa')
+    .values({
+      usuario_id: entrada.usuarioId,
+      codigo_hmac: entrada.hmac,
+      expira_em: sql<Date>`now() + make_interval(mins => ${entrada.validadeMinutos})`,
+    })
+    .execute();
+}
+
 export async function registrarAceite(
   trx: Trx,
   entrada: { usuarioId: string; versaoTermos: string; versaoPrivacidade: string },
