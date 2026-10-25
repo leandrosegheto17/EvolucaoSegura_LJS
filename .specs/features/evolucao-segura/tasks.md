@@ -224,9 +224,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `pnpm test` roda o Vitest em todos os pacotes
-- [ ] 1 teste de fumaça verde
-- [ ] Falha se o runner não for encontrado
+- [x] `pnpm test` roda o Vitest em todos os pacotes
+- [x] 1 teste de fumaça verde
+- [x] Falha se o runner não for encontrado
 
 **Tests**: unit
 **Gate**: quick
