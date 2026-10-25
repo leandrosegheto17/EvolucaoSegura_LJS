@@ -486,9 +486,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cada cabeçalho presente nas respostas
-- [ ] CSP sem origens externas além das necessárias
-- [ ] `no-store` em toda rota `/api/*`, inclusive em erro
+- [x] Cada cabeçalho presente nas respostas
+- [x] CSP sem origens externas além das necessárias
+- [x] `no-store` em toda rota `/api/*`, inclusive em erro
 
 **Tests**: integration
 **Gate**: full
