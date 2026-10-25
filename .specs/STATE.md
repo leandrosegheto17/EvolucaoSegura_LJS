@@ -4,15 +4,13 @@
 
 - **Fluxo**: 2, Aplicação para uso próprio (skill `uso-proprio`). Na prática é um produto vendido no padrão LJS; o usuário escolheu seguir por este fluxo (ver `necessidade.md`).
 - **Item**: `.specs/features/evolucao-segura/` (`spec.md`, `context.md`, `design.md`, `tasks.md`); produto em `.specs/produto/`; spikes em `.specs/spikes/`
-- **Fase aprovada**: 6, Construção, lotes 1 a 3 (T1 a T36, Phases 1 a 4) em 2026-10-25; spikes S1, S2 e S4 concluídos e aprovados
-- **Próxima fase**: 6, Construção, lote 4 = Phase 5 (acesso, cadastro e confirmação, T37 a T45) — modelo indicado: sonnet. Despachar `implementador-dominio` (identidade, senha e 2FA são regra difícil) ou `implementador`, um lote por vez, como nos lotes 1 a 3. Padrão de commit: um por tarefa, `[x]` no `tasks.md` no mesmo commit.
-- **Construção** (no meio): lotes 1 a 3 concluídos, 203 testes verdes, trava de testes verde no commit e01d746. Os commits dos lotes 1 a 3 (até e01d746) já estão em `origin/main` (o agente relatou não ter enviado nada; ainda assim o remoto os tem, origem do push não apurada). O commit desta retomada é local até o próximo push (que exige confirmação específica). O tlc retoma por `tasks.md` (itens `[x]`) e pelo git. Cada etapa fecha com relatório (feito, como validar, próximo; AD-002).
-- **Pendências do lote 3 a fechar no início da próxima sessão** (documentos, sem código):
-  - Apontar a entrada AD-005 do `## Decisions` para `.md/adr/005-rls-transacao-por-requisicao-e-funcoes-de-tarefa.md`.
-  - Atualizar a tabela de rastreabilidade da `spec.md` (ISO-*, AUD-*, OPS-13), que segue "Pending".
-  - O runbook precisa descrever o provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon (nascem `NOLOGIN`).
-  - Depois do primeiro deploy, fazer um teste de fumaça de vazamento de contexto entre conexões reaproveitadas do Hyperdrive (o teste local não pega; ver ADR-005).
+- **Fase aprovada**: 6, Construção, lotes 1 a 4 (T1 a T45, Phases 1 a 5) em 2026-10-25; spikes S1, S2 e S4 concluídos e aprovados
+- **Próxima fase**: 6, Construção, lote 5 = Phase 6 (login com 2FA, sessão e CSRF, a partir da T46) — modelo indicado: sonnet. Despachar `implementador-dominio` (autenticação e sessão são regra difícil), um lote por vez, como nos lotes 1 a 4. Padrão de commit: um por tarefa, `[x]` no `tasks.md` no mesmo commit. Pelo marco, ao fechar o lote 5 ou 6 oferecer nova troca de sessão.
+- **Construção** (no meio): lotes 1 a 4 concluídos, 417 testes verdes, trava de testes verde no commit 813bb02. Os commits até e01d746 estão em `origin/main`; os posteriores (docs f7f5513 e T37 a T45, até 813bb02) são locais até o próximo push, que exige confirmação específica. O tlc retoma por `tasks.md` (itens `[x]`) e pelo git. Cada etapa fecha com relatório (feito, como validar, próximo; AD-002).
+- **Pendências para o primeiro deploy** (já na T164, `tasks.md`): provisionar login e senha das roles `owner`, `app` e `backup_ro` no Neon; teste de fumaça de vazamento de contexto entre conexões do Hyperdrive (ADR-005); **confirmar que o usuário que roda a migration no Neon consegue conceder EXECUTE em `crypt` e `gen_salt` à `owner`** (migration 0003).
 - **Combinado na conversa e não registrado em artefato**:
+  - **Lote 4, decisões do usuário** (2026-10-25): `/api/health` fica fora do limite de 60/min (SPEC_DEVIATION em `limite.ts`); limite do webhook em 120/min é PREMISSA, revisar com o volume do sandbox na etapa 12; `MAIL_FROM` e `RESEND_API_KEY` seguem opcionais no esquema de ambiente (sem elas o envio falha, vai ao Sentry e o cadastro responde 202).
+  - **Premissas do lote 4 aceitas** (ver relatório do agente): nome aparado e e-mail em minúsculas no contrato; confirmação responde 200 `{"status":"confirmada"}`; `VERSAO_TERMOS` e `VERSAO_PRIVACIDADE` = `'1.0'`; bloqueio por falhas com janela a partir da primeira falha, 15 min a partir da 5ª, tentativas durante o bloqueio não contam; reenvio do 2FA cria desafio novo; `tentativa_login` guarda SHA-256 da chave, não o e-mail; a sessão ainda não tem coluna de CSRF (Phase 6); e-mail "você já tem conta" leva a `/recuperar` sem token.
   - **Tabelas de identidade** (`sessao`, `desafio_2fa` etc.) ficam sem RLS conforme o design; o teste de isolamento (`backend/api/test/isolamento/isolamento.test.ts`) ganha uma **lista explícita de exceções, cada uma com justificativa**, revisada tabela a tabela na Phase 5.
   - **Ator da auditoria sem usuário = `'sistema'`** (não `'system'` do legado). Mantido como está.
   - Premissas do lote 3 aceitas: IPv6 truncado em /48 com `::` expandido; eventos de exclusão `conta.exclusao_pedida/confirmada/desistida`; eventos de assinatura usam o alvo `conta`; `usuario.provisionado` removido.
@@ -24,7 +22,7 @@
   - Aviso da Cloudflare, Neon, Asaas, Resend e Sentry: nada foi criado nessas contas além dos recursos de spike, que foram apagados. O Neon e a Cloudflare ficaram logados (`neonctl auth`, `wrangler login`) nesta máquina.
   - O Postgres local do projeto roda no Docker na porta **5433** (a 5432 é de outro projeto); o banco local `evolucao_segura` acumula linhas de teste no `audit_log` (só de inclusão), sem efeito nos testes.
   - Windows com notificações desligadas esconde o push do Chrome (relevante para testes manuais de push).
-- **Gravada em**: 2026-10-25 00:10
+- **Gravada em**: 2026-10-25 (após o lote 4)
 
 ## Decisions
 
