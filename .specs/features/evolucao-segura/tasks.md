@@ -771,8 +771,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Teste confere `--caching-disabled` no comando gerado
-- [ ] Variáveis sem segredo no código
+- [x] Teste confere `--caching-disabled` no comando gerado
+- [x] Variáveis sem segredo no código
 
 **Tests**: unit
 **Gate**: quick
