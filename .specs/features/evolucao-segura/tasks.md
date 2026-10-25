@@ -504,9 +504,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Variável ausente ou malformada falha na partida
-- [ ] Teste confere que toda variável do schema consta no `.env.example`
-- [ ] Nenhum segredo em arquivo versionado
+- [x] Variável ausente ou malformada falha na partida
+- [x] Teste confere que toda variável do schema consta no `.env.example`
+- [x] Nenhum segredo em arquivo versionado
 
 **Tests**: unit
 **Gate**: quick
