@@ -2111,9 +2111,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Decimal recusado
-- [ ] Data YYYY-MM-DD válida e `meio` da lista
-- [ ] ADR-007 gravado
+- [x] Decimal recusado
+- [x] Data YYYY-MM-DD válida e `meio` da lista
+- [x] ADR-007 gravado
 
 **Tests**: unit
 **Gate**: quick
