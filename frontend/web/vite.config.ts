@@ -8,5 +8,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: { outDir: 'dist' },
-  test: { environment: 'jsdom', passWithNoTests: true },
+  // setup.ts copiado do legado (T64): matchers do jest-dom e do axe e cleanup após cada teste.
+  test: { environment: 'jsdom', passWithNoTests: true, setupFiles: ['src/test/setup.ts'] },
 });

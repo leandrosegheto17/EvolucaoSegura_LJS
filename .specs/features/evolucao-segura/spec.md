@@ -591,7 +591,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AUD-03 | P1: Auditoria | Tasks | Pending |
 | AUD-04 | P1: Auditoria | Tasks | Implementing |
 | PUB-01 | P1: Landing e PWA | Tasks | Pending |
-| PUB-02 | P1: Landing e PWA | Tasks | Pending |
+| PUB-02 | P1: Landing e PWA | Tasks | Implementing |
 | PUB-03 | P1: Landing e PWA | Tasks | Pending |
 | PUB-04 | P1: Landing e PWA | Tasks | Pending |
 | PUB-05 | P1: Landing e PWA | Tasks | Pending |

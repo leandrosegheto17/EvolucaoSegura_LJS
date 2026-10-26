@@ -4,3 +4,6 @@ coverage
 pnpm-lock.yaml
 .claude
 .specs
+# Copiados idênticos do legado (T64), para continuar comparáveis por diff; não reformatar.
+frontend/web/src/ui
+frontend/web/src/test

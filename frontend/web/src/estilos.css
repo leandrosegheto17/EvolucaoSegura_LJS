@@ -1,1 +1,2 @@
-@import 'tailwindcss';
+/* T64: tokens, fontes e tema do legado (src/ui/tokens), que já importam o Tailwind. */
+@import './ui/tokens/index.css';

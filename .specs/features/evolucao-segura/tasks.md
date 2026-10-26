@@ -1318,8 +1318,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Componentes e tokens idênticos ao legado
-- [ ] Testes de componente do legado verdes
+- [x] Componentes e tokens idênticos ao legado
+- [x] Testes de componente do legado verdes
 
 **Tests**: unit
 **Gate**: quick
