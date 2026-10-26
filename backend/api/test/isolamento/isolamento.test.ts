@@ -53,6 +53,9 @@ const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   assinatura: { plano: "'pro'", status: "'trial'" },
   // event_id é único e o banco de teste acumula linhas entre execuções.
   webhook_evento: { event_id: 'gen_random_uuid()::text' },
+  // T74: série de 2 a 52 ocorrências; sessão com fim > inicio.
+  serie_recorrencia: { frequencia: "'semanal'", ocorrencias: '2' },
+  sessao_atendimento: { inicio: 'now()', fim: "now() + interval '50 minutes'" },
 };
 
 const admin = new pg.Client({
@@ -216,6 +219,12 @@ describe('harness de isolamento', () => {
   it('cobre as tabelas de pacientes (T67: paciente e consentimento_tcle)', () => {
     expect(tabelas.map((t) => t.tabela)).toEqual(
       expect.arrayContaining(['paciente', 'consentimento_tcle']),
+    );
+  });
+
+  it('cobre as tabelas de agenda (T74: serie_recorrencia e sessao_atendimento)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['serie_recorrencia', 'sessao_atendimento']),
     );
   });
 

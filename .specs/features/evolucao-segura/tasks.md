@@ -1497,9 +1497,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sem permissão de DELETE para `app`
-- [ ] `row_version` presente
-- [ ] Entra no teste de isolamento
+- [x] Sem permissão de DELETE para `app`
+- [x] `row_version` presente
+- [x] Entra no teste de isolamento
 
 **Tests**: integration
 **Gate**: full
