@@ -9,6 +9,12 @@ import type { Problema } from './identidade.ts';
 export const STATUS_SESSAO = ['agendada', 'realizada', 'faltou', 'cancelada', 'remarcada'] as const;
 export type StatusSessao = (typeof STATUS_SESSAO)[number];
 
+// AGE-13: série semanal ou quinzenal de 2 a 52 ocorrências, a primeira incluída.
+export const FREQUENCIAS_SERIE = ['semanal', 'quinzenal'] as const;
+export type FrequenciaSerie = (typeof FREQUENCIAS_SERIE)[number];
+export const OCORRENCIAS_MINIMO = 2;
+export const OCORRENCIAS_MAXIMO = 52;
+
 // AGE-01: ISO 8601 com offset obrigatório (Z ou ±hh:mm) e ano entre 2000 e 2100, tanto o ano
 // escrito quanto o ano em UTC (2100-12-31T23:00-03:00 é 2101 em UTC: recusado). Data e hora
 // precisam existir no calendário (o Date.parse aceita 30 de fevereiro e 24:00; aqui não).

@@ -1661,9 +1661,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 1 e 53 ocorrências recusadas, 2 e 52 aceitas
-- [ ] Quinzenal pula uma semana
-- [ ] Deslocamento só das `agendada` a partir da data
+- [x] 1 e 53 ocorrências recusadas, 2 e 52 aceitas
+- [x] Quinzenal pula uma semana
+- [x] Deslocamento só das `agendada` a partir da data
 
 **Tests**: unit
 **Gate**: quick
