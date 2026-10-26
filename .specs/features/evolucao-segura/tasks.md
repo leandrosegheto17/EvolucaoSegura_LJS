@@ -2218,9 +2218,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Classificação de evolução em quatro estados e de pagamento em três
-- [ ] Semana de segunda ao último dia habilitado
-- [ ] Testes do legado verdes
+- [x] Classificação de evolução em quatro estados e de pagamento em três
+- [x] Semana de segunda ao último dia habilitado
+- [x] Testes do legado verdes
 
 **Tests**: unit
 **Gate**: quick
