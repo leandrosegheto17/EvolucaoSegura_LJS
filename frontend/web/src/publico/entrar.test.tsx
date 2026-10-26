@@ -59,7 +59,11 @@ async function passarDaSenha() {
     target: { value: 'cavalo-bateria-grampo-7' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
-  return screen.findByLabelText('Código');
+  const campo = await screen.findByLabelText('Código');
+  // A resposta chega fora do act: os efeitos (o setInterval da contagem) rodam depois do render.
+  // Esperar por eles evita adiantar o relógio antes de a contagem existir.
+  await act(async () => {});
+  return campo;
 }
 
 const botaoReenviar = () => screen.getByRole('button', { name: /reenviar/i }) as HTMLButtonElement;
@@ -211,6 +215,7 @@ describe('reenvio com contagem de 60 s (AUTH-06)', () => {
     expect(corpoDa(f, 1)).toEqual({ email: 'ana@exemplo.com.br' });
     // Depois da resposta (aviso na tela), o botão volta à contagem de 60 s.
     expect((await screen.findByRole('status')).textContent).toMatch(/novo código/i);
+    await act(async () => {});
     expect(botaoReenviar().disabled).toBe(true);
     expect(botaoReenviar().textContent).toMatch(/60 s/);
   });

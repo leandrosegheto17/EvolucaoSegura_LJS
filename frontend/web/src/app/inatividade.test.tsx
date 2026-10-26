@@ -136,6 +136,8 @@ describe('aviso de inatividade (AUTH-18)', () => {
     avancar(13 * MIN);
     fireEvent.click(screen.getByRole('button', { name: 'Continuar conectado' }));
     await vi.waitFor(() => expect(dialogo()).toBeNull());
+    // A resposta chega fora do act: espera os efeitos (os novos prazos) antes de adiantar o relógio.
+    await act(async () => {});
 
     avancar(2 * MIN);
     expect(roteador.state.location.pathname).toBe('/app/pacientes');
