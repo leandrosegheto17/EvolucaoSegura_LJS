@@ -545,8 +545,8 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | EVO-03 | P1: Evoluções | Tasks | Implementing |
 | EVO-04 | P1: Evoluções | Tasks | Implementing |
 | EVO-05 | P1: Evoluções | Tasks | Implementing |
-| EVO-06 | P1: Evoluções | Tasks | Pending |
-| EVO-07 | P1: Evoluções | Tasks | Pending |
+| EVO-06 | P1: Evoluções | Tasks | Implementing |
+| EVO-07 | P1: Evoluções | Tasks | Implementing |
 | FIN-01 | P1: Financeiro | Tasks | Pending |
 | FIN-02 | P1: Financeiro | Tasks | Pending |
 | FIN-03 | P1: Financeiro | Tasks | Pending |

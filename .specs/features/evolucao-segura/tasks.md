@@ -2020,9 +2020,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] No dia responde 409 `EDIT_WINDOW_OPEN`
-- [ ] Original preservada
-- [ ] Não existe rota DELETE
+- [x] No dia responde 409 `EDIT_WINDOW_OPEN`
+- [x] Original preservada
+- [x] Não existe rota DELETE
 
 **Tests**: integration
 **Gate**: full
