@@ -2440,10 +2440,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Nome `prontuario-<8 caracteres do id>.pdf`
-- [ ] Título, paciente, período, registro e rodapé "Prontuário — documento confidencial"
-- [ ] Texto acentuado correto
-- [ ] ADR-008 gravado
+- [x] Nome `prontuario-<8 caracteres do id>.pdf`
+- [x] Título, paciente, período, registro e rodapé "Prontuário — documento confidencial"
+- [x] Texto acentuado correto
+- [x] ADR-008 gravado
 
 **Tests**: unit
 **Gate**: build
