@@ -501,8 +501,8 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | PERF-01 | P1: Perfil | Tasks | Implementing |
 | PERF-02 | P1: Perfil | Tasks | Implementing |
 | PERF-03 | P1: Perfil | Tasks | Implementing |
-| PERF-04 | P1: Perfil | Tasks | Pending |
-| PERF-05 | P1: Perfil | Tasks | Pending |
+| PERF-04 | P1: Perfil | Tasks | Implementing |
+| PERF-05 | P1: Perfil | Tasks | Implementing |
 | PERF-06 | P1: Perfil | Tasks | Pending |
 | PERF-07 | P1: Perfil | Tasks | Pending |
 | PERF-08 | P1: Perfil | Tasks | Implementing |

@@ -1,5 +1,6 @@
 import {
   type Perfil,
+  PROBLEMA_ESPECIALIDADE_COM_ANAMNESE,
   PROBLEMA_PERFIL_NAO_ENCONTRADO,
   esquemaPerfilEntrada,
   problemaFimDeSemanaComSessoes,
@@ -15,6 +16,7 @@ import { sql } from 'kysely';
 import type { Trx } from '../db.ts';
 import { lerCorpo } from '../http.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
+import { criarModeloPadrao, existeAnamnese } from '../repositorios/anamnese.ts';
 import { registrarAuditoria } from '../repositorios/auditoria.ts';
 import { contarSessoesFuturasNosDias } from '../repositorios/sessoes.ts';
 
@@ -29,6 +31,12 @@ import { contarSessoesFuturasNosDias } from '../repositorios/sessoes.ts';
 //   não canceladas nesse dia, sem `confirmar: true`, responde 409 WEEKEND_DAY_HAS_SESSIONS com a
 //   quantidade (sábado e domingo somados) e nada é salvo. Com `confirmar: true`, salva e as
 //   sessões ficam como estão.
+// - PERF-04: definir a especialidade (no primeiro salvamento ou trocando o tipo) cria o modelo
+//   de anamnese padrão dela, na mesma transação, se ainda não existe.
+// - PERF-05: trocar o tipo da especialidade com anamnese registrada responde 409
+//   SPECIALTY_HAS_ANAMNESIS e nada é salvo. PREMISSA (como no legado, em que o tipo era
+//   imutável e a desativação é que checava a anamnese): o nome de "outra" e o registro
+//   profissional seguem editáveis.
 
 const consultaPerfil = (trx: Trx, usuarioId: string) =>
   trx
@@ -75,6 +83,13 @@ export const rotasPerfil = new Hono<AmbienteAutenticado>()
     const campos = camposAlterados(atual ?? null, novo);
     if (atual && campos.length === 0) return c.json(paraResposta(atual));
 
+    const especialidadeDefinida =
+      novo.especialidade !== null && novo.especialidade !== (atual?.especialidade ?? null);
+    if (especialidadeDefinida && atual?.especialidade && (await existeAnamnese(trx)))
+      return c.json(PROBLEMA_ESPECIALIDADE_COM_ANAMNESE, 409, {
+        'Content-Type': 'application/problem+json',
+      });
+
     const desligados = [
       ...(atual?.atende_sabado && !novo.atende_sabado ? [6] : []),
       ...(atual?.atende_domingo && !novo.atende_domingo ? [7] : []),
@@ -103,6 +118,7 @@ export const rotasPerfil = new Hono<AmbienteAutenticado>()
           .values({ ...novo, usuario_id: usuarioId })
           .returning('id')
           .executeTakeFirstOrThrow();
+    if (especialidadeDefinida) await criarModeloPadrao(trx, usuarioId, novo.especialidade!);
     await registrarAuditoria(trx, {
       usuarioId,
       ator: usuarioId,

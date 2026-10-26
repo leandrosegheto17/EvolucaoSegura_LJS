@@ -1841,8 +1841,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Definir psicologia cria o modelo com 7 campos e 4 alertas
-- [ ] Com anamnese registrada, troca responde 409 `SPECIALTY_HAS_ANAMNESIS`
+- [x] Definir psicologia cria o modelo com 7 campos e 4 alertas
+- [x] Com anamnese registrada, troca responde 409 `SPECIALTY_HAS_ANAMNESIS`
 
 **Tests**: integration
 **Gate**: full

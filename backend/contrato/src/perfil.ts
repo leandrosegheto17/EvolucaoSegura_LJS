@@ -77,3 +77,11 @@ export function problemaFimDeSemanaComSessoes(quantidade: number): Problema {
     quantidade,
   };
 }
+
+// PERF-05: trocar o tipo da especialidade quando já existe anamnese registrada. Nada é salvo.
+export const PROBLEMA_ESPECIALIDADE_COM_ANAMNESE: Problema = {
+  tipo: 'about:blank',
+  titulo: 'Especialidade com anamnese',
+  status: 409,
+  codigo: 'SPECIALTY_HAS_ANAMNESIS',
+};

@@ -171,6 +171,53 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Anamnese (migration 0008): RLS forçada; nada é apagado; retificação só de inclusão; a
+  // anamnese só muda no dia do cadastro (trigger, ES002).
+  modelo_anamnese: {
+    id: Generated<string>;
+    usuario_id: string;
+    especialidade: 'psicologia' | 'nutricao' | 'fisioterapia' | 'outra';
+    revisao: Generated<number>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  modelo_anamnese_item: {
+    id: Generated<string>;
+    usuario_id: string;
+    modelo_id: string;
+    tipo: 'campo' | 'alerta';
+    especial: Generated<boolean>;
+    rotulo: string;
+    ordem: number;
+    revisao_inclusao: number;
+    removido: Generated<boolean>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  anamnese: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    modelo_id: string;
+    data_sessao: string;
+    modelo_revisao: number;
+    valores: Generated<unknown>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  anamnese_retificacao: {
+    id: Generated<string>;
+    usuario_id: string;
+    anamnese_id: string;
+    seq: number;
+    motivo: string;
+    modelo_revisao: number;
+    valores: unknown;
+    criado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
