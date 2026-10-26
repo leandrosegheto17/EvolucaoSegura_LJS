@@ -1643,9 +1643,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sem `confirmar`, nada é salvo e a contagem vem no erro
-- [ ] Com `confirmar`, salva e mantém as sessões
-- [ ] Só conta sessões futuras não canceladas
+- [x] Sem `confirmar`, nada é salvo e a contagem vem no erro
+- [x] Com `confirmar`, salva e mantém as sessões
+- [x] Só conta sessões futuras não canceladas
 
 **Tests**: integration
 **Gate**: full

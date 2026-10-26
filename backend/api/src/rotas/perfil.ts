@@ -2,6 +2,7 @@ import {
   type Perfil,
   PROBLEMA_PERFIL_NAO_ENCONTRADO,
   esquemaPerfilEntrada,
+  problemaFimDeSemanaComSessoes,
 } from '@es/contrato/perfil';
 import {
   CAMPOS_PERFIL,
@@ -15,6 +16,7 @@ import type { Trx } from '../db.ts';
 import { lerCorpo } from '../http.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
 import { registrarAuditoria } from '../repositorios/auditoria.ts';
+import { contarSessoesFuturasNosDias } from '../repositorios/sessoes.ts';
 
 // PERF-02, PERF-03, PERF-09: GET e PUT /api/perfil, rotas autenticadas (sessão, CSRF na escrita,
 // transação do profissional). Adaptado do ProfileService do legado, com uma só especialidade.
@@ -23,6 +25,10 @@ import { registrarAuditoria } from '../repositorios/auditoria.ts';
 // - PUT valida pelo contrato (chave desconhecida = 422, vazio = null), resolve o perfil novo e
 //   grava só se algo mudou de fato. A auditoria perfil.editado leva só os nomes dos campos, na
 //   mesma transação. Sem mudança, nada é gravado nem auditado.
+// - PERF-06, PERF-07: desligar sábado ou domingo (de ligado para desligado) com sessões futuras
+//   não canceladas nesse dia, sem `confirmar: true`, responde 409 WEEKEND_DAY_HAS_SESSIONS com a
+//   quantidade (sábado e domingo somados) e nada é salvo. Com `confirmar: true`, salva e as
+//   sessões ficam como estão.
 
 const consultaPerfil = (trx: Trx, usuarioId: string) =>
   trx
@@ -68,6 +74,18 @@ export const rotasPerfil = new Hono<AmbienteAutenticado>()
     const novo = resolverPerfil(atual ?? null, leitura.dados);
     const campos = camposAlterados(atual ?? null, novo);
     if (atual && campos.length === 0) return c.json(paraResposta(atual));
+
+    const desligados = [
+      ...(atual?.atende_sabado && !novo.atende_sabado ? [6] : []),
+      ...(atual?.atende_domingo && !novo.atende_domingo ? [7] : []),
+    ];
+    if (desligados.length > 0 && leitura.dados.confirmar !== true) {
+      const quantidade = await contarSessoesFuturasNosDias(trx, usuarioId, desligados);
+      if (quantidade > 0)
+        return c.json(problemaFimDeSemanaComSessoes(quantidade), 409, {
+          'Content-Type': 'application/problem+json',
+        });
+    }
 
     const { id } = atual
       ? await trx

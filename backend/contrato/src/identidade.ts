@@ -73,6 +73,8 @@ export const esquemaProblema = z.strictObject({
   codigo: z.string().regex(/^[A-Za-z0-9_]+$/),
   motivo: z.enum(MOTIVOS_SENHA).optional(),
   campos: z.array(z.string()).optional(),
+  // PERF-06: quantidade de sessões futuras no dia que o perfil quer desligar.
+  quantidade: z.number().int().min(1).optional(),
 });
 export type Problema = z.infer<typeof esquemaProblema>;
 

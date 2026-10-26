@@ -6,10 +6,15 @@ import {
   type Sessao,
 } from '@es/contrato/agenda';
 import type { Problema } from '@es/contrato/identidade';
-import { type FimDeSemana, conflitos, diaHabilitadoNoInstante } from '@es/dominio/agenda/conflito';
+import {
+  FUSO_AGENDA,
+  type FimDeSemana,
+  conflitos,
+  diaHabilitadoNoInstante,
+} from '@es/dominio/agenda/conflito';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import type { Selectable } from 'kysely';
+import { type Selectable, sql } from 'kysely';
 import type { Banco, Trx } from '../db.ts';
 
 // Leitura e checagens da agenda na transação da requisição (RLS: só o que é do profissional da
@@ -133,4 +138,24 @@ export async function verificarHorario(
       return { ok: false, problema: PROBLEMA_CONFLITO_HORARIO };
   }
   return { ok: true, conflitos: colisoes };
+}
+
+// PERF-06: sessões futuras (início depois do relógio do banco) e não canceladas do profissional
+// cujo dia da semana, em America/Sao_Paulo, está em `diasIso` (6 = sábado, 7 = domingo).
+// PREMISSA: "não canceladas" é literal (remarcada conta), como no legado (status <> 'cancelada').
+export async function contarSessoesFuturasNosDias(
+  trx: Trx,
+  usuarioId: string,
+  diasIso: number[],
+): Promise<number> {
+  if (diasIso.length === 0) return 0;
+  const { total } = await trx
+    .selectFrom('sessao_atendimento')
+    .select(sql<string>`count(*)`.as('total'))
+    .where('usuario_id', '=', usuarioId)
+    .where('status', '<>', 'cancelada')
+    .where(sql<boolean>`inicio > now()`)
+    .where(sql<number>`extract(isodow from inicio at time zone ${FUSO_AGENDA})::int`, 'in', diasIso)
+    .executeTakeFirstOrThrow();
+  return Number(total);
 }

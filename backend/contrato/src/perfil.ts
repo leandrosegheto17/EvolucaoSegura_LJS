@@ -42,6 +42,8 @@ export const esquemaPerfilEntrada = z.strictObject({
   atende_sabado: z.boolean().optional(),
   atende_domingo: z.boolean().optional(),
   especialidade: esquemaEspecialidade.optional(),
+  // PERF-06, PERF-07: confirma desligar sábado ou domingo que ainda têm sessões futuras.
+  confirmar: z.boolean().optional(),
 });
 export type PerfilEntrada = z.output<typeof esquemaPerfilEntrada>;
 
@@ -63,3 +65,15 @@ export const PROBLEMA_PERFIL_NAO_ENCONTRADO: Problema = {
   status: 404,
   codigo: 'nao_encontrado',
 };
+
+// PERF-06: desligar sábado ou domingo com sessões futuras não canceladas nesse dia, sem
+// `confirmar: true`. Leva a quantidade de sessões (sábado e domingo somados) e nada é salvo.
+export function problemaFimDeSemanaComSessoes(quantidade: number): Problema {
+  return {
+    tipo: 'about:blank',
+    titulo: 'Há sessões nesse dia',
+    status: 409,
+    codigo: 'WEEKEND_DAY_HAS_SESSIONS',
+    quantidade,
+  };
+}

@@ -5,6 +5,7 @@ import {
   PROBLEMA_PERFIL_NAO_ENCONTRADO,
   esquemaEspecialidade,
   esquemaPerfilEntrada,
+  problemaFimDeSemanaComSessoes,
 } from './perfil.ts';
 
 // T62 / PERF-02, PERF-03: limites do perfil nos dois lados. nome de 1 a 200 (obrigatório),
@@ -131,5 +132,37 @@ describe('perfil não encontrado', () => {
       status: 404,
       codigo: 'nao_encontrado',
     });
+  });
+});
+
+// T82 / PERF-06, PERF-07: confirmar o desligamento do fim de semana com sessões futuras.
+describe('desligar sábado ou domingo com sessões (PERF-06, PERF-07)', () => {
+  it('confirmar é booleano opcional', () => {
+    expect(esquemaPerfilEntrada.parse({ nome: 'A', confirmar: true })).toMatchObject({
+      confirmar: true,
+    });
+    expect(aceita({ nome: 'A', confirmar: false })).toBe(true);
+    expect(aceita({ nome: 'A', confirmar: 'sim' })).toBe(false);
+    expect(esquemaPerfilEntrada.parse({ nome: 'A' })).not.toHaveProperty('confirmar');
+  });
+
+  it('o 409 WEEKEND_DAY_HAS_SESSIONS leva a quantidade e é um problema válido', () => {
+    const problema = problemaFimDeSemanaComSessoes(3);
+    expect(problema).toEqual({
+      tipo: 'about:blank',
+      titulo: expect.any(String),
+      status: 409,
+      codigo: 'WEEKEND_DAY_HAS_SESSIONS',
+      quantidade: 3,
+    });
+    expect(esquemaProblema.parse(problema)).toEqual(problema);
+  });
+
+  it('a quantidade do problema é inteira e positiva', () => {
+    const base = problemaFimDeSemanaComSessoes(1);
+    for (const quantidade of [0, -1, 1.5, '2'])
+      expect(esquemaProblema.safeParse({ ...base, quantidade }).success, String(quantidade)).toBe(
+        false,
+      );
   });
 });
