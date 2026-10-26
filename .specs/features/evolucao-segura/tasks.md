@@ -1984,10 +1984,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Segunda evolução da sessão responde 409 `EVOLUTION_EXISTS`
-- [ ] Sessão agendada vira realizada, atomicamente
-- [ ] Evolução sem sessão aceita
-- [ ] Isolamento coberto
+- [x] Segunda evolução da sessão responde 409 `EVOLUTION_EXISTS`
+- [x] Sessão agendada vira realizada, atomicamente
+- [x] Evolução sem sessão aceita
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full

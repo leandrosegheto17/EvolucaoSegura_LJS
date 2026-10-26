@@ -218,6 +218,27 @@ export interface Banco {
     valores: unknown;
     criado_em: Generated<Date>;
   };
+  // Evolução (migration 0009): RLS forçada; nada é apagado; uma por sessão; só muda no dia do
+  // cadastro (trigger, ES002); retificação só de inclusão.
+  evolucao: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    sessao_id: string | null;
+    texto: string;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  evolucao_retificacao: {
+    id: Generated<string>;
+    usuario_id: string;
+    evolucao_id: string;
+    seq: number;
+    texto: string;
+    motivo: string;
+    criado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
