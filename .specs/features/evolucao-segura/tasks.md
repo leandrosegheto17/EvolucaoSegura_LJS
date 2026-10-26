@@ -2165,9 +2165,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sem valor usa o preço do paciente; sem preço responde 422
-- [ ] Duplicado responde 422 `PAYMENT_DUPLICATE`; com `confirmar_duplicidade` gera revisão
-- [ ] Auditoria `pagamento.registrado` e `pagamento.corrigido`
+- [x] Sem valor usa o preço do paciente; sem preço responde 422
+- [x] Duplicado responde 422 `PAYMENT_DUPLICATE`; com `confirmar_duplicidade` gera revisão
+- [x] Auditoria `pagamento.registrado` e `pagamento.corrigido`
 
 **Tests**: integration
 **Gate**: full
