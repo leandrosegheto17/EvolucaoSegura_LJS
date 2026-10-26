@@ -541,7 +541,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | ANA-08 | P1: Anamnese | Tasks | Implementing |
 | ANA-09 | P1: Anamnese | Tasks | Implementing |
 | EVO-01 | P1: Evoluções | Tasks | Pending |
-| EVO-02 | P1: Evoluções | Tasks | Pending |
+| EVO-02 | P1: Evoluções | Tasks | Implementing |
 | EVO-03 | P1: Evoluções | Tasks | Pending |
 | EVO-04 | P1: Evoluções | Tasks | Pending |
 | EVO-05 | P1: Evoluções | Tasks | Pending |
@@ -609,9 +609,9 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | OPS-12 | P1: Operação | Tasks | Pending |
 | OPS-13 | P1: Operação | Tasks | Implementing |
 | OPS-14 | P1: Operação | Tasks | Pending |
-| RAS-01 | P2: Rascunhos e modelos | Tasks | Pending |
+| RAS-01 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-02 | P2: Rascunhos e modelos | Tasks | Pending |
-| RAS-03 | P2: Rascunhos e modelos | Tasks | Pending |
+| RAS-03 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-04 | P2: Rascunhos e modelos | Tasks | Pending |
 | PUSH-01 | P2: Push | Tasks | Pending |
 | PUSH-02 | P2: Push | Tasks | Pending |

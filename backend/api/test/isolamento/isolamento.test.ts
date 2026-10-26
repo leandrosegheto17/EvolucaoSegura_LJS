@@ -59,6 +59,8 @@ const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   // T89: especialidade e tipo do item só da lista; rótulo aparado de 1 a 60.
   modelo_anamnese: { especialidade: "'psicologia'" },
   modelo_anamnese_item: { tipo: "'campo'" },
+  // T98: modelo de texto só do tipo evolucao.
+  modelo_texto: { tipo: "'evolucao'" },
 };
 
 const admin = new pg.Client({
@@ -239,6 +241,12 @@ describe('harness de isolamento', () => {
         'anamnese',
         'anamnese_retificacao',
       ]),
+    );
+  });
+
+  it('cobre as tabelas de evolução (T98: evolução, retificação, rascunho e modelo de texto)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['evolucao', 'evolucao_retificacao', 'rascunho', 'modelo_texto']),
     );
   });
 

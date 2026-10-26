@@ -1930,9 +1930,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Segunda evolução da mesma sessão violada pelo banco
-- [ ] Sem DELETE para `app`
-- [ ] Entra no teste de isolamento
+- [x] Segunda evolução da mesma sessão violada pelo banco
+- [x] Sem DELETE para `app`
+- [x] Entra no teste de isolamento
 
 **Tests**: integration
 **Gate**: full
