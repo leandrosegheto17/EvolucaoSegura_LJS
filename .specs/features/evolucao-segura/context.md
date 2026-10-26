@@ -60,3 +60,4 @@ Comportamento de `privacidade_agenda` (manter o do legado, a confirmar ao portar
 - Encerrar outras sessões pelo usuário (não existe no legado).
 - Navegação por dia no Início.
 - Exportação completa em CSV.
+- UI de alterar e cancelar série (AGE-15 e AGE-16; os endpoints existem desde a T85 e a T86), junto da tela de detalhe da sessão (GET `/api/sessoes/:id`) e, se valer, da grade por hora do legado.
