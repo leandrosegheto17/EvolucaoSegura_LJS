@@ -14,6 +14,9 @@ export const API_BASE = '/api';
 export const CABECALHO_CSRF = 'x-csrf-token';
 export const CAMINHO_SESSAO_EXPIRADA = '/sessao-expirada';
 export const EVENTO_NAO_AUTORIZADO = 'api:nao-autorizado';
+// AUTH-18: toda resposta autenticada que não é 401 renovou o último uso da sessão no servidor; o
+// aviso de inatividade (app/inatividade.tsx) recomeça a contagem a cada uma.
+export const EVENTO_SESSAO_USADA = 'api:sessao-usada';
 
 const SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -108,6 +111,7 @@ export function criarClienteApi(opcoes: OpcoesCliente = {}) {
       ...(o.corpo !== undefined ? { body: JSON.stringify(o.corpo) } : {}),
       ...(o.sinal !== undefined ? { signal: o.sinal } : {}),
     });
+    if (!o.publica && resposta.status !== 401) window.dispatchEvent(new Event(EVENTO_SESSAO_USADA));
     if (resposta.ok) return resposta;
     const erro = await paraErroApi(resposta);
     if (erro.status === 401 && !o.publica) expirar();

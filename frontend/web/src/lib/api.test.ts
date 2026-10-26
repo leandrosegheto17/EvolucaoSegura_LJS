@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CABECALHO_CSRF,
   CAMINHO_SESSAO_EXPIRADA,
+  EVENTO_SESSAO_USADA,
   ErroApi,
   criarClienteApi,
   criarQueryClient,
@@ -271,5 +272,51 @@ describe('repetição no TanStack Query', () => {
     const padrao = criarQueryClient().getDefaultOptions();
     expect(padrao.queries?.retry).toBe(podeRepetir);
     expect(padrao.mutations?.retry).toBe(false);
+  });
+});
+
+// T60 / AUTH-18: a inatividade do servidor conta desde a última requisição autenticada; o cliente
+// avisa o app a cada resposta autenticada que não seja 401, para o aviso de inatividade recomeçar.
+describe('aviso de sessão usada (AUTH-18)', () => {
+  function ouvir() {
+    const ouvinte = vi.fn();
+    window.addEventListener(EVENTO_SESSAO_USADA, ouvinte);
+    return {
+      ouvinte,
+      parar: () => window.removeEventListener(EVENTO_SESSAO_USADA, ouvinte),
+    };
+  }
+
+  it.each([200, 204, 404, 422])('resposta %i de rota autenticada avisa', async (status) => {
+    const { ouvinte, parar } = ouvir();
+    const fetch = fetchSimulado({ status, corpo: status === 204 ? undefined : {} });
+    const api = criarClienteApi({ fetch, aoExpirar: () => {} });
+
+    await api.requisitar('/pacientes').catch(() => undefined);
+
+    expect(ouvinte).toHaveBeenCalledTimes(1);
+    parar();
+  });
+
+  it('401 não avisa (a sessão já acabou)', async () => {
+    const { ouvinte, parar } = ouvir();
+    const fetch = fetchSimulado({ status: 401, corpo: {} });
+    const api = criarClienteApi({ fetch, aoExpirar: () => {} });
+
+    await api.requisitar('/pacientes').catch(() => undefined);
+
+    expect(ouvinte).not.toHaveBeenCalled();
+    parar();
+  });
+
+  it('rota pública não avisa (não usa a sessão)', async () => {
+    const { ouvinte, parar } = ouvir();
+    const fetch = fetchSimulado({ status: 202, corpo: {} });
+    const api = criarClienteApi({ fetch, aoExpirar: () => {} });
+
+    await api.requisitar('/auth/recuperar', { metodo: 'POST', publica: true });
+
+    expect(ouvinte).not.toHaveBeenCalled();
+    parar();
   });
 });

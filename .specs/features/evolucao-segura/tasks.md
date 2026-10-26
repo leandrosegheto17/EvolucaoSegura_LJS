@@ -1245,9 +1245,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Diálogo aparece aos 13:00 de inatividade (relógio simulado)
-- [ ] "Continuar conectado" renova
-- [ ] Expiração limpa o cache e mantém os rascunhos
+- [x] Diálogo aparece aos 13:00 de inatividade (relógio simulado)
+- [x] "Continuar conectado" renova
+- [x] Expiração limpa o cache e mantém os rascunhos
 
 **Tests**: unit
 **Gate**: quick
