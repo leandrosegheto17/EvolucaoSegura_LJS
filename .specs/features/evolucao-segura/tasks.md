@@ -1912,9 +1912,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Selo correto nos dois estados
-- [ ] Alerta clínico da versão vigente em destaque
-- [ ] Layout comparado com o legado
+- [x] Selo correto nos dois estados
+- [x] Alerta clínico da versão vigente em destaque
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick

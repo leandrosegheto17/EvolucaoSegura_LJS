@@ -69,6 +69,15 @@ describe('Ficha do paciente', () => {
     );
   });
 
+  it('tem o cartão Anamnese com o link para a tela da anamnese do paciente (T97)', async () => {
+    mock();
+    setup();
+    expect(await screen.findByRole('heading', { name: 'Anamnese' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Abrir anamnese' }).getAttribute('href')).toBe(
+      '/app/pacientes/p1/anamnese',
+    );
+  });
+
   it('paciente inativo mostra o selo Inativo', async () => {
     mock({ ativo: false });
     setup();
