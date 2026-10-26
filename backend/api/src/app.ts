@@ -18,6 +18,7 @@ import { rotasPerfil } from './rotas/perfil.ts';
 import { health } from './rotas/health.ts';
 import { rotasRecuperar } from './rotas/recuperar.ts';
 import { rotasRedefinir } from './rotas/redefinir.ts';
+import { rotasTcle } from './rotas/tcle.ts';
 
 interface OpcoesApp {
   capturarErro?: (erro: unknown) => void;
@@ -60,6 +61,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasConfiguracoes);
   app.route('/api', rotasPacientes);
   app.route('/api', rotasPacientesAtivo);
+  app.route('/api', rotasTcle);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);

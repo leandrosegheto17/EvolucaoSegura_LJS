@@ -1444,9 +1444,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Finalidade 1 a 500, versão 1 a 50, data válida
-- [ ] Sem edição nem exclusão
-- [ ] Isolamento coberto
+- [x] Finalidade 1 a 500, versão 1 a 50, data válida
+- [x] Sem edição nem exclusão
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full
