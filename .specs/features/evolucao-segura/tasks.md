@@ -2183,9 +2183,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Filtros `em_debito`, `em_dia` e todos
-- [ ] Total em centavos inteiros
-- [ ] Só dados do profissional
+- [x] Filtros `em_debito`, `em_dia` e todos
+- [x] Total em centavos inteiros
+- [x] Só dados do profissional
 
 **Tests**: integration
 **Gate**: full
