@@ -2003,8 +2003,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Versão divergente responde 409
-- [ ] Depois da meia-noite a edição é recusada (relógio do banco)
+- [x] Versão divergente responde 409
+- [x] Depois da meia-noite a edição é recusada (relógio do banco)
 
 **Tests**: integration
 **Gate**: full
