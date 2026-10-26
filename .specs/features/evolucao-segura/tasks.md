@@ -1462,8 +1462,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cada abertura grava a auditoria
-- [ ] Paciente de outro profissional responde 404 sem auditar
+- [x] Cada abertura grava a auditoria
+- [x] Paciente de outro profissional responde 404 sem auditar
 
 **Tests**: integration
 **Gate**: full

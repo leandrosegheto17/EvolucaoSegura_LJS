@@ -512,7 +512,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | PAC-03 | P1: Pacientes | Tasks | Implementing |
 | PAC-04 | P1: Pacientes | Tasks | Implementing |
 | PAC-05 | P1: Pacientes | Tasks | Implementing |
-| PAC-06 | P1: Pacientes | Tasks | Pending |
+| PAC-06 | P1: Pacientes | Tasks | Implementing |
 | PAC-07 | P1: Pacientes | Tasks | Implementing |
 | AGE-01 | P1: Agenda | Tasks | Pending |
 | AGE-02 | P1: Agenda | Tasks | Pending |
