@@ -1,5 +1,6 @@
 import { waitUntil } from 'cloudflare:workers';
 import {
+  type ColumnType,
   type Generated,
   Kysely,
   PostgresDialect,
@@ -15,6 +16,9 @@ import pg from 'pg';
 // set_config('app.usuario_id', $1, true): o "true" faz valer só nesta transação (equivale ao
 // SET LOCAL, que não aceita parâmetro). Sem usuário (rotas públicas), app_usuario_id() fica nulo
 // e o RLS não mostra nenhuma linha. Spike set-local-hyperdrive.
+
+// timestamptz lido como Date e gravado a partir do texto ISO 8601 do contrato.
+type Instante = ColumnType<Date, string, string>;
 
 // Tabelas vistas pelo Kysely; cada etapa acrescenta as suas (migrations em backend/scripts).
 export interface Banco {
@@ -140,6 +144,32 @@ export interface Banco {
     data_consentimento: string;
     versao_termo: string;
     criado_em: Generated<Date>;
+  };
+  // Agenda (migration 0007): RLS forçada; nada é apagado; a sessão nasce agendada.
+  serie_recorrencia: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    frequencia: 'semanal' | 'quinzenal';
+    ocorrencias: number;
+    cancelada: Generated<boolean>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  sessao_atendimento: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    serie_id: string | null;
+    inicio: Instante;
+    fim: Instante;
+    link: string | null;
+    status: Generated<'agendada' | 'realizada' | 'faltou' | 'cancelada' | 'remarcada'>;
+    cobravel: Generated<boolean>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
   };
 }
 

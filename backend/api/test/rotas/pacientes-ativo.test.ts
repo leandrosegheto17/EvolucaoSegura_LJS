@@ -160,6 +160,35 @@ describe('inativar e reativar (PAC-03)', () => {
 
     expect(await retratoDoResto(sessao.usuarioId)).toEqual(antes);
   });
+
+  // Pendência do lote 8 (PAC-03, D-24), possível agora que a agenda existe (T78).
+  it('sessões futuras do paciente ficam intactas ao inativar e reativar', async () => {
+    const sessao = await sessaoDeTeste();
+    const id = await semearPaciente(sessao.usuarioId);
+    const criadas: string[] = [];
+    for (const dia of ['10', '17']) {
+      const resposta = await pedir('POST', '/api/sessoes', sessao, {
+        paciente_id: id,
+        inicio: `2026-11-${dia}T10:00:00-03:00`,
+        fim: `2026-11-${dia}T10:50:00-03:00`,
+      });
+      expect(resposta.status).toBe(201);
+      criadas.push(((await resposta.json()) as { id: string }).id);
+    }
+    const sessoes = () =>
+      comoAdmin(
+        `select id, paciente_id, inicio, fim, link, status, cobravel, row_version
+         from sessao_atendimento where usuario_id = $1 order by inicio`,
+        [sessao.usuarioId],
+      );
+    const antes = await sessoes();
+    expect(antes.map((s) => s['id'])).toEqual(criadas);
+
+    expect((await trocar(sessao, id, 'inativar')).status).toBe(200);
+    expect(await sessoes()).toEqual(antes);
+    expect((await trocar(sessao, id, 'reativar')).status).toBe(200);
+    expect(await sessoes()).toEqual(antes);
+  });
 });
 
 describe('repetir o mesmo estado (PAC-04)', () => {

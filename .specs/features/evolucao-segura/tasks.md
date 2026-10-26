@@ -1570,10 +1570,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 409 `SCHEDULE_CONFLICT` sem `confirmar_conflito`; com ele grava sem alterar a existente
-- [ ] 422 `WEEKDAY_UNAVAILABLE`
-- [ ] 422 `PATIENT_INACTIVE`
-- [ ] Paciente de outro profissional responde 404
+- [x] 409 `SCHEDULE_CONFLICT` sem `confirmar_conflito`; com ele grava sem alterar a existente
+- [x] 422 `WEEKDAY_UNAVAILABLE`
+- [x] 422 `PATIENT_INACTIVE`
+- [x] Paciente de outro profissional responde 404
 
 **Tests**: integration
 **Gate**: full
