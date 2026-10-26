@@ -1,7 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Outlet, type RouteObject } from 'react-router';
+import { Navigate, Outlet, type RouteObject } from 'react-router';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { Inicio } from './app/inicio.tsx';
+import { GuardaPerfil, Shell } from './app/shell.tsx';
 import { criarQueryClient } from './lib/api.ts';
 import { Cadastro, Confirmar } from './publico/cadastro.tsx';
 import { Entrar } from './publico/entrar.tsx';
@@ -9,7 +10,9 @@ import { Recuperar, Redefinir } from './publico/recuperar.tsx';
 
 // PUB-02: o app fica sob /app. As páginas públicas ficam ao lado, fora deste prefixo.
 // A raiz dá o cache do TanStack Query a todas as telas; a área /app tem o aviso de inatividade
-// (AUTH-18, AUTH-19).
+// (AUTH-18, AUTH-19), a guarda de perfil (PERF-01) e o shell portado do legado.
+// PREMISSA: rota de /app que ainda não existe (as telas chegam etapa a etapa) volta ao Início,
+// passando antes pela guarda de perfil.
 
 const clienteQuery = criarQueryClient();
 
@@ -34,7 +37,26 @@ export const rotas: RouteObject[] = [
   {
     element: <Raiz />,
     children: [
-      { path: '/app', element: <AreaDoApp />, children: [{ index: true, element: <Inicio /> }] },
+      {
+        path: '/app',
+        element: <AreaDoApp />,
+        children: [
+          {
+            element: <GuardaPerfil />,
+            children: [
+              {
+                element: <Shell />,
+                children: [
+                  { index: true, element: <Inicio /> },
+                  // A tela de perfil chega na T66.
+                  { path: 'perfil', element: <h1 className="text-2xl font-semibold">Perfil</h1> },
+                  { path: '*', element: <Navigate to="/app" replace /> },
+                ],
+              },
+            ],
+          },
+        ],
+      },
       { path: '/cadastro', element: <Cadastro /> },
       { path: '/confirmar', element: <Confirmar /> },
       { path: '/entrar', element: <Entrar /> },

@@ -1335,8 +1335,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Perfil incompleto redireciona qualquer rota de `/app`
-- [ ] Navegação igual à do legado no escopo
+- [x] Perfil incompleto redireciona qualquer rota de `/app`
+- [x] Navegação igual à do legado no escopo
 
 **Tests**: unit
 **Gate**: quick
