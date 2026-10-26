@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/cloudflare';
+import { waitUntil } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { cabecalhos } from './middleware/cabecalhos.ts';
 import { limitePorIp } from './middleware/limite.ts';
@@ -11,11 +12,14 @@ import { rotasCadastro } from './rotas/cadastro.ts';
 import { rotasConfirmar } from './rotas/confirmar.ts';
 import { rotasEu } from './rotas/eu.ts';
 import { health } from './rotas/health.ts';
+import { rotasRecuperar } from './rotas/recuperar.ts';
 
 interface OpcoesApp {
   capturarErro?: (erro: unknown) => void;
   // Os testes trocam o Resend por um cliente simulado.
   email?: (env: Cloudflare.Env) => ClienteEmail;
+  // Trabalho depois da resposta (padrão: waitUntil do Worker); os testes guardam e esperam.
+  emSegundoPlano?: (tarefa: Promise<unknown>) => void;
 }
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
@@ -35,6 +39,14 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasEntrar({ email: opcoes.email ?? emailPadrao, capturarErro }));
   app.route('/api', rotas2fa);
   app.route('/api', rotasReenviar2fa({ email: opcoes.email ?? emailPadrao, capturarErro }));
+  app.route(
+    '/api',
+    rotasRecuperar({
+      email: opcoes.email ?? emailPadrao,
+      capturarErro,
+      emSegundoPlano: opcoes.emSegundoPlano ?? waitUntil,
+    }),
+  );
   // Autenticadas: cada rota monta a lista `autenticada` (sessão, CSRF, transação).
   app.route('/api', rotasSair);
   app.route('/api', rotasEu);

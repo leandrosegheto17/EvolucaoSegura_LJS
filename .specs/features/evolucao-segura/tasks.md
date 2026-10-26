@@ -1137,9 +1137,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Mesma resposta para conta existente e inexistente
-- [ ] Novo pedido invalida o anterior
-- [ ] Token guardado só como SHA-256
+- [x] Mesma resposta para conta existente e inexistente
+- [x] Novo pedido invalida o anterior
+- [x] Token guardado só como SHA-256
 
 **Tests**: integration
 **Gate**: full
