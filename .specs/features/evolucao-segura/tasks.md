@@ -1807,8 +1807,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Texto até 5.000 e observação até 500
-- [ ] Id de item desconhecido ou de revisão futura recusado
+- [x] Texto até 5.000 e observação até 500
+- [x] Id de item desconhecido ou de revisão futura recusado
 
 **Tests**: unit
 **Gate**: quick
