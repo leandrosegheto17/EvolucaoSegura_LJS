@@ -1300,9 +1300,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sem mudança, nada é gravado nem auditado
-- [ ] Comportamento do legado confirmado ao portar a tela
-- [ ] Isolamento coberto
+- [x] Sem mudança, nada é gravado nem auditado
+- [x] Comportamento do legado confirmado ao portar a tela
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full

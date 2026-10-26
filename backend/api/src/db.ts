@@ -111,6 +111,14 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  configuracao_usuario: {
+    id: Generated<string>;
+    usuario_id: string;
+    privacidade_agenda: Generated<boolean>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
