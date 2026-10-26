@@ -1966,9 +1966,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Texto não vazio após aparar, até 100.000
-- [ ] Payload do rascunho até 512 KiB
-- [ ] Modelo até 50.000
+- [x] Texto não vazio após aparar, até 100.000
+- [x] Payload do rascunho até 512 KiB
+- [x] Modelo até 50.000
 
 **Tests**: unit
 **Gate**: quick

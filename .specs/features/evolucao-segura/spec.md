@@ -540,11 +540,11 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | ANA-07 | P1: Anamnese | Tasks | Implementing |
 | ANA-08 | P1: Anamnese | Tasks | Implementing |
 | ANA-09 | P1: Anamnese | Tasks | Implementing |
-| EVO-01 | P1: Evoluções | Tasks | Pending |
+| EVO-01 | P1: Evoluções | Tasks | Implementing |
 | EVO-02 | P1: Evoluções | Tasks | Implementing |
 | EVO-03 | P1: Evoluções | Tasks | Pending |
 | EVO-04 | P1: Evoluções | Tasks | Implementing |
-| EVO-05 | P1: Evoluções | Tasks | Pending |
+| EVO-05 | P1: Evoluções | Tasks | Implementing |
 | EVO-06 | P1: Evoluções | Tasks | Pending |
 | EVO-07 | P1: Evoluções | Tasks | Pending |
 | FIN-01 | P1: Financeiro | Tasks | Pending |
