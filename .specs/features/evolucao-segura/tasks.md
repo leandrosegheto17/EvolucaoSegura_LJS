@@ -2367,9 +2367,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Duas visões (conta e paciente)
-- [ ] Filtros e "Carregar mais"
-- [ ] Layout comparado com o legado
+- [x] Duas visões (conta e paciente)
+- [x] Filtros e "Carregar mais"
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick
