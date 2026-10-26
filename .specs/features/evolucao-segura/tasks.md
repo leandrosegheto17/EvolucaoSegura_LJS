@@ -1192,9 +1192,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Envia nome, e-mail, senha e aceite
-- [ ] Exibe o motivo da política de senha
-- [ ] Link inválido mostra mensagem clara
+- [x] Envia nome, e-mail, senha e aceite
+- [x] Exibe o motivo da política de senha
+- [x] Link inválido mostra mensagem clara
 
 **Tests**: unit
 **Gate**: quick
