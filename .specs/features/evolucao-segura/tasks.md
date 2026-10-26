@@ -2129,9 +2129,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Em débito: realizada sem pagamento e faltou ou cancelada cobrável sem pagamento
-- [ ] Agendada e remarcada nunca
-- [ ] Pagamento sem valor e sem preço é recusado
+- [x] Em débito: realizada sem pagamento e faltou ou cancelada cobrável sem pagamento
+- [x] Agendada e remarcada nunca
+- [x] Pagamento sem valor e sem preço é recusado
 
 **Tests**: unit
 **Gate**: quick
