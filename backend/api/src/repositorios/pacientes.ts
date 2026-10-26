@@ -30,3 +30,8 @@ export function paraPaciente(linha: LinhaPaciente): Paciente {
     criado_em: linha.criado_em.toISOString(),
   };
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Id malformado é tratado como inexistente (o mesmo 404), sem chegar ao banco.
+export const idValido = (id: string): boolean => UUID.test(id);

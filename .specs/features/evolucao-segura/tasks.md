@@ -1426,9 +1426,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Auditoria `paciente.inativado` e `paciente.reativado`
-- [ ] Repetir o mesmo estado não muda `row_version` nem audita
-- [ ] Sessões futuras intactas
+- [x] Auditoria `paciente.inativado` e `paciente.reativado`
+- [x] Repetir o mesmo estado não muda `row_version` nem audita
+- [x] Sessões futuras intactas
 
 **Tests**: integration
 **Gate**: full
