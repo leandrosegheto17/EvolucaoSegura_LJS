@@ -1210,9 +1210,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Fluxo senha, código, entrada no app
-- [ ] Reenvio com contagem de 60 s
-- [ ] 503 mostra "Não foi possível enviar o código agora"
+- [x] Fluxo senha, código, entrada no app
+- [x] Reenvio com contagem de 60 s
+- [x] 503 mostra "Não foi possível enviar o código agora"
 
 **Tests**: unit
 **Gate**: quick
