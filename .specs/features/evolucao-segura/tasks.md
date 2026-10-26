@@ -1787,11 +1787,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 30 campos e 12 alertas no limite
-- [ ] Rótulo único sem diferenciar maiúsculas
-- [ ] Um só campo "Frequência"
-- [ ] Com anamnese, só inclusão de itens
-- [ ] Preset de psicologia com 7 campos e 4 alertas
+- [x] 30 campos e 12 alertas no limite
+- [x] Rótulo único sem diferenciar maiúsculas
+- [x] Um só campo "Frequência"
+- [x] Com anamnese, só inclusão de itens
+- [x] Preset de psicologia com 7 campos e 4 alertas
 
 **Tests**: unit
 **Gate**: quick
