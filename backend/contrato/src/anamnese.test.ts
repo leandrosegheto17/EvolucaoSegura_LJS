@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   MOTIVO_MAXIMO,
+  PROBLEMA_ANAMNESE_NAO_ENCONTRADA,
+  PROBLEMA_MODELO_BLOQUEADO,
   PROBLEMA_ROTULO_INVALIDO,
   esquemaAnamneseEdicao,
   esquemaAnamneseEntrada,
   esquemaModeloEdicao,
+  esquemaModeloGravacao,
   esquemaRetificacaoEntrada,
 } from './anamnese.ts';
 import { esquemaProblema } from './identidade.ts';
@@ -134,6 +137,26 @@ describe('MODEL_LABEL_INVALID (ANA-01)', () => {
       titulo: 'Rótulo inválido no modelo',
       status: 422,
       codigo: 'MODEL_LABEL_INVALID',
+    });
+  });
+});
+
+describe('gravação do modelo (T94, decisão do usuário: row_version obrigatório)', () => {
+  const listas = { campos: [{ rotulo: 'Queixa' }], alertas: [] };
+
+  it('exige row_version inteiro positivo', () => {
+    expect(aceita(esquemaModeloGravacao, { ...listas, row_version: 1 })).toBe(true);
+    expect(aceita(esquemaModeloGravacao, listas)).toBe(false);
+    expect(aceita(esquemaModeloGravacao, { ...listas, row_version: 0 })).toBe(false);
+    expect(aceita(esquemaModeloGravacao, { ...listas, row_version: 1, extra: 1 })).toBe(false);
+  });
+
+  it('409 MODEL_LOCKED (ANA-03) e 404 nao_encontrado no formato problem+json', () => {
+    expect(esquemaProblema.parse(PROBLEMA_MODELO_BLOQUEADO)).toEqual(PROBLEMA_MODELO_BLOQUEADO);
+    expect(PROBLEMA_MODELO_BLOQUEADO).toMatchObject({ status: 409, codigo: 'MODEL_LOCKED' });
+    expect(PROBLEMA_ANAMNESE_NAO_ENCONTRADA).toMatchObject({
+      status: 404,
+      codigo: 'nao_encontrado',
     });
   });
 });

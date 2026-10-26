@@ -1,3 +1,4 @@
+import type { ItemDoModelo, ModeloAnamnese } from '@es/contrato/anamnese';
 import type { Especialidade } from '@es/contrato/perfil';
 import { presetDe } from '@es/dominio/anamnese/presets';
 import type { Trx } from '../db.ts';
@@ -46,4 +47,75 @@ export async function criarModeloPadrao(
       })),
     )
     .execute();
+}
+
+export interface ItemDoBanco {
+  id: string;
+  tipo: 'campo' | 'alerta';
+  especial: boolean;
+  rotulo: string;
+  ordem: number;
+  revisao_inclusao: number;
+}
+
+export interface ModeloDoBanco {
+  id: string;
+  especialidade: Especialidade;
+  revisao: number;
+  row_version: number;
+  itens: ItemDoBanco[];
+}
+
+// Itens vigentes (não removidos) do modelo, campos e alertas cada um na sua ordem.
+export async function itensDoModelo(trx: Trx, modeloId: string): Promise<ItemDoBanco[]> {
+  return trx
+    .selectFrom('modelo_anamnese_item')
+    .select(['id', 'tipo', 'especial', 'rotulo', 'ordem', 'revisao_inclusao'])
+    .where('modelo_id', '=', modeloId)
+    .where('removido', '=', false)
+    .orderBy('tipo')
+    .orderBy('ordem')
+    .execute();
+}
+
+// Modelo da especialidade do perfil, criado com o padrão se ainda não existe (PERF-04: perfil
+// salvo antes do modelo existir). Sem especialidade no perfil, null. `travar` = FOR UPDATE, que
+// serializa a edição do modelo com o registro da anamnese (ANA-03).
+export async function modeloDoPerfil(
+  trx: Trx,
+  usuarioId: string,
+  travar: boolean,
+): Promise<ModeloDoBanco | null> {
+  const perfil = await trx
+    .selectFrom('perfil')
+    .select('especialidade')
+    .where('usuario_id', '=', usuarioId)
+    .executeTakeFirst();
+  if (!perfil?.especialidade) return null;
+  await criarModeloPadrao(trx, usuarioId, perfil.especialidade);
+  let consulta = trx
+    .selectFrom('modelo_anamnese')
+    .select(['id', 'especialidade', 'revisao', 'row_version'])
+    .where('usuario_id', '=', usuarioId)
+    .where('especialidade', '=', perfil.especialidade);
+  if (travar) consulta = consulta.forUpdate();
+  const modelo = await consulta.executeTakeFirstOrThrow();
+  return { ...modelo, itens: await itensDoModelo(trx, modelo.id) };
+}
+
+const paraItem = (i: ItemDoBanco): ItemDoModelo => ({
+  id: i.id,
+  rotulo: i.rotulo,
+  ...(i.especial ? { especial: 'frequencia' as const } : {}),
+});
+
+export function paraModelo(modelo: ModeloDoBanco, bloqueado: boolean): ModeloAnamnese {
+  return {
+    especialidade: modelo.especialidade,
+    revisao: modelo.revisao,
+    row_version: modelo.row_version,
+    bloqueado,
+    campos: modelo.itens.filter((i) => i.tipo === 'campo').map(paraItem),
+    alertas: modelo.itens.filter((i) => i.tipo === 'alerta').map(paraItem),
+  };
 }

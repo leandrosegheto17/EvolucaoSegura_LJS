@@ -1858,9 +1858,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Remover ou renomear com anamnese registrada responde erro
-- [ ] Incluir item em qualquer posição é aceito
-- [ ] 422 `MODEL_LABEL_INVALID`
+- [x] Remover ou renomear com anamnese registrada responde erro
+- [x] Incluir item em qualquer posição é aceito
+- [x] 422 `MODEL_LABEL_INVALID`
 
 **Tests**: integration
 **Gate**: full

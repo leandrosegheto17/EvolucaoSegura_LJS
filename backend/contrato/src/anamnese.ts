@@ -69,3 +69,51 @@ export const PROBLEMA_ROTULO_INVALIDO: Problema = {
   status: 422,
   codigo: 'MODEL_LABEL_INVALID',
 };
+
+// --- Rotas do modelo (T94). Decisões do usuário em 2026-10-26: row_version obrigatório no corpo
+// (divergente = 409 versao_divergente, como na agenda); com anamnese, mexer em item existente
+// = 409 MODEL_LOCKED (como no legado); excesso de itens = 422 MODEL_LABEL_INVALID (ANA-01).
+
+const esquemaVersao = z.number().int().positive();
+
+// PUT /api/modelo-anamnese: as listas completas e o row_version do modelo lido.
+export const esquemaModeloGravacao = esquemaModeloEdicao.extend({ row_version: esquemaVersao });
+export type ModeloGravacao = z.output<typeof esquemaModeloGravacao>;
+
+export interface ItemDoModelo {
+  id: string;
+  rotulo: string;
+  especial?: 'frequencia';
+}
+
+// Resposta de GET e PUT /api/modelo-anamnese: o modelo da especialidade do perfil, com os itens
+// vigentes em ordem. `bloqueado` = já existe anamnese registrada (ANA-03: só incluir itens).
+export interface ModeloAnamnese {
+  especialidade: 'psicologia' | 'nutricao' | 'fisioterapia' | 'outra';
+  revisao: number;
+  row_version: number;
+  bloqueado: boolean;
+  campos: ItemDoModelo[];
+  alertas: ItemDoModelo[];
+}
+
+const problemaAnamnese = (codigo: string, status: number, titulo: string): Problema => ({
+  tipo: 'about:blank',
+  titulo,
+  status,
+  codigo,
+});
+
+// ANA-03: com anamnese registrada, remover, renomear ou reordenar item existente.
+export const PROBLEMA_MODELO_BLOQUEADO = problemaAnamnese(
+  'MODEL_LOCKED',
+  409,
+  'Modelo com anamnese registrada: só é possível incluir itens',
+);
+// Recurso inexistente, de outro profissional ou com id malformado (ISO-02); também o modelo de
+// quem ainda não definiu a especialidade.
+export const PROBLEMA_ANAMNESE_NAO_ENCONTRADA = problemaAnamnese(
+  'nao_encontrado',
+  404,
+  'Não encontrado',
+);
