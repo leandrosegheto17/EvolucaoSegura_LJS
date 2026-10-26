@@ -533,8 +533,8 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | AGE-17 | P1: Agenda | Tasks | Pending |
 | ANA-01 | P1: Anamnese | Tasks | Pending |
 | ANA-02 | P1: Anamnese | Tasks | Pending |
-| ANA-03 | P1: Anamnese | Tasks | Pending |
-| ANA-04 | P1: Anamnese | Tasks | Pending |
+| ANA-03 | P1: Anamnese | Tasks | Implementing |
+| ANA-04 | P1: Anamnese | Tasks | Implementing |
 | ANA-05 | P1: Anamnese | Tasks | Pending |
 | ANA-06 | P1: Anamnese | Tasks | Pending |
 | ANA-07 | P1: Anamnese | Tasks | Pending |

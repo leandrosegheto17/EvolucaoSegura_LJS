@@ -56,6 +56,9 @@ const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   // T74: série de 2 a 52 ocorrências; sessão com fim > inicio.
   serie_recorrencia: { frequencia: "'semanal'", ocorrencias: '2' },
   sessao_atendimento: { inicio: 'now()', fim: "now() + interval '50 minutes'" },
+  // T89: especialidade e tipo do item só da lista; rótulo aparado de 1 a 60.
+  modelo_anamnese: { especialidade: "'psicologia'" },
+  modelo_anamnese_item: { tipo: "'campo'" },
 };
 
 const admin = new pg.Client({
@@ -225,6 +228,17 @@ describe('harness de isolamento', () => {
   it('cobre as tabelas de agenda (T74: serie_recorrencia e sessao_atendimento)', () => {
     expect(tabelas.map((t) => t.tabela)).toEqual(
       expect.arrayContaining(['serie_recorrencia', 'sessao_atendimento']),
+    );
+  });
+
+  it('cobre as tabelas de anamnese (T89: modelo, itens, anamnese e retificação)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining([
+        'modelo_anamnese',
+        'modelo_anamnese_item',
+        'anamnese',
+        'anamnese_retificacao',
+      ]),
     );
   });
 
