@@ -2385,8 +2385,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Contador por chave e janela atômico
-- [ ] Entra no teste de isolamento
+- [x] Contador por chave e janela atômico
+- [x] Entra no teste de isolamento
 
 **Tests**: integration
 **Gate**: full

@@ -272,6 +272,10 @@ describe('harness de isolamento', () => {
     );
   });
 
+  it('cobre a tabela de limites de uso (T120: limite_uso)', () => {
+    expect(tabelas.map((t) => t.tabela)).toContain('limite_uso');
+  });
+
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
     expect(semRlsForcada(todas)).toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
   });

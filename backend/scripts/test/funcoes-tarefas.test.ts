@@ -11,6 +11,8 @@ const EXECUTAVEIS_PELA_APP = [
   'public.app_usuario_id()',
   // T40 / AUTH-12: hash e conferência de senha no Postgres (migration 0003).
   'public.conferir_senha(p_email text, p_senha text)',
+  // T120 / EXP-05: contador de uso por chave e janela (migration 0011).
+  'public.contar_uso(p_chave text, p_janela_segundos integer)',
   'public.definir_senha(p_usuario_id uuid, p_senha text)',
 ];
 
