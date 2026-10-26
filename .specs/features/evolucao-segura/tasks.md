@@ -1533,10 +1533,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Todas as transições da matriz aceitas e as demais recusadas
-- [ ] Mesmo status é idempotente
-- [ ] Realizada para cancelada recusa se há registros
-- [ ] Falta ou cancelamento grava `cobravel = false`
+- [x] Todas as transições da matriz aceitas e as demais recusadas
+- [x] Mesmo status é idempotente
+- [x] Realizada para cancelada recusa se há registros
+- [x] Falta ou cancelamento grava `cobravel = false`
 
 **Tests**: unit
 **Gate**: quick
