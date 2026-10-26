@@ -2236,9 +2236,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Com 8 sessões hoje, 6 na lista e contadores corretos
-- [ ] "Hoje" pelo relógio do banco em Brasília
-- [ ] Isolamento coberto
+- [x] Com 8 sessões hoje, 6 na lista e contadores corretos
+- [x] "Hoje" pelo relógio do banco em Brasília
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full
