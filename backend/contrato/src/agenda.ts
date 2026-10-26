@@ -144,7 +144,9 @@ export function decodificarCursor(texto: string): Cursor | null {
   const [inicio, id, ...resto] = decodificado.split('|');
   if (resto.length > 0 || inicio === undefined || id === undefined) return null;
   if (!UUID.test(id) || !instanteValido(inicio)) return null;
-  return { inicio: new Date(inicio).toISOString(), id: id.toLowerCase() };
+  // O início fica como veio (com os microssegundos do banco): truncar em milissegundos faria a
+  // última sessão da página voltar na seguinte.
+  return { inicio, id: id.toLowerCase() };
 }
 
 const inteiroDaQuery = z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int());

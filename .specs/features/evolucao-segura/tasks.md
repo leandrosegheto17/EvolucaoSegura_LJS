@@ -1589,9 +1589,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Intervalo acima de 62 dias recusado
-- [ ] Paginação estável com cursor
-- [ ] Só sessões do profissional
+- [x] Intervalo acima de 62 dias recusado
+- [x] Paginação estável com cursor
+- [x] Só sessões do profissional
 
 **Tests**: integration
 **Gate**: full
