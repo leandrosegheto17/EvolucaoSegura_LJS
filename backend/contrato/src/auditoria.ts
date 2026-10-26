@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Problema } from './identidade.ts';
 
 // AUD-01, AUD-02, AUD-04: evento de auditoria. Lista copiada do legado
 // (backend/src/audit/domain/audit-event.ts) sem as ações de IA, relatório, Google e whitelist,
@@ -90,3 +91,84 @@ export const esquemaEventoAuditoria = z.strictObject({
   userAgent: z.string().nullable().optional(),
 });
 export type EventoAuditoria = z.infer<typeof esquemaEventoAuditoria>;
+
+// AUD-03: leitura da trilha em GET /api/auditoria. Adaptado de account.controller.ts,
+// patient-history.controller.ts e audit-query.repository.ts do legado.
+// - Sem paciente_id: "Trilha da minha conta"; com paciente_id: "Histórico do paciente" (eventos
+//   do paciente e dos registros dele: evolução, anamnese, sessão, série e pagamento).
+// - Filtro no servidor (o legado filtrava só o que já tinha carregado): todos, retificacoes
+//   (ações *.retificada) ou exportacoes (ações exportacao.*). Ausente = todos.
+// - Páginas de 50 (limit de 1 a 100, como no legado), do mais novo ao mais antigo; o cursor é o
+//   id do último evento da página (texto decimal, como no legado) e vem null na última.
+// - paciente.consultado nunca aparece. Parâmetro desconhecido ou valor inválido: 400.
+export const FILTROS_AUDITORIA = ['todos', 'retificacoes', 'exportacoes'] as const;
+export type FiltroAuditoria = (typeof FILTROS_AUDITORIA)[number];
+
+export const ACOES_DO_FILTRO_AUDITORIA: Record<
+  Exclude<FiltroAuditoria, 'todos'>,
+  readonly AcaoAuditoria[]
+> = {
+  retificacoes: ACOES_AUDITORIA.filter((a) => a.endsWith('.retificada')),
+  exportacoes: ACOES_AUDITORIA.filter((a) => a.startsWith('exportacao.')),
+};
+
+export const ACOES_FORA_DA_TRILHA: readonly AcaoAuditoria[] = ['paciente.consultado'];
+
+export const LIMITE_PADRAO_AUDITORIA = 50;
+export const LIMITE_MAXIMO_AUDITORIA = 100;
+
+export const esquemaConsultaAuditoria = z
+  .strictObject({
+    filtro: z.enum(FILTROS_AUDITORIA).optional(),
+    paciente_id: z.string().optional(),
+    limit: z
+      .string()
+      .regex(/^\d+$/)
+      .transform(Number)
+      .pipe(z.number().int().min(1).max(LIMITE_MAXIMO_AUDITORIA))
+      .optional(),
+    cursor: z
+      .string()
+      .regex(/^\d{1,18}$/)
+      .optional(),
+  })
+  .transform((q) => ({
+    filtro: q.filtro ?? 'todos',
+    limit: q.limit ?? LIMITE_PADRAO_AUDITORIA,
+    cursor: q.cursor ?? null,
+    paciente_id: q.paciente_id ?? null,
+  }));
+export type ConsultaAuditoria = z.output<typeof esquemaConsultaAuditoria>;
+
+// Só metadados do audit_log; nunca conteúdo clínico.
+export interface EventoTrilha {
+  id: string;
+  acao: string;
+  alvo_tipo: string;
+  alvo_id: string | null;
+  campos_alterados: string[];
+  origem_ip: string | null;
+  origem_ua: string | null;
+  ocorrido_em: string;
+}
+
+export interface PaginaAuditoria {
+  items: EventoTrilha[];
+  proximo_cursor: string | null;
+}
+
+const problema = (codigo: string, status: number, titulo: string): Problema => ({
+  tipo: 'about:blank',
+  titulo,
+  status,
+  codigo,
+});
+
+// Paciente inexistente, de outro profissional ou com id malformado (ISO-02).
+export const PROBLEMA_AUDITORIA_NAO_ENCONTRADA = problema('nao_encontrado', 404, 'Não encontrado');
+// Filtro, limit, cursor ou parâmetro desconhecido.
+export const PROBLEMA_CONSULTA_AUDITORIA_INVALIDA = problema(
+  'consulta_invalida',
+  400,
+  'Consulta inválida',
+);

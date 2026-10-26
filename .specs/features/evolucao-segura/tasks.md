@@ -2348,10 +2348,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Filtros Todos, Retificações e Exportações
-- [ ] Paginação por cursor
-- [ ] Evento de consulta excluído
-- [ ] Só eventos do profissional
+- [x] Filtros Todos, Retificações e Exportações
+- [x] Paginação por cursor
+- [x] Evento de consulta excluído
+- [x] Só eventos do profissional
 
 **Tests**: integration
 **Gate**: full

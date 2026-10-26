@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ACOES_AUDITORIA, ALVOS_AUDITORIA, esquemaEventoAuditoria } from './auditoria.ts';
+import {
+  ACOES_AUDITORIA,
+  ACOES_DO_FILTRO_AUDITORIA,
+  ACOES_FORA_DA_TRILHA,
+  ALVOS_AUDITORIA,
+  LIMITE_PADRAO_AUDITORIA,
+  esquemaConsultaAuditoria,
+  esquemaEventoAuditoria,
+} from './auditoria.ts';
 
 // T31 / AUD-02: o evento de auditoria recusa ação ou alvo fora da lista e chaves extras.
 // AUD-01: só nomes de campo, nunca valores. AUD-04: ações novas de acesso, cadastro, assinatura
@@ -159,5 +167,62 @@ describe('evento', () => {
     expect(
       aceita({ ...base, camposAlterados: Array.from({ length: 50 }, (_, i) => `c${i}`) }),
     ).toBe(true);
+  });
+});
+
+// T118 / AUD-03: consulta da trilha (GET /api/auditoria). Filtro Todos, Retificações ou
+// Exportações; páginas de 50 por padrão com cursor (id do último evento da página); visão do
+// paciente por paciente_id. Parâmetro desconhecido ou valor inválido = recusa (400 na rota).
+describe('consulta da trilha (AUD-03)', () => {
+  const consulta = (q: Record<string, string>) => esquemaConsultaAuditoria.safeParse(q);
+
+  it('sem parâmetros: filtro todos, página de 50, sem cursor nem paciente', () => {
+    expect(esquemaConsultaAuditoria.parse({})).toEqual({
+      filtro: 'todos',
+      limit: LIMITE_PADRAO_AUDITORIA,
+      cursor: null,
+      paciente_id: null,
+    });
+    expect(LIMITE_PADRAO_AUDITORIA).toBe(50);
+  });
+
+  it.each(['todos', 'retificacoes', 'exportacoes'])('aceita o filtro %s', (filtro) => {
+    expect(consulta({ filtro }).data?.filtro).toBe(filtro);
+  });
+
+  it('aceita cursor, limit e paciente_id', () => {
+    expect(consulta({ cursor: '123', limit: '3', paciente_id: U }).data).toEqual({
+      filtro: 'todos',
+      limit: 3,
+      cursor: '123',
+      paciente_id: U,
+    });
+  });
+
+  it.each([
+    ['filtro fora da lista', { filtro: 'pagamentos' }],
+    ['filtro vazio', { filtro: '' }],
+    ['cursor não numérico', { cursor: 'x' }],
+    ['cursor negativo', { cursor: '-1' }],
+    ['cursor vazio', { cursor: '' }],
+    ['cursor com mais de 18 dígitos', { cursor: '1234567890123456789' }],
+    ['limit 0', { limit: '0' }],
+    ['limit acima de 100', { limit: '101' }],
+    ['limit não inteiro', { limit: '2.5' }],
+    ['parâmetro desconhecido', { usuario_id: U }],
+  ])('recusa %s', (_rotulo, q) => {
+    expect(consulta(q).success).toBe(false);
+  });
+
+  it('Retificações são as ações *.retificada e Exportações as exportacao.*', () => {
+    expect([...ACOES_DO_FILTRO_AUDITORIA.retificacoes].sort()).toEqual([
+      'anamnese.retificada',
+      'evolucao.retificada',
+    ]);
+    expect([...ACOES_DO_FILTRO_AUDITORIA.exportacoes]).toEqual(['exportacao.concluida']);
+  });
+
+  it('a consulta de ficha fica fora da trilha', () => {
+    expect(ACOES_FORA_DA_TRILHA).toEqual(['paciente.consultado']);
   });
 });
