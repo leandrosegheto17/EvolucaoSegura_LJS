@@ -2254,9 +2254,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Filtro guardado na URL
-- [ ] Total em reais formatado a partir de centavos
-- [ ] Layout comparado com o legado
+- [x] Filtro guardado na URL
+- [x] Total em reais formatado a partir de centavos
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick
