@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   MOTIVO_MAXIMO,
+  PROBLEMA_ANAMNESE_EXISTENTE,
   PROBLEMA_ANAMNESE_NAO_ENCONTRADA,
+  PROBLEMA_JANELA_FECHADA,
   PROBLEMA_MODELO_BLOQUEADO,
   PROBLEMA_ROTULO_INVALIDO,
+  PROBLEMA_VALOR_INVALIDO,
   esquemaAnamneseEdicao,
   esquemaAnamneseEntrada,
+  esquemaAnamneseGravacao,
   esquemaModeloEdicao,
   esquemaModeloGravacao,
   esquemaRetificacaoEntrada,
@@ -158,5 +162,25 @@ describe('gravação do modelo (T94, decisão do usuário: row_version obrigató
       status: 404,
       codigo: 'nao_encontrado',
     });
+  });
+});
+
+describe('gravação da anamnese (T95, decisões do usuário)', () => {
+  it('edição no dia exige row_version', () => {
+    expect(
+      aceita(esquemaAnamneseGravacao, { modelo_revisao: 1, valores: {}, row_version: 1 }),
+    ).toBe(true);
+    expect(aceita(esquemaAnamneseGravacao, { modelo_revisao: 1, valores: {} })).toBe(false);
+  });
+
+  it('409 ANAMNESIS_EXISTS, 409 EDIT_WINDOW_CLOSED e 422 ANAMNESIS_VALUE_INVALID', () => {
+    for (const [problema, status, codigo] of [
+      [PROBLEMA_ANAMNESE_EXISTENTE, 409, 'ANAMNESIS_EXISTS'],
+      [PROBLEMA_JANELA_FECHADA, 409, 'EDIT_WINDOW_CLOSED'],
+      [PROBLEMA_VALOR_INVALIDO, 422, 'ANAMNESIS_VALUE_INVALID'],
+    ] as const) {
+      expect(esquemaProblema.parse(problema), codigo).toEqual(problema);
+      expect(problema, codigo).toMatchObject({ status, codigo });
+    }
   });
 });

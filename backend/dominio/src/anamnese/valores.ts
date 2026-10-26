@@ -145,3 +145,23 @@ export function alertasVigentes(modelo: ModeloDosValores, versao: Versao): Alert
     })
     .map((a) => ({ item_id: a.id, rotulo: a.rotulo }));
 }
+
+// Forma canônica de um valor, sem depender da ordem das chaves (o jsonb reordena).
+const canonico = (v: unknown): string => {
+  if (v === null || v === undefined || typeof v !== 'object') return JSON.stringify(v ?? null);
+  const o = v as Record<string, unknown>;
+  return `{${Object.keys(o)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${canonico(o[k])}`)
+    .join(',')}}`;
+};
+
+// ANA-05, ANA-08: ids dos itens cujo valor difere entre duas versões (só ids, nunca conteúdo).
+// Lista vazia = sem conteúdo novo.
+export function itensAlterados(antes: unknown, depois: unknown): string[] {
+  const a = ehObjeto(antes) ? antes : {};
+  const b = ehObjeto(depois) ? depois : {};
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(
+    (k) => canonico(a[k]) !== canonico(b[k]),
+  );
+}

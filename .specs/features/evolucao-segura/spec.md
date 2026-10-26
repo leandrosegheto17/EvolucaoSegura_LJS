@@ -535,11 +535,11 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | ANA-02 | P1: Anamnese | Tasks | Implementing |
 | ANA-03 | P1: Anamnese | Tasks | Implementing |
 | ANA-04 | P1: Anamnese | Tasks | Implementing |
-| ANA-05 | P1: Anamnese | Tasks | Pending |
+| ANA-05 | P1: Anamnese | Tasks | Implementing |
 | ANA-06 | P1: Anamnese | Tasks | Implementing |
 | ANA-07 | P1: Anamnese | Tasks | Pending |
 | ANA-08 | P1: Anamnese | Tasks | Pending |
-| ANA-09 | P1: Anamnese | Tasks | Pending |
+| ANA-09 | P1: Anamnese | Tasks | Implementing |
 | EVO-01 | P1: Evoluções | Tasks | Pending |
 | EVO-02 | P1: Evoluções | Tasks | Pending |
 | EVO-03 | P1: Evoluções | Tasks | Pending |

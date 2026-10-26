@@ -117,3 +117,66 @@ export const PROBLEMA_ANAMNESE_NAO_ENCONTRADA = problemaAnamnese(
   404,
   'Não encontrado',
 );
+
+// --- Rotas da anamnese (T95). Decisões do usuário em 2026-10-26: row_version obrigatório na
+// edição; 409 ANAMNESIS_EXISTS, 409 EDIT_WINDOW_CLOSED e 422 ANAMNESIS_VALUE_INVALID, como no
+// legado; paciente sem anamnese = 200 {anamnese: null}.
+
+// PUT /api/anamneses/:id: edição no dia com o row_version lido.
+export const esquemaAnamneseGravacao = esquemaAnamneseEdicao.extend({ row_version: esquemaVersao });
+export type AnamneseGravacao = z.output<typeof esquemaAnamneseGravacao>;
+
+export interface ValorAlertaAnamnese {
+  marcado: boolean;
+  obs: string | null;
+}
+export type ValoresAnamnese = Record<string, string | ValorAlertaAnamnese>;
+
+export interface RetificacaoAnamnese {
+  seq: number;
+  motivo: string;
+  modelo_revisao: number;
+  valores: ValoresAnamnese;
+  criado_em: string;
+}
+
+// Resposta de GET (dentro de {anamnese}), POST, PUT e da retificação. `valores` e
+// `modelo_revisao` são os da versão original; a vigente é a retificação de maior seq
+// (`versao_vigente`, 0 = a original). `estado` e `editavel_ate` vêm do relógio do banco
+// (America/Sao_Paulo). `alertas` são os marcados na versão vigente, na ordem do modelo (ANA-09).
+export interface Anamnese {
+  id: string;
+  paciente_id: string;
+  data_sessao: string;
+  modelo_revisao: number;
+  valores: ValoresAnamnese;
+  estado: 'editavel_hoje' | 'registrada';
+  editavel_ate: string;
+  row_version: number;
+  criado_em: string;
+  versao_vigente: number;
+  retificacoes: RetificacaoAnamnese[];
+  alerta_clinico: boolean;
+  alertas: { item_id: string; rotulo: string }[];
+}
+
+// ANA-04: o paciente já tem anamnese.
+export const PROBLEMA_ANAMNESE_EXISTENTE = problemaAnamnese(
+  'ANAMNESIS_EXISTS',
+  409,
+  'O paciente já tem anamnese',
+);
+// ANA-05: edição depois do dia do cadastro; o caminho é a retificação.
+export const PROBLEMA_JANELA_FECHADA = problemaAnamnese(
+  'EDIT_WINDOW_CLOSED',
+  409,
+  'Prazo de edição encerrado: use a retificação',
+);
+// ANA-04: valores inválidos (id desconhecido ou de revisão futura, texto acima de 5.000,
+// observação acima de 500, "Frequência" fora das opções) ou revisão do modelo fora da faixa.
+// Corpo fixo: nunca leva o conteúdo.
+export const PROBLEMA_VALOR_INVALIDO = problemaAnamnese(
+  'ANAMNESIS_VALUE_INVALID',
+  422,
+  'Valores da anamnese inválidos',
+);

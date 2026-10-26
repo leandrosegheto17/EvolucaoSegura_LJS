@@ -4,6 +4,7 @@ import {
   type Versao,
   LIMITES_VALORES,
   alertasVigentes,
+  itensAlterados,
   itensVisiveis,
   lerValores,
   versaoVigente,
@@ -196,5 +197,25 @@ describe('versão vigente e alertas (ANA-06, ANA-09)', () => {
     expect(
       alertasVigentes(modelo, { modelo_revisao: 1, valores: { a2: { marcado: true, obs: null } } }),
     ).toEqual([]);
+  });
+});
+
+describe('itens alterados entre versões (ANA-05, ANA-08)', () => {
+  it('versões iguais, mesmo com as chaves em outra ordem: nenhum item alterado', () => {
+    expect(
+      itensAlterados(
+        { c1: 'dor', a1: { marcado: true, obs: null } },
+        { a1: { obs: null, marcado: true }, c1: 'dor' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('valor mudado, incluído ou retirado conta como alterado, só pelo id', () => {
+    expect(
+      itensAlterados(
+        { c1: 'dor', c2: 'mensal', a1: { marcado: true, obs: null } },
+        { c1: 'dor lombar', a1: { marcado: true, obs: null }, a2: { marcado: true, obs: null } },
+      ).sort(),
+    ).toEqual(['a2', 'c1', 'c2']);
   });
 });

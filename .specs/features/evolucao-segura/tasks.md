@@ -1876,9 +1876,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Segunda anamnese do paciente recusada
-- [ ] Edição às 23:59 aceita e à 00:00 recusada
-- [ ] Isolamento coberto
+- [x] Segunda anamnese do paciente recusada
+- [x] Edição às 23:59 aceita e à 00:00 recusada
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full
