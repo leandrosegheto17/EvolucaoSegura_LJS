@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Navigate, Outlet, type RouteObject } from 'react-router';
+import { AgendaPage, NovaSessaoPage } from './app/agenda/agenda.tsx';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { Inicio } from './app/inicio.tsx';
 import { PatientFichaPage } from './app/pacientes/ficha.tsx';
@@ -56,6 +57,8 @@ export const rotas: RouteObject[] = [
                   { index: true, element: <Inicio /> },
                   { path: 'perfil', element: <ProfilePage /> },
                   { path: 'configuracoes', element: <SettingsPage /> },
+                  { path: 'agenda', element: <AgendaPage /> },
+                  { path: 'agenda/nova', element: <NovaSessaoPage /> },
                   { path: 'pacientes', element: <PatientsListPage /> },
                   { path: 'pacientes/novo', element: <PatientFormPage /> },
                   { path: 'pacientes/:id', element: <PatientFichaPage /> },

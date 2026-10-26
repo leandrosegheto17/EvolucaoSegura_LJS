@@ -1733,9 +1733,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] 50 minutos pré-selecionado
-- [ ] Layout comparado com o legado
-- [ ] Erros do contrato exibidos
+- [x] 50 minutos pré-selecionado
+- [x] Layout comparado com o legado
+- [x] Erros do contrato exibidos
 
 **Tests**: unit
 **Gate**: quick
