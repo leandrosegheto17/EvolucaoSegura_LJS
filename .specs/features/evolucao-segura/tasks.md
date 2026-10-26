@@ -1625,9 +1625,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Transição inválida responde 422
-- [ ] Voltar para agendada reaplica dia habilitado e conflito
-- [ ] Falta e cancelamento gravam `cobravel = false` salvo "cobrar"
+- [x] Transição inválida responde 422
+- [x] Voltar para agendada reaplica dia habilitado e conflito
+- [x] Falta e cancelamento gravam `cobravel = false` salvo "cobrar"
 
 **Tests**: integration
 **Gate**: full
