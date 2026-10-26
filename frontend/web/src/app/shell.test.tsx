@@ -265,7 +265,10 @@ describe('guarda de perfil (PERF-01)', () => {
 
       await vi.waitFor(() => expect(roteador.state.location.pathname).toBe('/app/perfil'));
       expect(f.mock.calls.map((c) => c[0])).toContain('/api/eu');
-      expect(await screen.findByRole('heading', { name: 'Perfil' })).toBeTruthy();
+      // T66: o título provisório "Perfil" da T65 deu lugar à tela real.
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Meu perfil profissional' }),
+      ).toBeTruthy();
     },
   );
 

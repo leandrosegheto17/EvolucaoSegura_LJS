@@ -1352,9 +1352,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Campos e limites do contrato
-- [ ] Troca de especialidade mostra o erro do servidor
-- [ ] Layout comparado com o legado
+- [x] Campos e limites do contrato
+- [x] Troca de especialidade mostra o erro do servidor
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick

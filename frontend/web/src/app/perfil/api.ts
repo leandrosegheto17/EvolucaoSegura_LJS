@@ -1,4 +1,5 @@
-import type { Perfil } from '@es/contrato/perfil';
+import type { Configuracoes } from '@es/contrato/configuracoes';
+import type { Perfil, PerfilEntrada } from '@es/contrato/perfil';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api.ts';
 
@@ -11,6 +12,18 @@ export const CHAVE_PERFIL = ['perfil'] as const;
 
 export const lerPerfil = (sinal?: AbortSignal) =>
   api.requisitar<Perfil>('/perfil', sinal !== undefined ? { sinal } : {});
+
+export const salvarPerfil = (corpo: PerfilEntrada) =>
+  api.requisitar<Perfil>('/perfil', { metodo: 'PUT', corpo });
+
+// PERF-08: configurações (só a privacidade da agenda).
+export const CHAVE_CONFIGURACOES = ['configuracoes'] as const;
+
+export const lerConfiguracoes = (sinal?: AbortSignal) =>
+  api.requisitar<Configuracoes>('/configuracoes', sinal !== undefined ? { sinal } : {});
+
+export const salvarConfiguracoes = (corpo: Configuracoes) =>
+  api.requisitar<Configuracoes>('/configuracoes', { metodo: 'PUT', corpo });
 
 /** Pura: 1a letra do primeiro e do último nome, maiúsculas; nome único = 1 letra; vazio = ''. */
 export function initialsOf(nome: string | null | undefined): string {

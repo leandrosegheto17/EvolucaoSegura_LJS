@@ -2,6 +2,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Navigate, Outlet, type RouteObject } from 'react-router';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { Inicio } from './app/inicio.tsx';
+import { SettingsPage } from './app/perfil/configuracoes.tsx';
+import { ProfilePage } from './app/perfil/perfil.tsx';
 import { GuardaPerfil, Shell } from './app/shell.tsx';
 import { criarQueryClient } from './lib/api.ts';
 import { Cadastro, Confirmar } from './publico/cadastro.tsx';
@@ -48,8 +50,8 @@ export const rotas: RouteObject[] = [
                 element: <Shell />,
                 children: [
                   { index: true, element: <Inicio /> },
-                  // A tela de perfil chega na T66.
-                  { path: 'perfil', element: <h1 className="text-2xl font-semibold">Perfil</h1> },
+                  { path: 'perfil', element: <ProfilePage /> },
+                  { path: 'configuracoes', element: <SettingsPage /> },
                   { path: '*', element: <Navigate to="/app" replace /> },
                 ],
               },
