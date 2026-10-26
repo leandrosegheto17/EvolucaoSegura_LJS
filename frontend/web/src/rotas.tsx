@@ -2,6 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Navigate, Outlet, type RouteObject } from 'react-router';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { Inicio } from './app/inicio.tsx';
+import { PatientFichaPage } from './app/pacientes/ficha.tsx';
+import { PatientFormPage } from './app/pacientes/novo.tsx';
+import { PatientsListPage } from './app/pacientes/pacientes.tsx';
+import { PatientStatusPage } from './app/pacientes/situacao.tsx';
 import { SettingsPage } from './app/perfil/configuracoes.tsx';
 import { ProfilePage } from './app/perfil/perfil.tsx';
 import { GuardaPerfil, Shell } from './app/shell.tsx';
@@ -52,6 +56,10 @@ export const rotas: RouteObject[] = [
                   { index: true, element: <Inicio /> },
                   { path: 'perfil', element: <ProfilePage /> },
                   { path: 'configuracoes', element: <SettingsPage /> },
+                  { path: 'pacientes', element: <PatientsListPage /> },
+                  { path: 'pacientes/novo', element: <PatientFormPage /> },
+                  { path: 'pacientes/:id', element: <PatientFichaPage /> },
+                  { path: 'pacientes/:id/situacao', element: <PatientStatusPage /> },
                   { path: '*', element: <Navigate to="/app" replace /> },
                 ],
               },

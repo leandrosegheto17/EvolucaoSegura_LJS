@@ -1479,9 +1479,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Busca, filtro de ativos e inativação
-- [ ] Registro de TCLE
-- [ ] Layout comparado com o legado
+- [x] Busca, filtro de ativos e inativação
+- [x] Registro de TCLE
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick
