@@ -507,13 +507,13 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | PERF-07 | P1: Perfil | Tasks | Pending |
 | PERF-08 | P1: Perfil | Tasks | Implementing |
 | PERF-09 | P1: Perfil | Tasks | Implementing |
-| PAC-01 | P1: Pacientes | Tasks | Pending |
+| PAC-01 | P1: Pacientes | Tasks | Implementing |
 | PAC-02 | P1: Pacientes | Tasks | Pending |
 | PAC-03 | P1: Pacientes | Tasks | Pending |
 | PAC-04 | P1: Pacientes | Tasks | Pending |
-| PAC-05 | P1: Pacientes | Tasks | Pending |
+| PAC-05 | P1: Pacientes | Tasks | Implementing |
 | PAC-06 | P1: Pacientes | Tasks | Pending |
-| PAC-07 | P1: Pacientes | Tasks | Pending |
+| PAC-07 | P1: Pacientes | Tasks | Implementing |
 | AGE-01 | P1: Agenda | Tasks | Pending |
 | AGE-02 | P1: Agenda | Tasks | Pending |
 | AGE-03 | P1: Agenda | Tasks | Pending |

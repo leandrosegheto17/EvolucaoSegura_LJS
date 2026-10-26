@@ -213,6 +213,12 @@ describe('harness de isolamento', () => {
     );
   });
 
+  it('cobre as tabelas de pacientes (T67: paciente e consentimento_tcle)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['paciente', 'consentimento_tcle']),
+    );
+  });
+
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
     expect(semRlsForcada(todas)).toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
   });

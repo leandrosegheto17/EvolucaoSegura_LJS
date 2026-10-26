@@ -1370,9 +1370,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Só inclusão em `consentimento_tcle`
-- [ ] Sem permissão de DELETE para `app`
-- [ ] Entra no teste de isolamento
+- [x] Só inclusão em `consentimento_tcle`
+- [x] Sem permissão de DELETE para `app`
+- [x] Entra no teste de isolamento
 
 **Tests**: integration
 **Gate**: full
