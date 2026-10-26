@@ -119,6 +119,28 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Pacientes (migration 0006): RLS forçada; a app cria e troca só `ativo`; TCLE só de inclusão.
+  paciente: {
+    id: Generated<string>;
+    usuario_id: string;
+    nome: string;
+    telefone: string | null;
+    email: string | null;
+    endereco: string | null;
+    ativo: Generated<boolean>;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  consentimento_tcle: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    finalidade: string;
+    data_consentimento: string;
+    versao_termo: string;
+    criado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;

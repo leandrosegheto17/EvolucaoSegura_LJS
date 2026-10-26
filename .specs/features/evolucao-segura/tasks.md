@@ -1406,11 +1406,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Curingas escapados na busca
-- [ ] `ativo` inválido responde 400
-- [ ] `limit` fora de 1 a 100 recusado
-- [ ] Outro profissional recebe 404 idêntico ao inexistente
-- [ ] Não existe rota DELETE
+- [x] Curingas escapados na busca
+- [x] `ativo` inválido responde 400
+- [x] `limit` fora de 1 a 100 recusado
+- [x] Outro profissional recebe 404 idêntico ao inexistente
+- [x] Não existe rota DELETE
 
 **Tests**: integration
 **Gate**: full
