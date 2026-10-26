@@ -1552,9 +1552,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Intervalos [início, fim) que apenas se encostam não conflitam
-- [ ] Conflito só com agendada, realizada ou faltou
-- [ ] Sábado e domingo desligados recusados
+- [x] Intervalos [início, fim) que apenas se encostam não conflitam
+- [x] Conflito só com agendada, realizada ou faltou
+- [x] Sábado e domingo desligados recusados
 
 **Tests**: unit
 **Gate**: quick
