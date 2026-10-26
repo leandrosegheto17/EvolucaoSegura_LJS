@@ -2,7 +2,6 @@ import type {
   MudancaStatus,
   PaginaSessoes,
   RespostaSerie,
-  SerieCancelamento,
   SerieEntrada,
   Sessao,
   SessaoEntrada,
@@ -43,9 +42,3 @@ export const criarSerie = (corpo: SerieEntrada) =>
 /** POST /api/sessoes/:id/status: `cobravel: true` é o "cobrar" da falta ou do cancelamento. */
 export const mudarStatus = (id: string, corpo: MudancaStatus) =>
   api.requisitar<Sessao>(`/sessoes/${encodeURIComponent(id)}/status`, { metodo: 'POST', corpo });
-
-export const cancelarSerie = (id: string, corpo: SerieCancelamento) =>
-  api.requisitar<RespostaSerie>(`/series/${encodeURIComponent(id)}/cancelar`, {
-    metodo: 'POST',
-    corpo,
-  });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Sessao } from '@es/contrato/agenda';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { ehErroApi } from '../../lib/api.ts';
 import { Alert, Badge, Button, Empty, Field, Input, Select, Skeleton, Spinner } from '../../ui';
@@ -55,7 +55,7 @@ const TOM_STATUS: Record<Sessao['status'], 'ok' | 'warn' | 'err'> = {
 
 export const LINK_PRIMARIO =
   'inline-flex min-h-12 min-w-12 items-center justify-center rounded-card border-2 border-pri bg-pri px-4 font-semibold text-onpri focus-visible:outline-2 focus-visible:outline-offset-2';
-const LINK_SECUNDARIO =
+export const LINK_SECUNDARIO =
   'inline-flex min-h-12 min-w-12 items-center justify-center rounded-card border-2 border-pri px-4 font-semibold text-pri focus-visible:outline-2 focus-visible:outline-offset-2';
 
 /** Texto de um erro do contrato da agenda (AGE-01, AGE-04, AGE-06, AGE-12). */
@@ -84,7 +84,7 @@ export function usarNomes() {
   });
 }
 
-export function AgendaPage() {
+export function AgendaPage({ acoes }: { acoes?: (sessao: Sessao) => ReactNode }) {
   const [params, setParams] = useSearchParams();
   const segunda = segundaDe(lerChave(params.get('semana')) ?? new Date());
   const fim = somarDias(segunda, 7);
@@ -109,6 +109,9 @@ export function AgendaPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-heading text-2xl font-bold">Agenda</h1>
         <div className="flex flex-wrap gap-2">
+          <Link to="/app/agenda/serie/nova" className={LINK_SECUNDARIO}>
+            Nova série
+          </Link>
           <Link to="/app/agenda/nova" className={LINK_PRIMARIO}>
             Nova sessão
           </Link>
@@ -175,6 +178,7 @@ export function AgendaPage() {
                       </span>
                       <span>{nomes.data?.get(s.paciente_id) ?? 'Paciente'}</span>
                       <Badge tone={TOM_STATUS[s.status]}>{ROTULO_STATUS[s.status]}</Badge>
+                      {acoes?.(s)}
                     </li>
                   ))}
                 </ul>

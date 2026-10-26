@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@es/contrato": "workspace:*",
+    "@es/dominio": "workspace:*",
     "@radix-ui/react-alert-dialog": "1.1.23",
     "@sentry/react": "11.9.0",
     "@tanstack/react-query": "5.104.5",

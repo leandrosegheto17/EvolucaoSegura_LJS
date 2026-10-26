@@ -1751,9 +1751,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Diálogo lista as colisões e oferece confirmar
-- [ ] Ações de status só mostram transições válidas
-- [ ] "Cobrar" visível em falta e cancelamento
+- [x] Diálogo lista as colisões e oferece confirmar
+- [x] Ações de status só mostram transições válidas
+- [x] "Cobrar" visível em falta e cancelamento
 
 **Tests**: unit
 **Gate**: quick

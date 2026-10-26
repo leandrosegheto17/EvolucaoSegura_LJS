@@ -26,6 +26,8 @@ export class ErroApi extends Error {
   readonly codigo: string;
   motivo?: MotivoSenha;
   campos?: string[];
+  // AGE-14: colisões do 409 SCHEDULE_CONFLICT.
+  colisoes?: NonNullable<Problema['colisoes']>;
   // Segundos do Retry-After (429), quando vier.
   retryAfter?: number;
 
@@ -54,6 +56,7 @@ async function paraErroApi(resposta: Response): Promise<ErroApi> {
   );
   if (corpo.motivo !== undefined) erro.motivo = corpo.motivo;
   if (Array.isArray(corpo.campos)) erro.campos = corpo.campos;
+  if (Array.isArray(corpo.colisoes)) erro.colisoes = corpo.colisoes;
   const espera = Number(resposta.headers.get('Retry-After'));
   if (Number.isFinite(espera) && espera > 0) erro.retryAfter = espera;
   return erro;
