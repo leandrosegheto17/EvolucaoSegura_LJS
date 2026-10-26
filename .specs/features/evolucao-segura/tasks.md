@@ -1607,9 +1607,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Versão divergente responde 409 sem gravar
-- [ ] Mover reaplica as três checagens
-- [ ] Sessão não é apagada em nenhum caminho
+- [x] Versão divergente responde 409 sem gravar
+- [x] Mover reaplica as três checagens
+- [x] Sessão não é apagada em nenhum caminho
 
 **Tests**: integration
 **Gate**: full
