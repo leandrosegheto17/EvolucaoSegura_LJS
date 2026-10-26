@@ -2402,9 +2402,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Período inválido responde 400 e paciente de outro profissional 404
-- [ ] Dia em Brasília
-- [ ] Auditoria `exportacao.concluida` sem conteúdo
+- [x] Período inválido responde 400 e paciente de outro profissional 404
+- [x] Dia em Brasília
+- [x] Auditoria `exportacao.concluida` sem conteúdo
 
 **Tests**: integration
 **Gate**: full
