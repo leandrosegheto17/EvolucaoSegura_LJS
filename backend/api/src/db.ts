@@ -239,6 +239,17 @@ export interface Banco {
     motivo: string;
     criado_em: Generated<Date>;
   };
+  // Rascunho (migration 0009): um por (profissional, tipo, ref); substituído, nunca apagado.
+  rascunho: {
+    id: Generated<string>;
+    usuario_id: string;
+    tipo: string;
+    ref: string;
+    payload: unknown;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;

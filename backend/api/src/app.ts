@@ -22,6 +22,7 @@ import { rotasPacienteFicha } from './rotas/paciente-ficha.ts';
 import { rotasPacientes } from './rotas/pacientes.ts';
 import { rotasPacientesAtivo } from './rotas/pacientes-ativo.ts';
 import { rotasPerfil } from './rotas/perfil.ts';
+import { rotasRascunhos } from './rotas/rascunhos.ts';
 import { health } from './rotas/health.ts';
 import { rotasRecuperar } from './rotas/recuperar.ts';
 import { rotasRedefinir } from './rotas/redefinir.ts';
@@ -90,6 +91,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasEvolucoes);
   app.route('/api', rotasEvolucoesEditar);
   app.route('/api', rotasEvolucoesRetificar);
+  app.route('/api', rotasRascunhos);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);

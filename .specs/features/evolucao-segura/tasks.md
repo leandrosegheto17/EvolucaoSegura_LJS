@@ -2038,9 +2038,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `If-Match` divergente responde 412; rascunho inexistente aceita ausente ou "0"
-- [ ] Payload acima de 512 KiB recusado
-- [ ] Nada é apagado
+- [x] `If-Match` divergente responde 412; rascunho inexistente aceita ausente ou "0"
+- [x] Payload acima de 512 KiB recusado
+- [x] Nada é apagado
 
 **Tests**: integration
 **Gate**: full
