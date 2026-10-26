@@ -16,6 +16,7 @@ import {
   COLUNAS_SESSAO,
   paraSessao,
   responderProblemaAgenda,
+  sessaoTemRegistros,
   verificarHorario,
 } from '../repositorios/sessoes.ts';
 
@@ -30,10 +31,6 @@ import {
 // - Falta e cancelamento gravam cobravel = false, salvo "cobrar" (cobravel: true) (AGE-10).
 // - Mesmo status sem mudar o cobravel: 200 sem subir row_version nem auditar.
 // - Audita sessao.status_alterado com os nomes dos campos. Nunca apaga (AGE-17).
-
-// AGE-08: a sessão tem evolução ou pagamento. As tabelas entram nas etapas 9 e 10; a T113 liga
-// a consulta. Até lá, nenhuma sessão tem registros.
-const temRegistros = async (): Promise<boolean> => false;
 
 export const rotasSessoesStatus = new Hono<AmbienteAutenticado>().post(
   '/sessoes/:id/status',
@@ -57,7 +54,12 @@ export const rotasSessoesStatus = new Hono<AmbienteAutenticado>().post(
     if (atual.row_version !== dados.row_version)
       return responderProblemaAgenda(c, PROBLEMA_VERSAO_DIVERGENTE);
 
-    const resultado = avaliarTransicao(atual.status, dados.status, await temRegistros());
+    // AGE-08 (T113): só consulta os registros quando a guarda importa.
+    const registros =
+      atual.status === 'realizada' && dados.status === 'cancelada'
+        ? await sessaoTemRegistros(trx, usuarioId, atual.id)
+        : false;
+    const resultado = avaliarTransicao(atual.status, dados.status, registros);
     if (resultado === 'transicao_invalida')
       return responderProblemaAgenda(c, PROBLEMA_TRANSICAO_INVALIDA);
     if (resultado === 'SESSION_HAS_RECORDS')

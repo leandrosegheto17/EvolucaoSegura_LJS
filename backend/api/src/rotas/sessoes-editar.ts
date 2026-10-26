@@ -1,4 +1,5 @@
 import {
+  PROBLEMA_SESSAO_COM_REGISTROS,
   PROBLEMA_SESSAO_NAO_ENCONTRADA,
   PROBLEMA_VERSAO_DIVERGENTE,
   esquemaSessaoEdicao,
@@ -14,6 +15,7 @@ import {
   COLUNAS_SESSAO,
   paraSessao,
   responderProblemaAgenda,
+  sessaoTemRegistros,
   verificarHorario,
 } from '../repositorios/sessoes.ts';
 
@@ -26,6 +28,7 @@ import {
 //   realizada ou faltou), ignorando a própria. Trocar o paciente confere o novo paciente.
 //   PREMISSA: o legado só checava o dia quando o dia da semana mudava; aqui todo novo início é
 //   checado, como diz o AGE-06 ("movida para sábado ou domingo desligado").
+// - Trocar o paciente de sessão com evolução ou pagamento: 422 SESSION_HAS_RECORDS (T113).
 // - Sem mudança de fato: 200 com a sessão, sem subir row_version nem auditar.
 // - Audita sessao.editada com os nomes dos campos (e conflito_confirmado, como no legado).
 // Nenhum caminho apaga a sessão (AGE-17): não existe rota DELETE.
@@ -72,6 +75,10 @@ export const rotasSessoesEditar = new Hono<AmbienteAutenticado>().put(
     };
     const campos = CAMPOS_EDITAVEIS.filter((campo) => novo[campo] !== antes[campo]);
     if (campos.length === 0) return c.json(paraSessao(atual));
+    // AGE-08 (T113, decisão do usuário de 2026-10-26): a evolução guarda o paciente, então a
+    // sessão com evolução ou pagamento não troca de paciente; horário, link e cobravel seguem livres.
+    if (campos.includes('paciente_id') && (await sessaoTemRegistros(trx, usuarioId, atual.id)))
+      return responderProblemaAgenda(c, PROBLEMA_SESSAO_COM_REGISTROS);
 
     const moveu = campos.includes('inicio') || campos.includes('fim');
     const horario = await verificarHorario(trx, {

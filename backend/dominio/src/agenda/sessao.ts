@@ -16,8 +16,7 @@ export const TRANSICOES: Record<StatusSessao, readonly StatusSessao[]> = {
 export type ResultadoTransicao =
   'mesmo_status' | 'permitida' | 'transicao_invalida' | 'SESSION_HAS_RECORDS';
 
-// `temRegistros`: a sessão tem evolução ou pagamento (a API consulta; até essas tabelas existirem,
-// é sempre falso).
+// `temRegistros`: a sessão tem evolução ou pagamento (a API consulta com sessaoTemRegistros).
 export function avaliarTransicao(
   de: StatusSessao,
   para: StatusSessao,

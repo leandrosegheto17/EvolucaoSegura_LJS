@@ -159,3 +159,16 @@ export async function contarSessoesFuturasNosDias(
     .executeTakeFirstOrThrow();
   return Number(total);
 }
+
+// AGE-08: a sessão tem evolução ligada a ela ou pagamento.
+export async function sessaoTemRegistros(
+  trx: Trx,
+  usuarioId: string,
+  sessaoId: string,
+): Promise<boolean> {
+  const { rows } = await sql<{ tem: boolean }>`
+    select exists (select 1 from evolucao where usuario_id = ${usuarioId} and sessao_id = ${sessaoId})
+        or exists (select 1 from pagamento where usuario_id = ${usuarioId} and sessao_id = ${sessaoId})
+        as tem`.execute(trx);
+  return rows[0]?.tem === true;
+}

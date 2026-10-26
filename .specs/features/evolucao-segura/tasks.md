@@ -2201,8 +2201,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sessão com evolução ou com pagamento responde 422 `SESSION_HAS_RECORDS`
-- [ ] Sem registros, cancela
+- [x] Sessão com evolução ou com pagamento responde 422 `SESSION_HAS_RECORDS`
+- [x] Sem registros, cancela
 
 **Tests**: integration
 **Gate**: full
