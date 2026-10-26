@@ -143,6 +143,14 @@ export const esquemaSerieEdicao = z
   .refine(fimDepoisDoInicio, MENSAGEM_FIM);
 export type SerieEdicao = z.output<typeof esquemaSerieEdicao>;
 
+// POST /api/series/:id/cancelar (AGE-16): decisão do usuário (2026-10-26), como no legado:
+// a_partir_de opcional (padrão: agora) e row_version da série opcional.
+export const esquemaSerieCancelamento = z.strictObject({
+  a_partir_de: esquemaInstante.optional(),
+  row_version: esquemaVersao.optional(),
+});
+export type SerieCancelamento = z.output<typeof esquemaSerieCancelamento>;
+
 export interface Serie {
   id: string;
   paciente_id: string;

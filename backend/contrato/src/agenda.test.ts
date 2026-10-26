@@ -17,6 +17,7 @@ import {
   esquemaListagemSessoes,
   esquemaMudancaStatus,
   esquemaSessaoEdicao,
+  esquemaSerieCancelamento,
   esquemaSerieEdicao,
   esquemaSerieEntrada,
   esquemaSessaoEntrada,
@@ -369,6 +370,26 @@ describe('alterar série (AGE-15)', () => {
   it('fim igual ao início e campo extra são recusados', () => {
     expect(aceita(esquemaSerieEdicao, edicao({ fim: '2026-11-11T14:00:00-03:00' }))).toBe(false);
     expect(aceita(esquemaSerieEdicao, edicao({ frequencia: 'quinzenal' }))).toBe(false);
+  });
+});
+
+// T86 / AGE-16: corpo do POST /api/series/:id/cancelar (a_partir_de e row_version opcionais,
+// decisão do usuário em 2026-10-26).
+describe('cancelar série (AGE-16)', () => {
+  it('aceita corpo vazio, a_partir_de com offset e row_version', () => {
+    expect(aceita(esquemaSerieCancelamento, {})).toBe(true);
+    expect(
+      aceita(esquemaSerieCancelamento, {
+        a_partir_de: '2026-11-20T00:00:00-03:00',
+        row_version: 2,
+      }),
+    ).toBe(true);
+  });
+
+  it('a_partir_de sem offset, row_version zero e campo extra são recusados', () => {
+    expect(aceita(esquemaSerieCancelamento, { a_partir_de: '2026-11-20' })).toBe(false);
+    expect(aceita(esquemaSerieCancelamento, { row_version: 0 })).toBe(false);
+    expect(aceita(esquemaSerieCancelamento, { status: 'cancelada' })).toBe(false);
   });
 });
 

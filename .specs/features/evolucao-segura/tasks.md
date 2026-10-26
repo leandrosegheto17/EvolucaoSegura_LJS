@@ -1715,9 +1715,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Segunda chamada não muda nada
-- [ ] Ocorrências anteriores à data intactas
-- [ ] Nenhuma linha apagada
+- [x] Segunda chamada não muda nada
+- [x] Ocorrências anteriores à data intactas
+- [x] Nenhuma linha apagada
 
 **Tests**: integration
 **Gate**: full
