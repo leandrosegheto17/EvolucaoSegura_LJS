@@ -180,3 +180,24 @@ export const PROBLEMA_VALOR_INVALIDO = problemaAnamnese(
   422,
   'Valores da anamnese inválidos',
 );
+
+// --- Retificação (T96).
+// ANA-07: retificar no dia do cadastro (ainda dá para editar).
+export const PROBLEMA_JANELA_ABERTA = problemaAnamnese(
+  'EDIT_WINDOW_OPEN',
+  409,
+  'Ainda é o dia do cadastro: edite em vez de retificar',
+);
+// Duas retificações ao mesmo tempo (decisão do usuário em 2026-10-26, como no legado).
+export const PROBLEMA_RETIFICACAO_CONCORRENTE = problemaAnamnese(
+  'RECTIFICATION_CONFLICT',
+  409,
+  'Outra retificação foi gravada ao mesmo tempo; recarregue',
+);
+// ANA-08: a retificação não muda nenhum valor da versão vigente. PREMISSA: código no padrão
+// minúsculo do projeto (a spec só define o 400; no legado não havia código).
+export const PROBLEMA_SEM_CONTEUDO_NOVO = problemaAnamnese(
+  'sem_conteudo_novo',
+  400,
+  'A retificação não traz conteúdo novo',
+);

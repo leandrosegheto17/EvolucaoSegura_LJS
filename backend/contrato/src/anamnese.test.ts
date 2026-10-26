@@ -3,9 +3,12 @@ import {
   MOTIVO_MAXIMO,
   PROBLEMA_ANAMNESE_EXISTENTE,
   PROBLEMA_ANAMNESE_NAO_ENCONTRADA,
+  PROBLEMA_JANELA_ABERTA,
   PROBLEMA_JANELA_FECHADA,
   PROBLEMA_MODELO_BLOQUEADO,
+  PROBLEMA_RETIFICACAO_CONCORRENTE,
   PROBLEMA_ROTULO_INVALIDO,
+  PROBLEMA_SEM_CONTEUDO_NOVO,
   PROBLEMA_VALOR_INVALIDO,
   esquemaAnamneseEdicao,
   esquemaAnamneseEntrada,
@@ -178,6 +181,19 @@ describe('gravação da anamnese (T95, decisões do usuário)', () => {
       [PROBLEMA_ANAMNESE_EXISTENTE, 409, 'ANAMNESIS_EXISTS'],
       [PROBLEMA_JANELA_FECHADA, 409, 'EDIT_WINDOW_CLOSED'],
       [PROBLEMA_VALOR_INVALIDO, 422, 'ANAMNESIS_VALUE_INVALID'],
+    ] as const) {
+      expect(esquemaProblema.parse(problema), codigo).toEqual(problema);
+      expect(problema, codigo).toMatchObject({ status, codigo });
+    }
+  });
+});
+
+describe('retificação: erros (T96; ANA-07, ANA-08)', () => {
+  it('409 EDIT_WINDOW_OPEN, 400 sem conteúdo novo e 409 RECTIFICATION_CONFLICT', () => {
+    for (const [problema, status, codigo] of [
+      [PROBLEMA_JANELA_ABERTA, 409, 'EDIT_WINDOW_OPEN'],
+      [PROBLEMA_SEM_CONTEUDO_NOVO, 400, 'sem_conteudo_novo'],
+      [PROBLEMA_RETIFICACAO_CONCORRENTE, 409, 'RECTIFICATION_CONFLICT'],
     ] as const) {
       expect(esquemaProblema.parse(problema), codigo).toEqual(problema);
       expect(problema, codigo).toMatchObject({ status, codigo });

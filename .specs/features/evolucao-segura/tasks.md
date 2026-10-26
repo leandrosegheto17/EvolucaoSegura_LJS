@@ -1894,9 +1894,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] No dia do cadastro responde 409 `EDIT_WINDOW_OPEN`
-- [ ] Sem conteúdo novo responde 400
-- [ ] Original preservada e versão vigente é a nova
+- [x] No dia do cadastro responde 409 `EDIT_WINDOW_OPEN`
+- [x] Sem conteúdo novo responde 400
+- [x] Original preservada e versão vigente é a nova
 
 **Tests**: integration
 **Gate**: full
