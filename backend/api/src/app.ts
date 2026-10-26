@@ -11,6 +11,7 @@ import { rotasSair } from './rotas/auth-sair.ts';
 import { rotasCadastro } from './rotas/cadastro.ts';
 import { rotasConfirmar } from './rotas/confirmar.ts';
 import { rotasEu } from './rotas/eu.ts';
+import { rotasPerfil } from './rotas/perfil.ts';
 import { health } from './rotas/health.ts';
 import { rotasRecuperar } from './rotas/recuperar.ts';
 import { rotasRedefinir } from './rotas/redefinir.ts';
@@ -52,6 +53,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   // Autenticadas: cada rota monta a lista `autenticada` (sessão, CSRF, transação).
   app.route('/api', rotasSair);
   app.route('/api', rotasEu);
+  app.route('/api', rotasPerfil);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);

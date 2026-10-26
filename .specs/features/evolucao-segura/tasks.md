@@ -1281,10 +1281,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Chave desconhecida responde 422, vazio vira null
-- [ ] `outra` exige nome de 1 a 60
-- [ ] Auditoria `perfil.editado` só quando algo mudou
-- [ ] Outro profissional não enxerga o perfil
+- [x] Chave desconhecida responde 422, vazio vira null
+- [x] `outra` exige nome de 1 a 60
+- [x] Auditoria `perfil.editado` só quando algo mudou
+- [x] Outro profissional não enxerga o perfil
 
 **Tests**: integration
 **Gate**: full

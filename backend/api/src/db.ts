@@ -93,6 +93,24 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Perfil (migration 0005): RLS forçada; a app nunca troca o dono da linha.
+  perfil: {
+    id: Generated<string>;
+    usuario_id: string;
+    nome: string;
+    contato: string | null;
+    endereco: string | null;
+    atende_sabado: Generated<boolean>;
+    atende_domingo: Generated<boolean>;
+    especialidade: 'psicologia' | 'nutricao' | 'fisioterapia' | 'outra' | null;
+    especialidade_nome: string | null;
+    conselho: string | null;
+    numero_registro: string | null;
+    regiao: string | null;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
