@@ -1948,9 +1948,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Janela fecha à meia-noite de Brasília
-- [ ] Nome do modelo único sem diferenciar maiúsculas
-- [ ] Testes do legado verdes
+- [x] Janela fecha à meia-noite de Brasília
+- [x] Nome do modelo único sem diferenciar maiúsculas
+- [x] Testes do legado verdes
 
 **Tests**: unit
 **Gate**: quick
