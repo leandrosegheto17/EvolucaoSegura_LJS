@@ -271,6 +271,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 6. The API SHALL considerar em débito a sessão `realizada` sem pagamento e a `faltou` ou `cancelada` com `cobravel` e sem pagamento; agendada e remarcada nunca. [FIN-06]
 7. [FIN-07] WHEN `/app/financeiro` é aberto THEN o app SHALL listar débitos com filtro `em_debito`, `em_dia` ou todos guardado na URL e o total pendente somado em centavos.
 8. The API SHALL não excluir pagamentos e SHALL auditar `pagamento.registrado`, `pagamento.corrigido`, `preco_paciente.definido` e `preco_sessao.ajustado` quando a versão muda. [FIN-08]
+9. [FIN-09] WHEN o profissional abre `/app/financeiro/preco/paciente/:id`, `/app/financeiro/preco/sessao/:id` ou `/app/financeiro/pagamento/:sessaoId` THEN o app SHALL permitir definir o preço do paciente, ajustar o preço da sessão e registrar ou corrigir o pagamento da sessão (data, meio e valor opcional), mostrando valores em reais e enviando centavos; WHEN a API responde 409 `versao_divergente` THEN o app SHALL pedir para recarregar, WHEN responde 422 `PAYMENT_DUPLICATE` THEN SHALL pedir confirmação explícita antes de reenviar com `confirmar_duplicidade: true`, e WHEN responde 422 `PRICE_REQUIRED` THEN SHALL pedir o valor. Cada sessão da lista de hoje do Início, quando pendente de pagamento, SHALL ter o atalho "Pagamento" para essa tela, e cada paciente da lista de débitos SHALL ter o link "Registrar pagamento" para as sessões pendentes.
 
 **Independent Test**: definir preço, marcar sessão realizada, ver débito; registrar pagamento e ver o débito sumir.
 
@@ -555,6 +556,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | FIN-06 | P1: Financeiro | Tasks | Pending |
 | FIN-07 | P1: Financeiro | Tasks | Pending |
 | FIN-08 | P1: Financeiro | Tasks | Pending |
+| FIN-09 | P1: Financeiro | Tasks | Pending |
 | INI-01 | P1: Início | Tasks | Pending |
 | INI-02 | P1: Início | Tasks | Pending |
 | INI-03 | P1: Início | Tasks | Pending |

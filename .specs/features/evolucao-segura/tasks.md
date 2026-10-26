@@ -136,7 +136,7 @@ T98 -> T99 -> T100 -> T101 -> T102 -> T103 -> T104 -> T105 -> T106
 ### Phase 14: Etapa 10: Financeiro e Início
 
 ```
-T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117
+T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T166 -> T167 -> T168
 ```
 
 ### Phase 15: Etapa 11: Auditoria (telas) e exportação
@@ -2281,11 +2281,69 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
+### T166: Telas de preço do paciente e da sessão
+
+**What**: Definir o preço do paciente e ajustar o preço da sessão, com leitura do valor atual, `row_version` e erro 409.
+**Where**: `frontend/web/src/app/financeiro/preco.tsx`, `frontend/web/src/app/financeiro/api.ts` e `frontend/web/src/rotas.tsx`
+**Depends on**: T117
+**Requirement**: FIN-09
+
+**Done when**:
+
+- [ ] Rotas `/app/financeiro/preco/paciente/:id` e `/app/financeiro/preco/sessao/:id`
+- [ ] Valor mostrado em reais e enviado em centavos inteiros; decimal inválido recusado na tela
+- [ ] GET 404 = formulário de criação sem `row_version`; GET 200 = edição com o `row_version` lido
+- [ ] 409 `versao_divergente` pede para recarregar, sem perder o que foi digitado
+- [ ] Layout comparado com o legado (billing/price)
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### T167: Tela de registrar pagamento
+
+**What**: Registrar ou corrigir o pagamento de uma sessão (data, meio, valor opcional), com confirmação de duplicidade.
+**Where**: `frontend/web/src/app/financeiro/pagamento.tsx`, `frontend/web/src/app/financeiro/api.ts` e `frontend/web/src/rotas.tsx`
+**Depends on**: T166
+**Requirement**: FIN-09
+
+**Done when**:
+
+- [ ] Rota `/app/financeiro/pagamento/:sessaoId`; meios da lista fechada e data de hoje por padrão
+- [ ] Valor vazio usa o preço da API; 422 `PRICE_REQUIRED` pede o valor
+- [ ] 422 `PAYMENT_DUPLICATE` pede confirmação explícita e só então reenvia com `confirmar_duplicidade: true`; 201 e 200 mostram mensagens distintas
+- [ ] Link "Registrar pagamento" na lista de débitos do financeiro (T116)
+- [ ] Layout comparado com o legado (billing/payment)
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### T168: Atalho "Pagamento" na lista de hoje do Início
+
+**What**: Sessão pendente de pagamento na lista de hoje ganha o atalho para a tela de pagamento.
+**Where**: `frontend/web/src/app/inicio/inicio.tsx`
+**Depends on**: T167
+**Requirement**: FIN-09, INI-03
+
+**Done when**:
+
+- [ ] Atalho "Pagamento" só nas sessões com pagamento pendente; some em pago e não cobrável
+- [ ] O atalho leva a `/app/financeiro/pagamento/:sessaoId`
+- [ ] Testes existentes do Início seguem verdes sem alteração
+
+**Tests**: unit
+**Gate**: build
+
+---
+
 ### T118: GET /api/auditoria
 
 **What**: Trilha da conta e histórico do paciente, páginas de 50, filtros e sem `paciente.consultado`.
 **Where**: `backend/api/src/rotas/auditoria.ts`
-**Depends on**: T117
+**Depends on**: T168
 **Requirement**: AUD-03
 
 **Done when**:
@@ -3162,7 +3220,7 @@ T82 -> T83
 T88 -> T89
 T97 -> T98
 T106 -> T107
-T117 -> T118
+T168 -> T118
 T124 -> T125
 T132 -> T133
 T139 -> T140
