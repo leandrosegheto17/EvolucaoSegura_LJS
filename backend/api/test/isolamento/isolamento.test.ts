@@ -61,6 +61,8 @@ const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   modelo_anamnese_item: { tipo: "'campo'" },
   // T98: modelo de texto só do tipo evolucao.
   modelo_texto: { tipo: "'evolucao'" },
+  // T107: meio do pagamento só da lista.
+  pagamento: { meio: "'pix'" },
 };
 
 const admin = new pg.Client({
@@ -189,6 +191,13 @@ const CONSULTA_PRIVILEGIOS_APP = `
 const semRlsForcada = (lista: TabelaComUsuario[]): string[] =>
   lista.filter((t) => !t.rls || !t.forcada).map((t) => t.tabela);
 
+// Roda a verificação de todas as tabelas em paralelo, cada uma na sua transação. Em série o tempo
+// crescia com o número de tabelas e passou de 5 s na T107 (mudança aprovada pelo usuário em
+// 2026-10-26). Promise.all rejeita com a primeira falha: nenhuma tabela é engolida.
+const porTabela = async (verificar: (tabela: string) => Promise<void>): Promise<void> => {
+  await Promise.all(tabelas.map(({ tabela }) => verificar(tabela)));
+};
+
 let todas: TabelaComUsuario[] = [];
 // Tabelas com usuario_id e RLS: todas menos as exceções declaradas.
 let tabelas: TabelaComUsuario[] = [];
@@ -250,6 +259,19 @@ describe('harness de isolamento', () => {
     );
   });
 
+  it('cobre as tabelas do financeiro (T107: preços, pagamento e revisões)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining([
+        'preco_paciente',
+        'preco_paciente_revisao',
+        'preco_sessao',
+        'preco_sessao_revisao',
+        'pagamento',
+        'pagamento_revisao',
+      ]),
+    );
+  });
+
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
     expect(semRlsForcada(todas)).toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
   });
@@ -293,41 +315,41 @@ describe('harness de isolamento', () => {
   });
 
   it('cada tabela semeada mostra a linha de A para A (o seed vale)', async () => {
-    for (const { tabela } of tabelas) expect(await contarDeA(A, tabela), tabela).toBe(1);
+    await porTabela(async (tabela) => expect(await contarDeA(A, tabela), tabela).toBe(1));
   });
 
   it('B não lê nenhuma linha de A', async () => {
-    for (const { tabela } of tabelas) expect(await contarDeA(B, tabela), tabela).toBe(0);
+    await porTabela(async (tabela) => expect(await contarDeA(B, tabela), tabela).toBe(0));
   });
 
   it('B não altera linha de A (zero linhas afetadas ou recusa do banco)', async () => {
-    for (const { tabela } of tabelas) {
+    await porTabela(async (tabela) => {
       const resultado = await resultadoComoB(
         sql`update ${sql.table(`public.${tabela}`)} set usuario_id = usuario_id
             where usuario_id = ${A}`,
       );
       expect([0, SEM_PERMISSAO_OU_RLS], tabela).toContain(resultado);
-    }
-    for (const { tabela } of tabelas) expect(await contarDeA(A, tabela), tabela).toBe(1);
+    });
+    await porTabela(async (tabela) => expect(await contarDeA(A, tabela), tabela).toBe(1));
   });
 
   it('B não apaga linha de A (zero linhas afetadas ou recusa do banco)', async () => {
-    for (const { tabela } of tabelas) {
+    await porTabela(async (tabela) => {
       const resultado = await resultadoComoB(
         sql`delete from ${sql.table(`public.${tabela}`)} where usuario_id = ${A}`,
       );
       expect([0, SEM_PERMISSAO_OU_RLS], tabela).toContain(resultado);
-    }
-    for (const { tabela } of tabelas) expect(await contarDeA(A, tabela), tabela).toBe(1);
+    });
+    await porTabela(async (tabela) => expect(await contarDeA(A, tabela), tabela).toBe(1));
   });
 
   it('B não cria linha em nome de A', async () => {
-    for (const { tabela } of tabelas) {
+    await porTabela(async (tabela) => {
       const resultado = await resultadoComoB(
         sql`insert into ${sql.table(`public.${tabela}`)} (usuario_id) values (${A})`,
       );
       expect(resultado, tabela).toBe(SEM_PERMISSAO_OU_RLS);
-    }
-    for (const { tabela } of tabelas) expect(await contarDeA(A, tabela), tabela).toBe(1);
+    });
+    await porTabela(async (tabela) => expect(await contarDeA(A, tabela), tabela).toBe(1));
   });
 });

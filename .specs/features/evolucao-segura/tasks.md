@@ -2092,10 +2092,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Valor de 0 a 9.999.999.999 por restrição
-- [ ] `pagamento` único por sessão
-- [ ] Sem DELETE para `app`
-- [ ] Entra no teste de isolamento
+- [x] Valor de 0 a 9.999.999.999 por restrição
+- [x] `pagamento` único por sessão
+- [x] Sem DELETE para `app`
+- [x] Entra no teste de isolamento
 
 **Tests**: integration
 **Gate**: full
