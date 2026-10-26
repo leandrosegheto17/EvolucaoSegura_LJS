@@ -2056,9 +2056,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Nome duplicado (sem diferenciar maiúsculas) recusado
-- [ ] Arquivar em vez de apagar
-- [ ] Isolamento coberto
+- [x] Nome duplicado (sem diferenciar maiúsculas) recusado
+- [x] Arquivar em vez de apagar
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full

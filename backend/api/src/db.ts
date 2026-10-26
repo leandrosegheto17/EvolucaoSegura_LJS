@@ -250,6 +250,18 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Modelo de texto (migration 0009): só do tipo evolucao; arquivar = preencher arquivado_em.
+  modelo_texto: {
+    id: Generated<string>;
+    usuario_id: string;
+    tipo: 'evolucao';
+    nome: string;
+    corpo: string;
+    arquivado_em: Date | null;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
