@@ -2310,11 +2310,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Rota `/app/financeiro/pagamento/:sessaoId`; meios da lista fechada e data de hoje por padrão
-- [ ] Valor vazio usa o preço da API; 422 `PRICE_REQUIRED` pede o valor
-- [ ] 422 `PAYMENT_DUPLICATE` pede confirmação explícita e só então reenvia com `confirmar_duplicidade: true`; 201 e 200 mostram mensagens distintas
-- [ ] Link "Registrar pagamento" na lista de débitos do financeiro (T116)
-- [ ] Layout comparado com o legado (billing/payment)
+- [x] Rota `/app/financeiro/pagamento/:sessaoId`; meios da lista fechada e data de hoje por padrão
+- [x] Valor vazio usa o preço da API; 422 `PRICE_REQUIRED` pede o valor
+- [x] 422 `PAYMENT_DUPLICATE` pede confirmação explícita e só então reenvia com `confirmar_duplicidade: true`; 201 e 200 mostram mensagens distintas
+- [x] Link "Registrar pagamento" na lista de débitos do financeiro (T116)
+- [x] Layout comparado com o legado (billing/payment)
 
 **Tests**: unit
 **Gate**: quick

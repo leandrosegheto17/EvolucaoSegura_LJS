@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { Badge, Button, Empty, Field, Select, Table } from '../../ui';
 import { QueryFetchState } from '../../ui/new/QueryFetchState';
 import { type FiltroDebitos, listarDebitos, lerPendencias } from './api.ts';
@@ -8,10 +8,9 @@ import { type FiltroDebitos, listarDebitos, lerPendencias } from './api.ts';
 // layout (título, filtro "Situação financeira", tabela com situação, sessões e valor pendente,
 // seção "Sessões pendentes" do paciente). Filtro (?status=) e paciente aberto (?paciente=) vivem
 // na URL. Valores chegam em centavos (ADR-007) e são formatados em reais aqui.
-// SPEC_DEVIATION: o legado tinha o modo privacidade (iniciais) e o link "Registrar pagamento" para
-// uma página própria; a spec só pede a lista, o filtro e o total (FIN-07), e a agenda daqui já
-// mostra o nome completo. Registro de pagamento e preço pela tela ficam em item adiado
-// (context.md).
+// SPEC_DEVIATION: o legado tinha o modo privacidade (iniciais); a agenda daqui já mostra o nome
+// completo. O link "Registrar pagamento" (FIN-09, T167) leva às sessões pendentes e, de cada uma,
+// à tela de pagamento.
 
 const FILTROS: FiltroDebitos[] = ['todos', 'em_debito', 'em_dia'];
 const ROTULO: Record<FiltroDebitos, string> = {
@@ -119,14 +118,27 @@ export function FinanceiroPage() {
             ),
             String(d.sessoes_pendentes),
             emReais(d.valor_pendente),
-            <Button
-              key="a"
-              variant="outline"
-              aria-label={`Ver pendências de ${d.nome}`}
-              onClick={() => atualizar(filtro, d.paciente_id)}
-            >
-              Ver pendências
-            </Button>,
+            <div key="a" className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                aria-label={`Ver pendências de ${d.nome}`}
+                onClick={() => atualizar(filtro, d.paciente_id)}
+              >
+                Ver pendências
+              </Button>
+              {d.status === 'em_debito' && (
+                <Link
+                  to={`/app/financeiro?${new URLSearchParams({
+                    ...(filtro !== 'todos' ? { status: filtro } : {}),
+                    paciente: d.paciente_id,
+                  }).toString()}`}
+                  aria-label={`Registrar pagamento de ${d.nome}`}
+                  className="font-semibold text-pri underline"
+                >
+                  Registrar pagamento
+                </Link>
+              )}
+            </div>,
           ])}
         />
       )}
@@ -155,11 +167,19 @@ export function FinanceiroPage() {
             <>
               <Table
                 caption="Sessões pendentes de pagamento"
-                columns={['Data', 'Situação da sessão', 'Valor']}
+                columns={['Data', 'Situação da sessão', 'Valor', 'Ações']}
                 rows={pendencias.data.sessoes.map((s) => [
                   dataHora(s.inicio),
                   ROTULO_SESSAO[s.status] ?? s.status,
                   s.valor === null ? 'Sem preço' : emReais(s.valor),
+                  <Link
+                    key="p"
+                    to={`/app/financeiro/pagamento/${encodeURIComponent(s.sessao_id)}`}
+                    aria-label={`Registrar pagamento da sessão de ${dataHora(s.inicio)}`}
+                    className="font-semibold text-pri underline"
+                  >
+                    Registrar pagamento
+                  </Link>,
                 ])}
               />
               <p>

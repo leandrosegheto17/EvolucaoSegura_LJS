@@ -162,6 +162,30 @@ describe('Financeiro: sessões pendentes do paciente (FIN-07)', () => {
     await userEvent.click(within(secao).getByRole('button', { name: 'Fechar' }));
     expect(screen.getByTestId('loc').textContent).toBe('/app/financeiro?status=em_debito');
   });
+
+  // T167 / FIN-09: link "Registrar pagamento" na lista de débitos.
+  it('paciente em débito tem o link "Registrar pagamento" para as sessões pendentes; em dia não', async () => {
+    mock();
+    setup('/app/financeiro?status=em_debito');
+    await screen.findByText('Ana Souza');
+    const link = screen.getByRole('link', { name: 'Registrar pagamento de Ana Souza' });
+    expect(link.getAttribute('href')).toBe('/app/financeiro?status=em_debito&paciente=p1');
+    const outra = screen.getByText('Bia Lima').closest('tr')!;
+    expect(within(outra).queryByRole('link', { name: /Registrar pagamento/ })).toBeNull();
+  });
+
+  it('cada sessão pendente tem o link "Registrar pagamento" para a tela do pagamento', async () => {
+    mock();
+    setup('/app/financeiro?paciente=p1');
+    const secao = await screen.findByRole('region', { name: /Sessões pendentes/ });
+    const links = await within(secao).findAllByRole('link', {
+      name: /^Registrar pagamento da sessão/,
+    });
+    expect(links.map((l) => l.getAttribute('href'))).toEqual([
+      '/app/financeiro/pagamento/s1',
+      '/app/financeiro/pagamento/s2',
+    ]);
+  });
 });
 
 describe('Financeiro: acessibilidade', () => {

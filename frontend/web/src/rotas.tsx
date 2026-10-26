@@ -5,6 +5,7 @@ import { NovaSessaoPage } from './app/agenda/agenda.tsx';
 import { AgendaComAcoes, NovaSeriePage } from './app/agenda/serie.tsx';
 import { EvolucaoPage, ModelosTextoPage } from './app/evolucao/evolucao.tsx';
 import { FinanceiroPage } from './app/financeiro/financeiro.tsx';
+import { PagamentoPage } from './app/financeiro/pagamento.tsx';
 import { PrecoPacientePage, PrecoSessaoPage } from './app/financeiro/preco.tsx';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { Inicio } from './app/inicio/inicio.tsx';
@@ -74,6 +75,7 @@ export const rotas: RouteObject[] = [
                   { path: 'financeiro', element: <FinanceiroPage /> },
                   { path: 'financeiro/preco/paciente/:id', element: <PrecoPacientePage /> },
                   { path: 'financeiro/preco/sessao/:id', element: <PrecoSessaoPage /> },
+                  { path: 'financeiro/pagamento/:sessaoId', element: <PagamentoPage /> },
                   { path: 'modelo-anamnese', element: <ModeloAnamnesePage /> },
                   { path: 'modelos-texto', element: <ModelosTextoPage /> },
                   { path: '*', element: <Navigate to="/app" replace /> },
