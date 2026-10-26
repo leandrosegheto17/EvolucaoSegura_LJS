@@ -62,3 +62,4 @@ Comportamento de `privacidade_agenda` (manter o do legado, a confirmar ao portar
 - Exportação completa em CSV.
 - UI de alterar e cancelar série (AGE-15 e AGE-16; os endpoints existem desde a T85 e a T86), junto da tela de detalhe da sessão (GET `/api/sessoes/:id`) e, se valer, da grade por hora do legado.
 - Telas de registro de pagamento e de preço (paciente e sessão) no financeiro: a API existe (T107 a T113), mas a spec só pede a lista, o filtro e o total na tela (FIN-07). No legado eram as páginas billing/payment e billing/price; a lista de débitos também tinha o modo privacidade.
+- Atalho "Pagamento" por sessão na lista de hoje do Início (o legado levava à página de pagamento), junto da tela de registro de pagamento.

@@ -6,7 +6,7 @@ import { AgendaComAcoes, NovaSeriePage } from './app/agenda/serie.tsx';
 import { EvolucaoPage, ModelosTextoPage } from './app/evolucao/evolucao.tsx';
 import { FinanceiroPage } from './app/financeiro/financeiro.tsx';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
-import { Inicio } from './app/inicio.tsx';
+import { Inicio } from './app/inicio/inicio.tsx';
 import { PatientFichaPage } from './app/pacientes/ficha.tsx';
 import { PatientFormPage } from './app/pacientes/novo.tsx';
 import { PatientsListPage } from './app/pacientes/pacientes.tsx';

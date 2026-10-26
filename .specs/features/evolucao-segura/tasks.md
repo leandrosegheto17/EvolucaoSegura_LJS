@@ -2272,9 +2272,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Contadores e lista batem com a API
-- [ ] Selos de evolução e pagamento
-- [ ] Layout comparado com o legado
+- [x] Contadores e lista batem com a API
+- [x] Selos de evolução e pagamento
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick

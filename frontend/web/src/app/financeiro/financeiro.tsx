@@ -93,7 +93,8 @@ export function FinanceiroPage() {
       />
       {debitos.isSuccess && (
         <p className="font-semibold">
-          Total pendente: <span data-testid="total-pendente">{emReais(debitos.data.total_pendente)}</span>
+          Total pendente:{' '}
+          <span data-testid="total-pendente">{emReais(debitos.data.total_pendente)}</span>
         </p>
       )}
       {debitos.isSuccess && itens.length === 0 && (
