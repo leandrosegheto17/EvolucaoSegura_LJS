@@ -1228,8 +1228,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Pedido mostra sempre a mesma mensagem
-- [ ] Redefinição trata `link_invalido` e motivo da senha
+- [x] Pedido mostra sempre a mesma mensagem
+- [x] Redefinição trata `link_invalido` e motivo da senha
 
 **Tests**: unit
 **Gate**: quick
