@@ -206,6 +206,14 @@ describe('códigos de erro problem+json', () => {
     });
   });
 
+  it('o código aceita letras maiúsculas e minúsculas, dígitos e sublinhado (decisão 2026-10-26)', () => {
+    const base = problema('validacao', 'Dados inválidos');
+    for (const codigo of ['SCHEDULE_CONFLICT', 'WEEKEND_DAY_HAS_SESSIONS', 'nao_encontrado', 'X1'])
+      expect(aceita(esquemaProblema, { ...base, codigo }), codigo).toBe(true);
+    for (const codigo of ['', 'com-hifen', 'com espaço', 'ação', 'x.y'])
+      expect(aceita(esquemaProblema, { ...base, codigo }), codigo).toBe(false);
+  });
+
   it('o esquema do problema recusa chave desconhecida e motivo fora da lista', () => {
     const base = problema('validacao', 'Dados inválidos');
     expect(aceita(esquemaProblema, { ...base, detalhe: 'senha errada' })).toBe(false);

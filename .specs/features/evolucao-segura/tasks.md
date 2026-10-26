@@ -1515,9 +1515,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] ISO 8601 com offset, anos 2000 a 2100, `fim > inicio`
-- [ ] Link opcional com http ou https até 500
-- [ ] Intervalo de listagem de até 62 dias, `limit` padrão 50 e máximo 100
+- [x] ISO 8601 com offset, anos 2000 a 2100, `fim > inicio`
+- [x] Link opcional com http ou https até 500
+- [x] Intervalo de listagem de até 62 dias, `limit` padrão 50 e máximo 100
 
 **Tests**: unit
 **Gate**: quick

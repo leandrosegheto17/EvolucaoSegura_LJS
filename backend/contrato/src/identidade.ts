@@ -68,7 +68,9 @@ export const esquemaProblema = z.strictObject({
   tipo: z.literal('about:blank'),
   titulo: z.string(),
   status: z.number().int().min(400).max(599),
-  codigo: z.string().regex(/^[a-z0-9_]+$/),
+  // Minúsculas no padrão do projeto; maiúsculas para os códigos da spec (ex.: SCHEDULE_CONFLICT,
+  // SPECIALTY_HAS_ANAMNESIS, WEEKEND_DAY_HAS_SESSIONS). Decisão do usuário em 2026-10-26.
+  codigo: z.string().regex(/^[A-Za-z0-9_]+$/),
   motivo: z.enum(MOTIVOS_SENHA).optional(),
   campos: z.array(z.string()).optional(),
 });
