@@ -78,6 +78,15 @@ describe('Ficha do paciente', () => {
     );
   });
 
+  it('tem o cartão Evolução com o link para a tela da evolução do paciente (T106)', async () => {
+    mock();
+    setup();
+    expect(await screen.findByRole('heading', { name: 'Evolução' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Abrir evolução' }).getAttribute('href')).toBe(
+      '/app/pacientes/p1/evolucao',
+    );
+  });
+
   it('paciente inativo mostra o selo Inativo', async () => {
     mock({ ativo: false });
     setup();

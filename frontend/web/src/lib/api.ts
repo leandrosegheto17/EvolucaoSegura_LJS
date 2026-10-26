@@ -75,6 +75,8 @@ export interface OpcoesRequisicao {
   // Rota pública, antes da sessão: sem x-csrf-token e sem ir a /sessao-expirada no 401.
   publica?: boolean;
   sinal?: AbortSignal;
+  // Cabeçalhos extras (ex.: If-Match do rascunho, RAS-02).
+  cabecalhos?: Record<string, string>;
 }
 
 export interface OpcoesCliente {
@@ -107,6 +109,7 @@ export function criarClienteApi(opcoes: OpcoesCliente = {}) {
       if (csrf !== null) headers[CABECALHO_CSRF] = csrf;
     }
     if (o.corpo !== undefined) headers['Content-Type'] = 'application/json';
+    if (o.cabecalhos !== undefined) Object.assign(headers, o.cabecalhos);
     const resposta = await buscar(`${API_BASE}${caminho}`, {
       method: metodo,
       headers,

@@ -2074,9 +2074,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Rascunho oferecido depois da sessão expirar com texto não salvo
-- [ ] Meia-noite com a tela aberta recusa a gravação e oferece retificar
-- [ ] Layout comparado com o legado
+- [x] Rascunho oferecido depois da sessão expirar com texto não salvo
+- [x] Meia-noite com a tela aberta recusa a gravação e oferece retificar
+- [x] Layout comparado com o legado
 
 **Tests**: unit
 **Gate**: quick

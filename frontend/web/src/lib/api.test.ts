@@ -137,6 +137,26 @@ describe('token CSRF em toda escrita (AUTH-17)', () => {
   });
 });
 
+describe('cabeçalhos extras (If-Match do rascunho, RAS-02)', () => {
+  it('envia os cabeçalhos pedidos junto do token CSRF', async () => {
+    const fetch = fetchSimulado(
+      { status: 200, corpo: { csrf_token: 'tok' } },
+      { status: 200, corpo: {} },
+    );
+    const api = criarClienteApi({ fetch, aoExpirar: () => {} });
+
+    await api.requisitar('/rascunhos/evolucao/x', {
+      metodo: 'PUT',
+      corpo: { payload: {} },
+      cabecalhos: { 'If-Match': '3' },
+    });
+
+    const h = cabecalhos(fetch.mock.calls[1]![1]);
+    expect(h.get('If-Match')).toBe('3');
+    expect(h.get(CABECALHO_CSRF)).toBe('tok');
+  });
+});
+
 describe('401 leva a /sessao-expirada', () => {
   const PROBLEMA_401 = {
     tipo: 'about:blank',

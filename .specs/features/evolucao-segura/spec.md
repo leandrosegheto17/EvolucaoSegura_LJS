@@ -612,7 +612,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | RAS-01 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-02 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-03 | P2: Rascunhos e modelos | Tasks | Implementing |
-| RAS-04 | P2: Rascunhos e modelos | Tasks | Pending |
+| RAS-04 | P2: Rascunhos e modelos | Tasks | Implementing |
 | PUSH-01 | P2: Push | Tasks | Pending |
 | PUSH-02 | P2: Push | Tasks | Pending |
 | PUSH-03 | P2: Push | Tasks | Pending |

@@ -57,6 +57,12 @@ export function PatientFichaPage() {
             Abrir anamnese
           </Link>
         </Card>
+        <Card className="flex flex-col gap-3 p-4">
+          <h2 className="text-lg font-bold">Evolução</h2>
+          <Link to={`/app/pacientes/${id}/evolucao`} className="font-semibold underline">
+            Abrir evolução
+          </Link>
+        </Card>
         <ConsentsCard id={id} />
       </div>
     </div>
