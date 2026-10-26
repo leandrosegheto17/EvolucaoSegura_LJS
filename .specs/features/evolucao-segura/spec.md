@@ -499,13 +499,13 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | ISO-03 | P1: Isolamento | Tasks | Implementing |
 | ISO-04 | P1: Isolamento | Tasks | Implementing |
 | PERF-01 | P1: Perfil | Tasks | Pending |
-| PERF-02 | P1: Perfil | Tasks | Pending |
-| PERF-03 | P1: Perfil | Tasks | Pending |
+| PERF-02 | P1: Perfil | Tasks | Implementing |
+| PERF-03 | P1: Perfil | Tasks | Implementing |
 | PERF-04 | P1: Perfil | Tasks | Pending |
 | PERF-05 | P1: Perfil | Tasks | Pending |
 | PERF-06 | P1: Perfil | Tasks | Pending |
 | PERF-07 | P1: Perfil | Tasks | Pending |
-| PERF-08 | P1: Perfil | Tasks | Pending |
+| PERF-08 | P1: Perfil | Tasks | Implementing |
 | PERF-09 | P1: Perfil | Tasks | Pending |
 | PAC-01 | P1: Pacientes | Tasks | Pending |
 | PAC-02 | P1: Pacientes | Tasks | Pending |

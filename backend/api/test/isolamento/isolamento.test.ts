@@ -207,6 +207,12 @@ describe('harness de isolamento', () => {
     );
   });
 
+  it('cobre as tabelas de perfil (T61: perfil e configuracao_usuario)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['perfil', 'configuracao_usuario']),
+    );
+  });
+
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {
     expect(semRlsForcada(todas)).toEqual(Object.keys(EXCECOES_SEM_RLS).sort());
   });

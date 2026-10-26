@@ -1263,9 +1263,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Uma especialidade por profissional
-- [ ] `atende_sabado` e `atende_domingo` com padrão falso
-- [ ] `privacidade_agenda` com padrão falso
+- [x] Uma especialidade por profissional
+- [x] `atende_sabado` e `atende_domingo` com padrão falso
+- [x] `privacidade_agenda` com padrão falso
 
 **Tests**: integration
 **Gate**: full
