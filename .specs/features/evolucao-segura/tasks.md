@@ -1155,10 +1155,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Token inválido responde 400 `link_invalido` antes de avaliar a senha
-- [ ] Senha nova que não passa na política responde 422
-- [ ] Todas as sessões encerradas
-- [ ] Token usado não vale de novo
+- [x] Token inválido responde 400 `link_invalido` antes de avaliar a senha
+- [x] Senha nova que não passa na política responde 422
+- [x] Todas as sessões encerradas
+- [x] Token usado não vale de novo
 
 **Tests**: integration
 **Gate**: full

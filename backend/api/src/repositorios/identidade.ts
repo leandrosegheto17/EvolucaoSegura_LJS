@@ -255,3 +255,13 @@ export async function encerrarSessaoPorHash(trx: Trx, hash: Buffer): Promise<voi
     .where('encerrada_em', 'is', null)
     .execute();
 }
+
+// AUTH-14: encerra (UPDATE de data, sem DELETE) todas as sessões ainda abertas do profissional.
+export async function encerrarSessoesDoUsuario(trx: Trx, usuarioId: string): Promise<void> {
+  await trx
+    .updateTable('sessao')
+    .set({ encerrada_em: sql<Date>`now()` })
+    .where('usuario_id', '=', usuarioId)
+    .where('encerrada_em', 'is', null)
+    .execute();
+}

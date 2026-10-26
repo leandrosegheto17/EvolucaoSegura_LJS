@@ -13,6 +13,7 @@ import { rotasConfirmar } from './rotas/confirmar.ts';
 import { rotasEu } from './rotas/eu.ts';
 import { health } from './rotas/health.ts';
 import { rotasRecuperar } from './rotas/recuperar.ts';
+import { rotasRedefinir } from './rotas/redefinir.ts';
 
 interface OpcoesApp {
   capturarErro?: (erro: unknown) => void;
@@ -47,6 +48,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
       emSegundoPlano: opcoes.emSegundoPlano ?? waitUntil,
     }),
   );
+  app.route('/api', rotasRedefinir);
   // Autenticadas: cada rota monta a lista `autenticada` (sessão, CSRF, transação).
   app.route('/api', rotasSair);
   app.route('/api', rotasEu);
