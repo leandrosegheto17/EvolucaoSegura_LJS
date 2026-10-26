@@ -108,6 +108,34 @@ export const esquemaMudancaStatus = z.strictObject({
 });
 export type MudancaStatus = z.output<typeof esquemaMudancaStatus>;
 
+// POST /api/series (AGE-13): a primeira ocorrência em inicio e fim (regras do AGE-01), a
+// frequência e o total de ocorrências, a primeira incluída. `cobravel` e `link` valem para todas.
+// PREMISSA: corpo plano; no legado, frequência e ocorrências iam em `recorrencia` do POST
+// /sessions.
+export const esquemaSerieEntrada = z
+  .strictObject({
+    paciente_id: esquemaId,
+    inicio: esquemaInstante,
+    fim: esquemaInstante,
+    link: esquemaLink,
+    cobravel: z.boolean().optional(),
+    confirmar_conflito: z.boolean().optional(),
+    frequencia: z.enum(FREQUENCIAS_SERIE),
+    ocorrencias: z.number().int().min(OCORRENCIAS_MINIMO).max(OCORRENCIAS_MAXIMO),
+  })
+  .refine(fimDepoisDoInicio, MENSAGEM_FIM);
+export type SerieEntrada = z.output<typeof esquemaSerieEntrada>;
+
+export interface Serie {
+  id: string;
+  paciente_id: string;
+  frequencia: FrequenciaSerie;
+  ocorrencias: number;
+  cancelada: boolean;
+  row_version: number;
+  criado_em: string;
+}
+
 export interface Sessao {
   id: string;
   paciente_id: string;
@@ -128,6 +156,11 @@ export const INTERVALO_MAXIMO_DIAS = 62;
 export const LIMITE_PADRAO_SESSOES = 50;
 export const LIMITE_MAXIMO_SESSOES = 100;
 const DIA_MS = 86_400_000;
+
+export interface RespostaSerie {
+  serie: Serie;
+  sessoes: Sessao[];
+}
 
 export interface Cursor {
   inicio: string;

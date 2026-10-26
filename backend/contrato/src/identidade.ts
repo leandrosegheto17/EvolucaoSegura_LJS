@@ -75,6 +75,17 @@ export const esquemaProblema = z.strictObject({
   campos: z.array(z.string()).optional(),
   // PERF-06: quantidade de sessões futuras no dia que o perfil quer desligar.
   quantidade: z.number().int().min(1).optional(),
+  // AGE-14: no 409 SCHEDULE_CONFLICT da série, cada par (ocorrência da série, sessão existente)
+  // que se sobrepõe; `ocorrencia` conta a partir de 1 e `inicio` é o da ocorrência.
+  colisoes: z
+    .array(
+      z.strictObject({
+        ocorrencia: z.number().int().min(1),
+        inicio: z.string(),
+        sessao_id: z.string(),
+      }),
+    )
+    .optional(),
 });
 export type Problema = z.infer<typeof esquemaProblema>;
 

@@ -1679,9 +1679,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Todas as colisões listadas no 409 e nada criado sem `confirmar_conflito`
-- [ ] Com a confirmação, cria todas
-- [ ] Mesma duração em todas
+- [x] Todas as colisões listadas no 409 e nada criado sem `confirmar_conflito`
+- [x] Com a confirmação, cria todas
+- [x] Mesma duração em todas
 
 **Tests**: integration
 **Gate**: full

@@ -16,6 +16,7 @@ import {
   esquemaListagemSessoes,
   esquemaMudancaStatus,
   esquemaSessaoEdicao,
+  esquemaSerieEntrada,
   esquemaSessaoEntrada,
 } from './agenda.ts';
 import { esquemaProblema } from './identidade.ts';
@@ -277,6 +278,58 @@ describe('listagem (AGE-03)', () => {
 
   it('parâmetro desconhecido é ignorado', () => {
     expect(listar({ de, ate: '2026-05-08T03:00:00Z', q: 'x' }).success).toBe(true);
+  });
+});
+
+// T84 / AGE-13, AGE-14: corpo do POST /api/series (a primeira ocorrência em inicio e fim, com as
+// regras do AGE-01) e a lista de colisões do 409.
+describe('criar série (AGE-13)', () => {
+  const serie = (extra: Record<string, unknown> = {}) => ({
+    ...sessao('2026-11-10T10:00:00-03:00', '2026-11-10T10:50:00-03:00'),
+    frequencia: 'semanal',
+    ocorrencias: 4,
+    ...extra,
+  });
+
+  it('1 e 53 ocorrências são recusadas; 2 e 52 são aceitas', () => {
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: 1 }))).toBe(false);
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: 53 }))).toBe(false);
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: 2 }))).toBe(true);
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: 52 }))).toBe(true);
+  });
+
+  it('ocorrências fracionárias ou em texto são recusadas', () => {
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: 2.5 }))).toBe(false);
+    expect(aceita(esquemaSerieEntrada, serie({ ocorrencias: '4' }))).toBe(false);
+  });
+
+  it('só semanal e quinzenal', () => {
+    expect(aceita(esquemaSerieEntrada, serie({ frequencia: 'quinzenal' }))).toBe(true);
+    expect(aceita(esquemaSerieEntrada, serie({ frequencia: 'diaria' }))).toBe(false);
+    expect(aceita(esquemaSerieEntrada, serie({ frequencia: undefined }))).toBe(false);
+  });
+
+  it('a primeira ocorrência segue o AGE-01 (fim depois do início, offset obrigatório)', () => {
+    expect(aceita(esquemaSerieEntrada, serie({ fim: '2026-11-10T10:00:00-03:00' }))).toBe(false);
+    expect(aceita(esquemaSerieEntrada, serie({ inicio: '2026-11-10T09:00:00' }))).toBe(false);
+  });
+
+  it('campo extra é recusado', () => {
+    expect(aceita(esquemaSerieEntrada, serie({ status: 'realizada' }))).toBe(false);
+  });
+
+  it('o 409 da série lista as colisões e continua um problema válido (AGE-14)', () => {
+    const problema = {
+      ...PROBLEMA_CONFLITO_HORARIO,
+      colisoes: [{ ocorrencia: 2, inicio: '2026-11-17T13:00:00.000Z', sessao_id: SESSAO }],
+    };
+    expect(esquemaProblema.parse(problema)).toEqual(problema);
+    expect(
+      esquemaProblema.safeParse({
+        ...PROBLEMA_CONFLITO_HORARIO,
+        colisoes: [{ ocorrencia: 0, inicio: '2026-11-17T13:00:00.000Z', sessao_id: SESSAO }],
+      }).success,
+    ).toBe(false);
   });
 });
 
