@@ -1824,8 +1824,8 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Motivo de 1 a 5.000
-- [ ] Código `MODEL_LABEL_INVALID` sem ecoar o texto
+- [x] Motivo de 1 a 5.000
+- [x] Código `MODEL_LABEL_INVALID` sem ecoar o texto
 
 **Tests**: unit
 **Gate**: quick
