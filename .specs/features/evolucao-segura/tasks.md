@@ -2290,11 +2290,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Rotas `/app/financeiro/preco/paciente/:id` e `/app/financeiro/preco/sessao/:id`
-- [ ] Valor mostrado em reais e enviado em centavos inteiros; decimal inválido recusado na tela
-- [ ] GET 404 = formulário de criação sem `row_version`; GET 200 = edição com o `row_version` lido
-- [ ] 409 `versao_divergente` pede para recarregar, sem perder o que foi digitado
-- [ ] Layout comparado com o legado (billing/price)
+- [x] Rotas `/app/financeiro/preco/paciente/:id` e `/app/financeiro/preco/sessao/:id`
+- [x] Valor mostrado em reais e enviado em centavos inteiros; decimal inválido recusado na tela
+- [x] GET 404 = formulário de criação sem `row_version`; GET 200 = edição com o `row_version` lido
+- [x] 409 `versao_divergente` pede para recarregar, sem perder o que foi digitado
+- [x] Layout comparado com o legado (billing/price)
 
 **Tests**: unit
 **Gate**: quick
