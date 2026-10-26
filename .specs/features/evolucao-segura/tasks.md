@@ -2330,9 +2330,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Atalho "Pagamento" só nas sessões com pagamento pendente; some em pago e não cobrável
-- [ ] O atalho leva a `/app/financeiro/pagamento/:sessaoId`
-- [ ] Testes existentes do Início seguem verdes sem alteração
+- [x] Atalho "Pagamento" só nas sessões com pagamento pendente; some em pago e não cobrável
+- [x] O atalho leva a `/app/financeiro/pagamento/:sessaoId`
+- [x] Testes existentes do Início seguem verdes sem alteração
 
 **Tests**: unit
 **Gate**: build

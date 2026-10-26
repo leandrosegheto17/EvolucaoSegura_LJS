@@ -18,8 +18,8 @@ import { lerResumoInicio } from './api.ts';
 // prontos de GET /api/inicio; a tela não recalcula nada.
 // SPEC_DEVIATION: o legado dava a cada sessão um chip de estado visual calculado no cliente
 // (sessionVisualState) e um atalho "Pagamento" para a página de pagamento. Aqui a linha mostra os
-// dois selos da spec (evolução, com quatro estados, e pagamento, com três) e o atalho de
-// pagamento fica adiado com a tela de registro (context.md). O nome vem inteiro, como na agenda.
+// dois selos da spec (evolução, com quatro estados, e pagamento, com três) e o atalho "Pagamento"
+// só aparece com pagamento pendente (FIN-09, T168). O nome vem inteiro, como na agenda.
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const hora = (iso: string) => {
@@ -82,6 +82,11 @@ function ListaDeHoje({ sessoes, total }: { sessoes: SessaoDeHoje[]; total: numbe
               <Link to={`/app/pacientes/${s.paciente.id}/evolucao`} className={LINK_SESSAO}>
                 Evolução
               </Link>
+              {s.pagamento === 'pendente' && (
+                <Link to={`/app/financeiro/pagamento/${s.id}`} className={LINK_SESSAO}>
+                  Pagamento
+                </Link>
+              )}
             </li>
           ))}
         </ul>

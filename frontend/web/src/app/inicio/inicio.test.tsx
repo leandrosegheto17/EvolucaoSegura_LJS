@@ -206,3 +206,27 @@ describe('Início: acessibilidade', () => {
     expect((await axe(container)).violations).toEqual([]);
   });
 });
+
+// T168 / FIN-09, INI-03: atalho "Pagamento" na lista de hoje (no legado, TodayList levava à página
+// de pagamento da sessão).
+describe('Início: atalho Pagamento (FIN-09)', () => {
+  it('aparece só na sessão com pagamento pendente e leva à tela de pagamento da sessão', async () => {
+    mock(
+      resumo({
+        hoje: [
+          sessao(1, { pagamento: 'pendente' }),
+          sessao(2, { pagamento: 'pago' }),
+          sessao(3, { pagamento: 'nao_cobravel' }),
+        ],
+        hoje_total: 3,
+      }),
+    );
+    setup();
+    await screen.findByText('Paciente 1');
+    const linha = (n: number) => screen.getByText(`Paciente ${n}`).closest('li')!;
+    const atalho = within(linha(1)).getByRole('link', { name: 'Pagamento' });
+    expect(atalho.getAttribute('href')).toBe('/app/financeiro/pagamento/s1');
+    expect(within(linha(2)).queryByRole('link', { name: 'Pagamento' })).toBeNull();
+    expect(within(linha(3)).queryByRole('link', { name: 'Pagamento' })).toBeNull();
+  });
+});
