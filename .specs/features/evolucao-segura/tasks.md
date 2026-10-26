@@ -1174,9 +1174,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Escrita envia `x-csrf-token`
-- [ ] 401 leva a `/sessao-expirada`
-- [ ] Teste do cliente com `fetch` simulado
+- [x] Escrita envia `x-csrf-token`
+- [x] 401 leva a `/sessao-expirada`
+- [x] Teste do cliente com `fetch` simulado
 
 **Tests**: unit
 **Gate**: quick
