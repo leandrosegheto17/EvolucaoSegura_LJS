@@ -6,6 +6,7 @@ import {
   PROBLEMA_CONSULTA_SESSOES_INVALIDA,
   PROBLEMA_DIA_INDISPONIVEL,
   PROBLEMA_PACIENTE_INATIVO,
+  PROBLEMA_SERIE_CANCELADA,
   PROBLEMA_SESSAO_COM_REGISTROS,
   PROBLEMA_SESSAO_NAO_ENCONTRADA,
   PROBLEMA_TRANSICAO_INVALIDA,
@@ -16,6 +17,7 @@ import {
   esquemaListagemSessoes,
   esquemaMudancaStatus,
   esquemaSessaoEdicao,
+  esquemaSerieEdicao,
   esquemaSerieEntrada,
   esquemaSessaoEntrada,
 } from './agenda.ts';
@@ -333,6 +335,43 @@ describe('criar série (AGE-13)', () => {
   });
 });
 
+// T85 / AGE-15: corpo do PUT /api/series/:id (novo horário da primeira ocorrência aberta, com as
+// regras do AGE-01; a_partir_de e row_version opcionais, decisão do usuário em 2026-10-26).
+describe('alterar série (AGE-15)', () => {
+  const edicao = (extra: Record<string, unknown> = {}) => ({
+    inicio: '2026-11-11T14:00:00-03:00',
+    fim: '2026-11-11T15:00:00-03:00',
+    ...extra,
+  });
+
+  it('aceita só o horário, e também a_partir_de, link, cobravel, confirmar_conflito e row_version', () => {
+    expect(aceita(esquemaSerieEdicao, edicao())).toBe(true);
+    expect(
+      aceita(
+        esquemaSerieEdicao,
+        edicao({
+          a_partir_de: '2026-11-10T00:00:00-03:00',
+          link: 'https://meet.exemplo.com/x',
+          cobravel: true,
+          confirmar_conflito: true,
+          row_version: 3,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('a_partir_de precisa de offset; row_version precisa ser inteiro positivo', () => {
+    expect(aceita(esquemaSerieEdicao, edicao({ a_partir_de: '2026-11-10' }))).toBe(false);
+    expect(aceita(esquemaSerieEdicao, edicao({ a_partir_de: '2026-11-10T00:00:00' }))).toBe(false);
+    expect(aceita(esquemaSerieEdicao, edicao({ row_version: 0 }))).toBe(false);
+  });
+
+  it('fim igual ao início e campo extra são recusados', () => {
+    expect(aceita(esquemaSerieEdicao, edicao({ fim: '2026-11-11T14:00:00-03:00' }))).toBe(false);
+    expect(aceita(esquemaSerieEdicao, edicao({ frequencia: 'quinzenal' }))).toBe(false);
+  });
+});
+
 describe('erros da agenda', () => {
   it('códigos e status da spec, no formato problem+json do projeto', () => {
     const problemas = [
@@ -344,6 +383,7 @@ describe('erros da agenda', () => {
       [PROBLEMA_VERSAO_DIVERGENTE, 'versao_divergente', 409],
       [PROBLEMA_SESSAO_NAO_ENCONTRADA, 'nao_encontrado', 404],
       [PROBLEMA_CONSULTA_SESSOES_INVALIDA, 'consulta_invalida', 400],
+      [PROBLEMA_SERIE_CANCELADA, 'SERIES_CANCELLED', 422],
     ] as const;
     for (const [problema, codigo, status] of problemas) {
       expect(esquemaProblema.parse(problema), codigo).toEqual(problema);

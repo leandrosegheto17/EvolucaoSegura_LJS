@@ -126,6 +126,23 @@ export const esquemaSerieEntrada = z
   .refine(fimDepoisDoInicio, MENSAGEM_FIM);
 export type SerieEntrada = z.output<typeof esquemaSerieEntrada>;
 
+// PUT /api/series/:id (AGE-15): novo início e fim da primeira ocorrência `agendada` a partir de
+// `a_partir_de`; as demais andam a mesma diferença, com a nova duração. Link ausente = sem link;
+// cobravel ausente = como está. Decisão do usuário (2026-10-26), como no legado: a_partir_de
+// opcional (padrão: agora) e row_version da série opcional.
+export const esquemaSerieEdicao = z
+  .strictObject({
+    inicio: esquemaInstante,
+    fim: esquemaInstante,
+    link: esquemaLink,
+    cobravel: z.boolean().optional(),
+    a_partir_de: esquemaInstante.optional(),
+    confirmar_conflito: z.boolean().optional(),
+    row_version: esquemaVersao.optional(),
+  })
+  .refine(fimDepoisDoInicio, MENSAGEM_FIM);
+export type SerieEdicao = z.output<typeof esquemaSerieEdicao>;
+
 export interface Serie {
   id: string;
   paciente_id: string;
@@ -277,6 +294,9 @@ export const PROBLEMA_VERSAO_DIVERGENTE = problemaAgenda(
   409,
   'Alguém alterou isto; recarregue',
 );
+// AGE-15: alterar série já cancelada (decisão do usuário em 2026-10-26: código novo, em
+// maiúsculas como os da spec).
+export const PROBLEMA_SERIE_CANCELADA = problemaAgenda('SERIES_CANCELLED', 422, 'Série cancelada');
 // Sessão (ou paciente) inexistente, de outro profissional ou com id malformado (ISO-02).
 export const PROBLEMA_SESSAO_NAO_ENCONTRADA = problemaAgenda(
   'nao_encontrado',

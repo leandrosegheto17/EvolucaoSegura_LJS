@@ -1697,9 +1697,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Passadas e já realizadas intocadas
-- [ ] Dia habilitado e conflito reaplicados
-- [ ] Tudo ou nada
+- [x] Passadas e já realizadas intocadas
+- [x] Dia habilitado e conflito reaplicados
+- [x] Tudo ou nada
 
 **Tests**: integration
 **Gate**: full

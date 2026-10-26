@@ -1,6 +1,7 @@
 import type { Serie } from '@es/contrato/agenda';
 import type { Selectable } from 'kysely';
-import type { Banco } from '../db.ts';
+import type { Banco, Trx } from '../db.ts';
+import { COLUNAS_SESSAO, type LinhaSessao } from './sessoes.ts';
 
 // Leitura da série na transação da requisição (RLS e filtro por usuario_id). Adaptado de
 // series.repository.ts do legado. Nada é apagado: cancelar só muda o flag e o status (AGE-17).
@@ -29,3 +30,18 @@ export const paraSerie = (linha: LinhaSerie): Serie => ({
   row_version: linha.row_version,
   criado_em: linha.criado_em.toISOString(),
 });
+
+// Todas as ocorrências da série, da mais cedo para a mais tarde.
+export const ocorrenciasDaSerie = (
+  trx: Trx,
+  usuarioId: string,
+  serieId: string,
+): Promise<LinhaSessao[]> =>
+  trx
+    .selectFrom('sessao_atendimento')
+    .select(COLUNAS_SESSAO)
+    .where('usuario_id', '=', usuarioId)
+    .where('serie_id', '=', serieId)
+    .orderBy('inicio')
+    .orderBy('id')
+    .execute();
