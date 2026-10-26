@@ -508,7 +508,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | PERF-08 | P1: Perfil | Tasks | Implementing |
 | PERF-09 | P1: Perfil | Tasks | Implementing |
 | PAC-01 | P1: Pacientes | Tasks | Implementing |
-| PAC-02 | P1: Pacientes | Tasks | Pending |
+| PAC-02 | P1: Pacientes | Tasks | Implementing |
 | PAC-03 | P1: Pacientes | Tasks | Pending |
 | PAC-04 | P1: Pacientes | Tasks | Pending |
 | PAC-05 | P1: Pacientes | Tasks | Implementing |

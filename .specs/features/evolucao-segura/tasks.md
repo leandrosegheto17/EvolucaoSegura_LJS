@@ -1388,9 +1388,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Limites de nome, telefone, e-mail e endereço
-- [ ] Campo extra recusado
-- [ ] Data do TCLE YYYY-MM-DD válida
+- [x] Limites de nome, telefone, e-mail e endereço
+- [x] Campo extra recusado
+- [x] Data do TCLE YYYY-MM-DD válida
 
 **Tests**: unit
 **Gate**: quick
