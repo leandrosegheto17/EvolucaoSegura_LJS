@@ -2147,9 +2147,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Versão divergente responde 409
-- [ ] Auditoria `preco_paciente.definido` e `preco_sessao.ajustado` só quando a versão muda
-- [ ] Isolamento coberto
+- [x] Versão divergente responde 409
+- [x] Auditoria `preco_paciente.definido` e `preco_sessao.ajustado` só quando a versão muda
+- [x] Isolamento coberto
 
 **Tests**: integration
 **Gate**: full

@@ -19,6 +19,8 @@ import pg from 'pg';
 
 // timestamptz lido como Date e gravado a partir do texto ISO 8601 do contrato.
 type Instante = ColumnType<Date, string, string>;
+// bigint em centavos: o pg devolve texto; grava a partir do inteiro do contrato.
+type Centavos = ColumnType<string, number, number>;
 
 // Tabelas vistas pelo Kysely; cada etapa acrescenta as suas (migrations em backend/scripts).
 export interface Banco {
@@ -258,6 +260,37 @@ export interface Banco {
     nome: string;
     corpo: string;
     arquivado_em: Date | null;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  // Financeiro (migration 0010): valores em bigint centavos (ADR-007), lidos como texto pelo pg;
+  // revisão antes/depois gravada por trigger; nada é apagado.
+  preco_paciente: {
+    id: Generated<string>;
+    usuario_id: string;
+    paciente_id: string;
+    valor_centavos: Centavos;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  preco_sessao: {
+    id: Generated<string>;
+    usuario_id: string;
+    sessao_id: string;
+    valor_centavos: Centavos;
+    row_version: Generated<number>;
+    criado_em: Generated<Date>;
+    atualizado_em: Generated<Date>;
+  };
+  pagamento: {
+    id: Generated<string>;
+    usuario_id: string;
+    sessao_id: string;
+    valor_centavos: Centavos;
+    data_pagamento: ColumnType<string, string, string>;
+    meio: 'dinheiro' | 'pix' | 'cartao' | 'transferencia' | 'outro';
     row_version: Generated<number>;
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
