@@ -3192,8 +3192,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Medição registrada com ambiente, tamanho de página e CPU
+- [x] Medição registrada com ambiente, tamanho de página e CPU
 - [ ] Tamanho máximo de página fixado com folga em 10 ms; se nenhum tamanho útil couber, parar e abrir novo spike
+
+- 2026-10-27: medição em `medicao-exportacao.md`. Nenhum tamanho útil coube com folga (custo fixo de 5 ms de mediana e 10 ms de máximo com 1 linha); a tarefa parou e pede novo spike. Achado à parte: as migrations 0012 a 0015 e 0018 a 0021 falham no Neon (PG 18) por `SET app.tarefa_*` na definição das funções.
 
 **Tests**: none
 **Gate**: build
