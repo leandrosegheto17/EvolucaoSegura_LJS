@@ -3152,8 +3152,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Clique abre a tela relacionada
-- [ ] Teste do roteamento do clique
+- [x] Clique abre a tela relacionada
+- [x] Teste do roteamento do clique
+
+- `sw.ts` sem imports, emitido como `/sw.js` (escopo `/`) por uma segunda entrada do build em `vite.config.ts` (SPEC_DEVIATION do design, que prevê o `vite-plugin-pwa` com injectManifest: o plugin entra com o manifest na T156 e passa a gerar o `sw.js` a partir deste arquivo). Destinos: sessão próxima `/app/agenda` (não há tela própria de sessão), evolução pendente `/app` (Início), cobrança e trial `/app/plano`; qualquer url fora de `/app` na mesma origem abre o Início. Com o app aberto, a janela navega e ganha foco; senão abre outra. Push sem dados ou com JSON inválido mostra "Evolução Segura" e abre o Início. O registro do service worker fica com a ativação do push (T179); precache e offline na T184.
 
 **Tests**: unit
 **Gate**: build
