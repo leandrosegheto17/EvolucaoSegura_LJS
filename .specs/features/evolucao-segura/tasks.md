@@ -2608,8 +2608,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `vencimento_atraso` gravado
-- [ ] Transição inválida ignorada com registro
+- [x] `vencimento_atraso` gravado
+- [x] Transição inválida ignorada com registro
+- PREMISSA: `vencimento_atraso` = início do dia seguinte ao `dueDate` em America/Sao_Paulo (mesma regra do `periodo_fim`); o registro da transição inválida vai ao Sentry (`AvisoWebhook`) e o evento fica marcado com o profissional.
 
 **Tests**: integration
 **Gate**: full

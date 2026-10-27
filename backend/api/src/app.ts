@@ -44,6 +44,7 @@ import { rotasSessoesLista } from './rotas/sessoes-lista.ts';
 import { rotasSessoesStatus } from './rotas/sessoes-status.ts';
 import { rotasTcle } from './rotas/tcle.ts';
 import { processarPagamento } from './rotas/webhook-pago.ts';
+import { processarVencida } from './rotas/webhook-vencida.ts';
 import { type ProcessadorWebhook, rotasWebhookAsaas } from './rotas/webhook-asaas.ts';
 
 interface OpcoesApp {
@@ -63,6 +64,7 @@ interface OpcoesApp {
 const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {
   PAYMENT_RECEIVED: processarPagamento,
   PAYMENT_CONFIRMED: processarPagamento,
+  PAYMENT_OVERDUE: processarVencida,
 };
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
