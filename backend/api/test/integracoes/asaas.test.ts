@@ -146,6 +146,16 @@ describe('operações (formatos do spike S3)', () => {
     });
   });
 
+  it('consulta a assinatura e devolve o próximo vencimento (nextDueDate)', async () => {
+    const { fn, chamadas } = fetchSimulado(() => json(ASSINATURA_CRIADA));
+    const assinatura = await cliente(fn).obterAssinatura('sub_58a47vh52dgm4omd');
+
+    expect(assinatura).toEqual({ id: 'sub_58a47vh52dgm4omd', proximoVencimento: '2026-11-30' });
+    expect(chamadas.map((c) => [c.init.method, c.url])).toEqual([
+      ['GET', `${SANDBOX}/subscriptions/sub_58a47vh52dgm4omd`],
+    ]);
+  });
+
   it('lista as cobranças da assinatura em centavos', async () => {
     const { fn, chamadas } = fetchSimulado(() => json(COBRANCAS));
     const cobrancas = await cliente(fn).listarCobrancas('sub_58a47vh52dgm4omd');

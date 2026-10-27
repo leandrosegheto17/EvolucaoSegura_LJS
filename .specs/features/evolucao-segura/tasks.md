@@ -2589,9 +2589,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Estado final igual se o webhook chega antes da resposta da criação
-- [ ] Outros estados não regridem
-- [ ] Auditoria da mudança
+- [x] Estado final igual se o webhook chega antes da resposta da criação
+- [x] Outros estados não regridem
+- [x] Auditoria da mudança
+- Decisão do usuário (2026-10-27): `periodo_fim` = início do dia seguinte ao `nextDueDate` (de `GET /subscriptions/{id}`, método novo do cliente Asaas) em America/Sao_Paulo. Cancelada não volta a ativa: ignorada e registrada no Sentry (`AvisoWebhook`).
 
 **Tests**: integration
 **Gate**: full

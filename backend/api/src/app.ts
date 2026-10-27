@@ -43,6 +43,7 @@ import { rotasSessoesEditar } from './rotas/sessoes-editar.ts';
 import { rotasSessoesLista } from './rotas/sessoes-lista.ts';
 import { rotasSessoesStatus } from './rotas/sessoes-status.ts';
 import { rotasTcle } from './rotas/tcle.ts';
+import { processarPagamento } from './rotas/webhook-pago.ts';
 import { type ProcessadorWebhook, rotasWebhookAsaas } from './rotas/webhook-asaas.ts';
 
 interface OpcoesApp {
@@ -58,7 +59,11 @@ interface OpcoesApp {
 }
 
 // PLANO-08, PLANO-09: processadores do webhook do Asaas por tipo de evento.
-const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {};
+// O spike S3 viu PAYMENT_RECEIVED; PAYMENT_CONFIRMED é aceito por segurança (Pix real).
+const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {
+  PAYMENT_RECEIVED: processarPagamento,
+  PAYMENT_CONFIRMED: processarPagamento,
+};
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
 const emailPadrao = (env: Cloudflare.Env): ClienteEmail =>
@@ -94,6 +99,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
     '/api',
     rotasWebhookAsaas({
       asaas: opcoes.asaas ?? asaasPadrao,
+      capturarErro,
       processadores: opcoes.processadoresWebhook ?? PROCESSADORES_WEBHOOK,
     }),
   );

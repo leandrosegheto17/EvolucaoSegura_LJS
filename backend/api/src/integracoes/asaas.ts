@@ -1,6 +1,7 @@
 // PLANO-05, PLANO-12: cliente do Asaas por fetch. Cria o cliente (nome e CPF/CNPJ) e a assinatura
 // mensal do Pro de 1990 centavos por Pix, lista as cobranças da assinatura, busca o QR Code Pix de
-// uma cobrança e cancela a assinatura. Formatos do spike S3 (.specs/spikes/asaas-sandbox):
+// uma cobrança, consulta a assinatura (próximo vencimento, T130) e cancela a assinatura.
+// Formatos do spike S3 (.specs/spikes/asaas-sandbox):
 // - autenticação pelo cabeçalho `access_token`; o `User-Agent` é obrigatório;
 // - o valor vai em reais (19.9) e volta em reais; aqui tudo é centavos inteiros (ADR-007);
 // - erro vem como HTTP 400 `{errors:[{code, description}]}`.
@@ -61,6 +62,8 @@ export interface ClienteAsaas {
     clienteId: string;
     primeiroVencimento: string; // AAAA-MM-DD
   }): Promise<{ id: string; proximoVencimento: string }>;
+  // PLANO-08: o webhook não traz a próxima data de vencimento; vem desta consulta (spike S3).
+  obterAssinatura(assinaturaId: string): Promise<{ id: string; proximoVencimento: string }>;
   listarCobrancas(assinaturaId: string): Promise<CobrancaAsaas[]>;
   buscarQrPix(cobrancaId: string): Promise<QrPixAsaas>;
   cancelarAssinatura(assinaturaId: string): Promise<void>;
@@ -157,6 +160,11 @@ export function criarClienteAsaas(opcoes: OpcoesAsaas): ClienteAsaas {
         description: DESCRICAO_ASSINATURA,
       });
       // A resposta traz em nextDueDate o vencimento do ciclo seguinte (spike S3).
+      return { id: texto(r['id']), proximoVencimento: texto(r['nextDueDate']) };
+    },
+
+    async obterAssinatura(assinaturaId) {
+      const r = await chamar('GET', `/subscriptions/${encodeURIComponent(assinaturaId)}`);
       return { id: texto(r['id']), proximoVencimento: texto(r['nextDueDate']) };
     },
 

@@ -9,7 +9,7 @@ import { comoAdmin, ipUnico, type sessaoDeTeste } from '../apoio.ts';
 export type Sessao = Awaited<ReturnType<typeof sessaoDeTeste>>;
 type Operacao = keyof ClienteAsaas;
 
-export function asaasSimulado() {
+export function asaasSimulado(opcoes: { proximoVencimento?: string } = {}) {
   const chamadas: { operacao: Operacao; dados: unknown }[] = [];
   let falha: { operacao: Operacao; erro: unknown } | null = null;
   const sufixo = () => crypto.randomUUID().slice(0, 12);
@@ -25,6 +25,10 @@ export function asaasSimulado() {
     async criarAssinatura(dados) {
       registrar('criarAssinatura', dados);
       return { id: `sub_${sufixo()}`, proximoVencimento: '2026-11-30' };
+    },
+    async obterAssinatura(assinaturaId) {
+      registrar('obterAssinatura', assinaturaId);
+      return { id: assinaturaId, proximoVencimento: opcoes.proximoVencimento ?? '2026-11-30' };
     },
     async listarCobrancas(assinaturaId) {
       registrar('listarCobrancas', assinaturaId);

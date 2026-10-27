@@ -30,6 +30,28 @@ export interface ContextoWebhook {
   trx: Trx;
   evento: EventoAsaas;
   asaas: ClienteAsaas;
+  // Registro do que foi ignorado (ex.: transição inválida), sem dado pessoal; vai ao Sentry.
+  registrar: (aviso: AvisoWebhook) => void;
+}
+
+export class AvisoWebhook extends Error {
+  readonly motivo: string;
+  readonly detalhes: Readonly<Record<string, string>>;
+  constructor(motivo: string, detalhes: Record<string, string>) {
+    super(`Webhook do Asaas: ${motivo}`);
+    this.name = 'AvisoWebhook';
+    this.motivo = motivo;
+    this.detalhes = detalhes;
+  }
+}
+
+// Decisão do usuário (2026-10-27): assinatura não achada é erro (500) para o Asaas reenviar; cobre
+// o webhook que chega antes de a criação gravar os ids (edge case da spec).
+export class AssinaturaNaoAchada extends Error {
+  constructor() {
+    super('Webhook do Asaas: assinatura não achada');
+    this.name = 'AssinaturaNaoAchada';
+  }
 }
 
 // Devolve o profissional a quem o evento pertence (null quando não há um).
@@ -37,6 +59,7 @@ export type ProcessadorWebhook = (ctx: ContextoWebhook) => Promise<{ usuarioId: 
 
 export interface OpcoesWebhookAsaas {
   asaas: (env: Cloudflare.Env) => ClienteAsaas;
+  capturarErro: (erro: unknown) => void;
   processadores: Readonly<Record<string, ProcessadorWebhook>>;
 }
 
@@ -57,7 +80,7 @@ function lerEvento(corpo: unknown): EventoAsaas | null {
   return corpo as EventoAsaas;
 }
 
-export const rotasWebhookAsaas = ({ asaas, processadores }: OpcoesWebhookAsaas) =>
+export const rotasWebhookAsaas = ({ asaas, capturarErro, processadores }: OpcoesWebhookAsaas) =>
   new Hono<{ Bindings: Cloudflare.Env }>().post('/webhooks/asaas', async (c) => {
     if (!(await tokenConfere(c.req.header('asaas-access-token'), c.env.ASAAS_WEBHOOK_TOKEN)))
       return responderProblema(c, 'credenciais_invalidas', 'Não autorizado');
@@ -72,7 +95,7 @@ export const rotasWebhookAsaas = ({ asaas, processadores }: OpcoesWebhookAsaas) 
       if (rows[0]!.r === 'repetido') return 'repetido' as const;
       const processador = processadores[evento.event];
       const { usuarioId } = processador
-        ? await processador({ trx, evento, asaas: asaas(c.env) })
+        ? await processador({ trx, evento, asaas: asaas(c.env), registrar: capturarErro })
         : { usuarioId: null };
       await sql`select tarefas.marcar_webhook_processado(${evento.id}, ${usuarioId}::uuid)`.execute(
         trx,
