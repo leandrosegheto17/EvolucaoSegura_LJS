@@ -3010,8 +3010,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Só a cifra da biblioteca é usada; o JWT vem da T142
-- [ ] 404 e 410 removem a assinatura
+- [x] Só a cifra da biblioteca é usada; o JWT vem da T142
+- [x] 404 e 410 removem a assinatura
+
+- `@block65/webcrypto-web-push` 2.0.0 instalada (só `encryptNotification`). A mensagem vai cifrada como JSON `{titulo, corpo, url}`. 201 não prova entrega; outras respostas e erro de rede devolvem `falha` sem remover nem lançar. TTL padrão de 1 h (PREMISSA). A remoção roda numa transação do dono da assinatura (RLS; a app tem DELETE na `push_subscription`).
 
 **Tests**: integration
 **Gate**: full
