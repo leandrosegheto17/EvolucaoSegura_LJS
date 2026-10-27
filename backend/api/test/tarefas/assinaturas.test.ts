@@ -4,13 +4,15 @@ import { ErroAsaas } from '../../src/integracoes/asaas.ts';
 import { tarefaAssinaturas } from '../../src/tarefas/assinaturas.ts';
 import { type ContextoTarefa, despachar } from '../../src/tarefas/despachar.ts';
 import { TAREFAS } from '../../src/tarefas/registro.ts';
-import { comoAdmin, sessaoDeTeste } from '../apoio.ts';
+import { comoAdmin, ipUnico, sessaoDeTeste } from '../apoio.ts';
 import {
+  appComAsaas,
   asaasSimulado,
   auditoriaDe,
   type Estado,
   linhaAssinatura,
   semearAssinatura,
+  USER_AGENT,
 } from '../rotas/plano-apoio.ts';
 
 // T137 / PLANO-04, PLANO-10, PLANO-11: a tarefa do cron leva a free, pelas regras da T125:
@@ -122,8 +124,11 @@ describe('trial vencido cai para free (PLANO-04)', () => {
 });
 
 describe('cancelada no fim do período cai para free (PLANO-11)', () => {
-  it('muda para free sem chamar o Asaas (já cancelada lá) e mantém os ids', async () => {
-    const { asaas, rodar } = montar();
+  // T196 (decisão do usuário, 2026-10-27): a cancelada que cai para free também perde o
+  // asaas_subscription_id, para o GET /api/plano não consultar o Asaas com uma assinatura já
+  // cancelada lá. Este teste antes exigia manter o id (T137); mudou por essa decisão.
+  it('muda para free sem chamar o Asaas (já cancelada lá) e limpa o id da assinatura', async () => {
+    const { asaas, erros, rodar } = montar();
     const p = await profissional('cancelada', { periodoFim: antes(1) });
 
     await rodar();
@@ -132,12 +137,57 @@ describe('cancelada no fim do período cai para free (PLANO-11)', () => {
       plano: 'free',
       status: 'free',
       asaas_customer_id: p.cliente,
-      asaas_subscription_id: p.assinatura,
+      asaas_subscription_id: null,
     });
     expect(asaas.chamadas).toEqual([]);
-    expect((await auditoriaDe(p.usuarioId)).map((e) => e.campos_alterados)).toEqual([
-      ['status', 'plano'],
+    expect(await auditoriaDe(p.usuarioId)).toEqual([
+      {
+        ator: 'sistema',
+        acao: 'assinatura.free',
+        alvo_tipo: 'conta',
+        alvo_id: p.usuarioId,
+        campos_alterados: ['status', 'plano', 'asaas_subscription_id'],
+      },
     ]);
+    expect(erros).toEqual([]);
+  });
+
+  it('reexecução não chama o Asaas, não audita de novo e não muda a linha (T196)', async () => {
+    const p = await profissional('cancelada', { periodoFim: antes(DIA) });
+    await montar().rodar();
+    const linha = await linhaAssinatura(p.usuarioId);
+
+    const segunda = montar();
+    await segunda.rodar();
+
+    expect(segunda.asaas.chamadas).toEqual([]);
+    expect(await linhaAssinatura(p.usuarioId)).toEqual(linha);
+    expect(linha).toMatchObject({ status: 'free', asaas_subscription_id: null });
+    expect(await auditoriaDe(p.usuarioId)).toHaveLength(1);
+    expect(segunda.erros).toEqual([]);
+  });
+
+  it('depois de cair para free, o GET /api/plano não chama o Asaas (T196)', async () => {
+    const sessao = await sessaoDeTeste();
+    await semearAssinatura(sessao.usuarioId, 'cancelada', {
+      comAsaas: true,
+      periodoFim: antes(DIA),
+    });
+    await montar().rodar();
+    const asaasDaRota = asaasSimulado();
+
+    const resposta = await appComAsaas(asaasDaRota.cliente).request(
+      '/api/plano',
+      {
+        method: 'GET',
+        headers: { 'CF-Connecting-IP': ipUnico(), 'User-Agent': USER_AGENT, cookie: sessao.cookie },
+      },
+      env,
+    );
+
+    expect(resposta.status).toBe(200);
+    expect(await resposta.json()).toEqual({ plano: 'free', status: 'free', data: null, pix: null });
+    expect(asaasDaRota.chamadas).toEqual([]);
   });
 
   it('cancelada até o futuro segue com o Pro', async () => {

@@ -27,6 +27,8 @@ import type { Tarefa } from './despachar.ts';
 //   PREMISSA: 404 do Asaas = a assinatura já não existe lá (cancelada numa execução anterior cuja
 //   transação não chegou a gravar); conta como cancelada.
 // - Trial e cancelada não chamam o Asaas (a cancelada já foi cancelada lá pela rota, T132).
+// - Cancelada (T196, decisão do usuário, 2026-10-27): ao mudar para free, também limpa o
+//   asaas_subscription_id, para o GET /api/plano não consultar o Asaas com assinatura cancelada.
 // - Reexecução: a assinatura já em free não aparece na lista; se aparecer de novo por corrida, a
 //   mudança devolve 'mesmo_estado' e nada se repete (Asaas, id, auditoria).
 // - Audita assinatura.free (ator sistema) só com os nomes dos campos.
@@ -66,10 +68,14 @@ async function levarAFree(
           erro instanceof ErroAsaas && erro.tipo === 'falha' && erro.status === 404;
         if (!jaNaoExiste) throw erro;
       }
-      if ((await desvincularAssinaturaAsaas(trx, usuarioId)) === 'desvinculada')
-        campos.push('asaas_subscription_id');
     }
   }
+  if (
+    (status_anterior === 'atrasada' || status_anterior === 'cancelada') &&
+    atual.asaas_subscription_id !== null &&
+    (await desvincularAssinaturaAsaas(trx, usuarioId)) === 'desvinculada'
+  )
+    campos.push('asaas_subscription_id');
 
   await registrarAuditoria(trx, {
     usuarioId,

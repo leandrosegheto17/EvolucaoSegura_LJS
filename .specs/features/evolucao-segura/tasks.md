@@ -2926,9 +2926,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Cancelada que cai para free fica sem `asaas_subscription_id`
-- [ ] Reexecução não repete efeitos
-- [ ] `GET /api/plano` de quem está sem id não chama o Asaas
+- [x] Cancelada que cai para free fica sem `asaas_subscription_id`
+- [x] Reexecução não repete efeitos
+- [x] `GET /api/plano` de quem está sem id não chama o Asaas
+
+- O teste da T137 "cancelada ... mantém os ids" foi trocado para exigir o id limpo, pela decisão do usuário (2026-10-27) que criou esta tarefa; a auditoria passa a listar `asaas_subscription_id`.
 
 **Tests**: integration
 **Gate**: full
