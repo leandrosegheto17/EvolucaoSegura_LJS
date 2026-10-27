@@ -2742,9 +2742,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Dados intactos ao cair para Free
-- [ ] Cancela no Asaas ao cair por atraso
-- [ ] Reexecução não repete efeitos
+- [x] Dados intactos ao cair para Free
+- [x] Cancela no Asaas ao cair por atraso
+- [x] Reexecução não repete efeitos
+
+- Decisão do usuário (2026-10-27): ao cair por atraso, cancela no Asaas e limpa o `asaas_subscription_id` (`tarefas.desvincular_assinatura_asaas`, migration 0015); falha do Asaas não muda nada e a execução seguinte tenta de novo. PREMISSA: 404 do Asaas no cancelamento conta como já cancelada. Trial e cancelada não chamam o Asaas e mantêm os ids. Audita `assinatura.free` (ator sistema).
 
 **Tests**: integration
 **Gate**: full

@@ -1,3 +1,5 @@
+import { type ClienteAsaas, criarClienteAsaas } from '../integracoes/asaas.ts';
+import { tarefaAssinaturas } from './assinaturas.ts';
 import type { Tarefa } from './despachar.ts';
 
 // PUSH-07 (ADR-010): ponto único de registro das tarefas do cron. O despachante roda esta lista
@@ -9,4 +11,9 @@ import type { Tarefa } from './despachar.ts';
 //   5. purga de contas (T152)
 //   6. limpeza de tokens e sessões vencidos (T139)
 // Tarefa nova: um objeto Tarefa (nome, janela, executar) na posição dela nesta lista.
-export const TAREFAS: readonly Tarefa[] = [];
+
+// Chave ou endpoint ausente faz a criação lançar: a tarefa trata como Asaas indisponível.
+const asaasPadrao = (env: Cloudflare.Env): ClienteAsaas =>
+  criarClienteAsaas({ apiKey: env.ASAAS_API_KEY ?? '', baseUrl: env.ASAAS_BASE_URL ?? '' });
+
+export const TAREFAS: readonly Tarefa[] = [tarefaAssinaturas({ asaas: asaasPadrao })];

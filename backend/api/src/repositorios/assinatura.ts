@@ -54,3 +54,32 @@ export async function mudarEstadoAssinatura(
   );
   return rows[0]!;
 }
+
+// Cron (T137): assinaturas cujo tempo acabou, entre todos os profissionais (migration 0015).
+export interface AssinaturaVencida {
+  usuario_id: string;
+  status: EstadoAssinatura;
+  asaas_subscription_id: string | null;
+}
+
+export async function listarAssinaturasVencidas(
+  trx: Trx,
+  agora: Date,
+  limite: number,
+): Promise<AssinaturaVencida[]> {
+  const { rows } = await sql<AssinaturaVencida>`
+    select * from tarefas.listar_assinaturas_vencidas(${agora}::timestamptz, ${limite}::integer)`.execute(
+    trx,
+  );
+  return rows;
+}
+
+// Limpa o id da assinatura do Asaas já em free (migration 0015).
+export async function desvincularAssinaturaAsaas(
+  trx: Trx,
+  usuarioId: string,
+): Promise<'desvinculada' | 'sem_vinculo' | 'nao_free' | 'inexistente'> {
+  const { rows } = await sql<{ r: 'desvinculada' | 'sem_vinculo' | 'nao_free' | 'inexistente' }>`
+    select tarefas.desvincular_assinatura_asaas(${usuarioId}::uuid) as r`.execute(trx);
+  return rows[0]!.r;
+}
