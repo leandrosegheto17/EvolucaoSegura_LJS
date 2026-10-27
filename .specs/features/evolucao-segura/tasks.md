@@ -2626,9 +2626,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Asaas fora responde 503 sem mudar o estado
-- [ ] Depois de `periodo_fim` o cron leva a `free` (etapa seguinte)
-- [ ] Auditoria
+- [x] Asaas fora responde 503 sem mudar o estado
+- [x] Depois de `periodo_fim` o cron leva a `free` (etapa seguinte)
+- [x] Auditoria
+- Decisão do usuário (2026-10-27): só `ativa` cancela; os demais estados respondem 409. O "cron leva a free" é provado aqui pela regra `estadoPorTempo` sobre a linha cancelada; o cron em si é a T137.
 
 **Tests**: integration
 **Gate**: full

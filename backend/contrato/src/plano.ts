@@ -53,6 +53,13 @@ export type AssinarEntrada = z.output<typeof esquemaAssinarEntrada>;
 // "Meu plano" (GET /api/plano, T134) e o estado só muda com o webhook de pagamento (PLANO-08).
 export const RESPOSTA_ASSINAR = { status: 'aguardando_pagamento' } as const;
 
+// 200 de POST /api/plano/cancelar (PLANO-11): cancelada no Asaas e no app; o Pro segue até
+// periodo_fim, quando o cron leva a free.
+export interface RespostaCancelar {
+  status: 'cancelada';
+  periodo_fim: string;
+}
+
 const problema = (codigo: string, status: number, titulo: string): Problema => ({
   tipo: 'about:blank',
   titulo,
@@ -60,7 +67,8 @@ const problema = (codigo: string, status: number, titulo: string): Problema => (
   codigo,
 });
 
-// Decisão do usuário (2026-10-27): assinar só em trial e free. Os demais estados respondem 409.
+// Decisão do usuário (2026-10-27): assinar só em trial e free; cancelar só em ativa. Os demais
+// estados respondem 409.
 // PREMISSA: também 409 sem assinatura e em trial que já tem assinatura criada no Asaas (a
 // cobrança pendente já está em "Meu plano"; outra geraria cobrança em dobro).
 export const PROBLEMA_ASSINATURA_ESTADO = problema(
