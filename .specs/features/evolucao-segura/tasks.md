@@ -2570,9 +2570,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Sem o token responde 401 sem processar
-- [ ] `event_id` repetido responde 200 sem efeito
-- [ ] Erro de processamento responde 500 para o Asaas reenviar
+- [x] Sem o token responde 401 sem processar
+- [x] `event_id` repetido responde 200 sem efeito
+- [x] Erro de processamento responde 500 para o Asaas reenviar
+- Decisão do usuário (2026-10-27): gravar e processar numa transação só; erro (ou assinatura não achada, T130 e T131) responde 500 e o reenvio chega como evento novo. PREMISSA: corpo sem `id` ou `event` responde 422.
 
 **Tests**: integration
 **Gate**: full

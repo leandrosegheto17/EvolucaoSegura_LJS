@@ -13,10 +13,12 @@ export default defineConfig({
       miniflare: {
         hyperdrives: { HYPERDRIVE: urlBancoApp, HYPERDRIVE_ADMIN: urlBancoAdmin },
         // Sem MAIL_FROM nem RESEND_API_KEY: os testes injetam um e-mail simulado.
-        // HMAC_2FA_SEGREDO é de teste (não é segredo de nenhum ambiente real).
+        // HMAC_2FA_SEGREDO e ASAAS_WEBHOOK_TOKEN são de teste (não são segredo de nenhum ambiente real).
         bindings: {
           URL_PUBLICA: 'http://localhost:8787',
           HMAC_2FA_SEGREDO: 'segredo-de-teste-do-hmac-2fa-com-32-ou-mais',
+          // Token de teste do webhook do Asaas (não é o de nenhum ambiente real).
+          ASAAS_WEBHOOK_TOKEN: 'token-de-teste-do-webhook-asaas-com-32-ou-mais',
         },
       },
     }),

@@ -43,6 +43,7 @@ import { rotasSessoesEditar } from './rotas/sessoes-editar.ts';
 import { rotasSessoesLista } from './rotas/sessoes-lista.ts';
 import { rotasSessoesStatus } from './rotas/sessoes-status.ts';
 import { rotasTcle } from './rotas/tcle.ts';
+import { type ProcessadorWebhook, rotasWebhookAsaas } from './rotas/webhook-asaas.ts';
 
 interface OpcoesApp {
   capturarErro?: (erro: unknown) => void;
@@ -52,7 +53,12 @@ interface OpcoesApp {
   emSegundoPlano?: (tarefa: Promise<unknown>) => void;
   // Os testes trocam o Asaas por um cliente simulado.
   asaas?: (env: Cloudflare.Env) => ClienteAsaas;
+  // Os testes trocam os processadores do webhook do Asaas por evento.
+  processadoresWebhook?: Readonly<Record<string, ProcessadorWebhook>>;
 }
+
+// PLANO-08, PLANO-09: processadores do webhook do Asaas por tipo de evento.
+const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {};
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
 const emailPadrao = (env: Cloudflare.Env): ClienteEmail =>
@@ -84,6 +90,13 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
     }),
   );
   app.route('/api', rotasRedefinir);
+  app.route(
+    '/api',
+    rotasWebhookAsaas({
+      asaas: opcoes.asaas ?? asaasPadrao,
+      processadores: opcoes.processadoresWebhook ?? PROCESSADORES_WEBHOOK,
+    }),
+  );
   // Autenticadas: cada rota monta a lista `autenticada` (sessão, CSRF, transação).
   app.route('/api', rotasSair);
   app.route('/api', rotasEu);
