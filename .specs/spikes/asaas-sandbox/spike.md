@@ -23,7 +23,7 @@ No sandbox, o fluxo cliente (nome e CPF) → assinatura mensal de R$ 19,90 por P
 ## Prazo e método
 
 - **Prazo**: 3 horas e 3 tentativas, o que vier primeiro
-- **Início**: <gravado ao despachar> · **Limite**: <início + 3 h>
+- **Início**: 2026-10-27 10:55 · **Limite**: 2026-10-27 13:55
 - **Extensão**: nenhuma
 - **Método**: (1) Script Node com `fetch` para criar cliente, assinatura e buscar o QR. (2) Endpoint que grava os webhooks recebidos. (3) Simular o pagamento pelo sandbox e capturar o payload. (4) Anotar campos obrigatórios, erros e eventos.
 - **Onde roda**: `.specs/spikes/asaas-sandbox/codigo/`
