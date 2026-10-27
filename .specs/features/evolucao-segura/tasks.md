@@ -3112,8 +3112,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Uma vez por evento
-- [ ] Corpo sem dado clínico
+- [x] Uma vez por evento
+- [x] Corpo sem dado clínico
+
+- Tarefa do cron `push_cobranca`, terceira do despachante (design: "avisos de plano"). A origem são os eventos do webhook já processados em `webhook_evento` com o profissional achado; a função `tarefas.listar_eventos_cobranca_para_aviso(desde, ate, limite)` vai na migration 0020 (`0020_funcoes_push_cobranca.ts`, policy só de SELECT do owner em `webhook_evento` ligada por `app.tarefa_push`); por isso a T148 passa a 0021. `PAYMENT_CREATED` = cobrança gerada; `PAYMENT_RECEIVED` e `PAYMENT_CONFIRMED` = pagamento confirmado (um aviso só por pagamento); `PAYMENT_OVERDUE` = cobrança vencida. Chave = (tipo, id do pagamento). Corpo com texto fixo (sem valor, datas nem ids) e `/app/plano`. PREMISSAS: o push sai para todo evento desses tipos ligado ao profissional, mesmo quando o webhook não mudou o estado (o e-mail da PLANO-13 só sai na mudança); janela de 24 h (evento mais antigo não gera push) e TTL de 24 h; até 10 avisos por execução.
 
 **Tests**: integration
 **Gate**: full
@@ -3302,11 +3304,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
-### T148: Migration 0020: exclusão de conta
+### T148: Migration 0021: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
 **Estimativa**: 2h
-**Where**: `backend/scripts/migrations/0020_exclusao.ts` (era 0018; a T144 criou a 0018 e a T145 a 0019)
+**Where**: `backend/scripts/migrations/0021_exclusao.ts` (era 0018; a T144 criou a 0018, a T145 a 0019 e a T146 a 0020)
 **Depends on**: T175
 **Requirement**: CONTA-03, CONTA-05
 

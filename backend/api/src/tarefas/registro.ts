@@ -2,6 +2,7 @@ import { type ClienteAsaas, criarClienteAsaas } from '../integracoes/asaas.ts';
 import { tarefaAssinaturas } from './assinaturas.ts';
 import type { Tarefa } from './despachar.ts';
 import { tarefaLimpeza } from './limpeza.ts';
+import { tarefaPushCobranca } from './push-cobranca.ts';
 import { tarefaPushPendente } from './push-pendente.ts';
 import { tarefaPushSessao } from './push-sessao.ts';
 
@@ -22,6 +23,7 @@ const asaasPadrao = (env: Cloudflare.Env): ClienteAsaas =>
 export const TAREFAS: readonly Tarefa[] = [
   tarefaPushSessao(),
   tarefaPushPendente(),
+  tarefaPushCobranca(),
   tarefaAssinaturas({ asaas: asaasPadrao }),
   tarefaLimpeza(),
 ];
