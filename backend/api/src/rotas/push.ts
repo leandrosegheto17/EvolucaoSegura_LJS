@@ -3,10 +3,12 @@ import {
   esquemaAtivarPush,
   esquemaDesativarPush,
 } from '@es/contrato/push';
+import type { ChavePush } from '@es/contrato/push';
 import { Hono } from 'hono';
 import { lerCorpo } from '../http.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
 import { responderProblemaAgenda as responderProblema } from '../repositorios/sessoes.ts';
+import { vapidDoAmbiente } from '../tarefas/push-sessao.ts';
 
 // PUSH-01, PERF-08: ativar e desativar o push do dispositivo, rotas autenticadas.
 // - POST /api/push/assinatura guarda a assinatura (PushSubscription.toJSON do navegador). O mesmo
@@ -17,9 +19,16 @@ import { responderProblemaAgenda as responderProblema } from '../repositorios/se
 // - DELETE /api/push/assinatura remove a assinatura do endpoint dado. 204 também quando não há o
 //   que remover (desativar de novo, ou endpoint de outro profissional, que o RLS esconde: nada
 //   muda, ISO-02).
+// - GET /api/push/chave (T179) entrega a chave pública VAPID, que o navegador passa ao
+//   PushManager.subscribe. Sem as três chaves VAPID o push está desligado (como nas tarefas do
+//   cron): chave_publica null. Nunca expõe a privada.
 // Sem auditoria: a spec não lista evento para o push.
 
 export const rotasPush = new Hono<AmbienteAutenticado>()
+  .get('/push/chave', ...autenticada, (c) => {
+    const corpo: ChavePush = { chave_publica: vapidDoAmbiente(c.env)?.chavePublica ?? null };
+    return c.json(corpo);
+  })
   .post('/push/assinatura', ...autenticada, async (c) => {
     const leitura = await lerCorpo(c, esquemaAtivarPush);
     if (!leitura.ok) return leitura.resposta;

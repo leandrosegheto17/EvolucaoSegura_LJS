@@ -4,6 +4,7 @@ import { type ReactNode, useCallback, useRef, useState } from 'react';
 import { Alert, Button, Skeleton, Spinner } from '../../ui';
 import { useSignOut } from '../sair.ts';
 import { ThemeSwitch } from '../shell/ThemeSwitch.tsx';
+import { PushDispositivo } from '../configuracoes/push.tsx';
 import { setTheme, useEffectiveTheme } from '../theme.ts';
 import { CHAVE_CONFIGURACOES, lerConfiguracoes, salvarConfiguracoes } from './api.ts';
 
@@ -12,6 +13,8 @@ import { CHAVE_CONFIGURACOES, lerConfiguracoes, salvarConfiguracoes } from './ap
 // (fixa em 15 min, sem opção, PERF-08) e Inteligência artificial (fora do escopo). Comportamento
 // do legado mantido: privacidade_agenda desligada = agenda com o nome completo; ligada = iniciais;
 // cada mudança salva na hora.
+// PERF-08, PUSH-01 (T179): cartão Notificações com o interruptor do push deste dispositivo
+// (app/configuracoes/push.tsx), independente das configurações salvas no servidor.
 
 type Save = 'idle' | 'saving' | 'ok' | 'err';
 
@@ -89,6 +92,10 @@ export function SettingsPage() {
         <div role="status" aria-live="polite" className="text-mut">
           {themeMsg}
         </div>
+      </Card>
+
+      <Card id="cfg-push" title="Notificações">
+        <PushDispositivo />
       </Card>
 
       {consulta.isPending && (

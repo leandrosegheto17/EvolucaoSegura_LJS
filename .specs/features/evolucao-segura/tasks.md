@@ -3172,8 +3172,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Interruptor ativa e desativa o push do dispositivo
-- [ ] Permissão negada tratada
+- [x] Interruptor ativa e desativa o push do dispositivo
+- [x] Permissão negada tratada
+
+- Cartão "Notificações" nas Configurações (`perfil/configuracoes.tsx`) com o componente `configuracoes/push.tsx`. Ativar: permissão, registro de `/sw.js` (T147), `pushManager.subscribe` com a chave VAPID e `POST /api/push/assinatura`; desativar: `DELETE` e depois `unsubscribe`. Estado inicial pela assinatura do navegador. SPEC_DEVIATION (escopo): o navegador precisa da chave pública VAPID e nada a expunha, então a tarefa acrescenta `GET /api/push/chave` (autenticada, `{chave_publica}` ou `null` quando o push está desligado; contrato `esquemaChavePush`). PREMISSAS: permissão negada bloqueia o interruptor com a explicação de liberar no navegador; pedido fechado sem resposta deixa tentar de novo; falha ao guardar cancela a assinatura nova; 409 `endpoint_em_uso` avisa e não mexe na assinatura (é da outra conta); navegador sem suporte (ex.: Safari do iPhone fora do app instalado) mostra a orientação de adicionar à Tela de Início e esconde o interruptor; textos escritos pelo implementador.
 
 **Tests**: unit
 **Gate**: build

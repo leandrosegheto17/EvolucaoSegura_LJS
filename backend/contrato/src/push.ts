@@ -27,6 +27,18 @@ export type AtivarPush = z.output<typeof esquemaAtivarPush>;
 export const esquemaDesativarPush = z.strictObject({ endpoint });
 export type DesativarPush = z.output<typeof esquemaDesativarPush>;
 
+// T179 (PUSH-01, PERF-08): resposta de GET /api/push/chave, a chave pública VAPID que o navegador
+// passa como applicationServerKey; null = push desligado no servidor (sem as chaves VAPID).
+export const esquemaChavePush = z.strictObject({
+  chave_publica: z
+    .string()
+    .min(1)
+    .max(200)
+    .regex(/^[A-Za-z0-9_-]+={0,2}$/)
+    .nullable(),
+});
+export type ChavePush = z.output<typeof esquemaChavePush>;
+
 // PREMISSA: o endpoint já está ativo para outro profissional (o mesmo navegador usado por duas
 // contas). A assinatura de um não passa para o outro sem que o primeiro desative.
 export const PROBLEMA_ENDPOINT_EM_USO: Problema = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { esquemaAtivarPush, esquemaDesativarPush } from './push.ts';
+import { esquemaAtivarPush, esquemaChavePush, esquemaDesativarPush } from './push.ts';
 
 // T143 / PUSH-01: contrato da ativação e da desativação do push. O corpo de ativar é o
 // PushSubscription.toJSON() do navegador; os limites são os da migration 0017 (endpoint https de
@@ -57,5 +57,26 @@ describe('desativar push (PUSH-01)', () => {
     expect(esquemaDesativarPush.safeParse({ endpoint: ok.endpoint, keys: ok.keys }).success).toBe(
       false,
     );
+  });
+});
+
+// T179 / PUSH-01, PERF-08: resposta de GET /api/push/chave, a chave pública VAPID (base64url) que
+// o navegador usa no PushManager.subscribe; null quando o push está desligado no servidor.
+describe('chave pública do push (PUSH-01)', () => {
+  it('aceita a chave base64url ou null', () => {
+    const chave = 'BOr4H2Cb1u2yP4yq8bBFq3vB9Yb3pU9n5B0kQ0yVq3C8';
+    expect(esquemaChavePush.parse({ chave_publica: chave })).toEqual({ chave_publica: chave });
+    expect(esquemaChavePush.parse({ chave_publica: null })).toEqual({ chave_publica: null });
+  });
+
+  it('recusa chave fora de base64url, ausente, ou campo a mais', () => {
+    for (const corpo of [
+      { chave_publica: 'a b' },
+      { chave_publica: '' },
+      { chave_publica: 'x'.repeat(201) },
+      {},
+      { chave_publica: null, privada: 'x' },
+    ])
+      expect(esquemaChavePush.safeParse(corpo).success, JSON.stringify(corpo)).toBe(false);
   });
 });

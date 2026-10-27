@@ -56,6 +56,14 @@ const setup = () =>
   );
 
 describe('Configurações', () => {
+  it('tem o cartão Notificações com o push do dispositivo (PERF-08, T179)', async () => {
+    stub();
+    setup();
+    expect(await screen.findByRole('heading', { name: 'Notificações' })).toBeTruthy();
+    // jsdom não tem service worker nem PushManager: o cartão explica e não chama a API.
+    expect(screen.getByText(/Este navegador não recebe notificações/)).toBeTruthy();
+  });
+
   it('privacidade desligada por padrão; sem inatividade e sem IA; acessível', async () => {
     stub();
     const { container } = setup();
