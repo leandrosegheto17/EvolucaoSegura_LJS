@@ -2526,25 +2526,26 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T128: POST /api/plano/assinar
 
 **What**: Assinar o Pro com nome e CPF/CNPJ validado por dígito verificador.
-**Where**: `backend/api/src/rotas/plano-assinar.ts`
+**Where**: `backend/api/src/rotas/plano-assinar.ts`, `backend/contrato/src/plano.ts` e `backend/scripts/migrations/0013_ids_asaas.ts` (função `public.gravar_ids_asaas`, porque a `app` não tem UPDATE na assinatura)
+**Decisões do usuário (2026-10-27)**: ids do Asaas gravados pela função da migration 0013 (a do webhook passou a ser a 0014 e as seguintes subiram um número); assinar só em trial e free, os demais estados respondem 409; primeiro vencimento hoje em America/Sao_Paulo; auditoria pela ação nova `assinatura.solicitada`. PREMISSA: 409 também sem assinatura e em trial que já tem assinatura no Asaas; cliente do Asaas criado a cada assinatura.
 **Depends on**: T127
 **Requirement**: PLANO-05, PLANO-12
 
 **Done when**:
 
-- [ ] CPF/CNPJ inválido responde 422
-- [ ] Asaas fora responde 503 sem mudar o estado local
-- [ ] Auditoria `assinatura.*`
+- [x] CPF/CNPJ inválido responde 422
+- [x] Asaas fora responde 503 sem mudar o estado local
+- [x] Auditoria `assinatura.*`
 
 **Tests**: integration
 **Gate**: full
 
 ---
 
-### T169: Migration 0013: função `tarefas.*` do webhook
+### T169: Migration 0014: função `tarefas.*` do webhook
 
 **What**: Função `SECURITY DEFINER` para gravar `webhook_evento` (idempotente por `event_id`) e marcar `processado_em`, porque a `app` só lê essa tabela.
-**Where**: `backend/scripts/migrations/0013_funcoes_webhook.ts`
+**Where**: `backend/scripts/migrations/0014_funcoes_webhook.ts`
 **Depends on**: T128
 **Requirement**: PLANO-06, PLANO-07
 
@@ -2705,10 +2706,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T170: Migration 0014: função `tarefas.*` das assinaturas vencidas
+### T170: Migration 0015: função `tarefas.*` das assinaturas vencidas
 
 **What**: Função `SECURITY DEFINER` que lista, entre todos os usuários, as assinaturas cujo tempo acabou (trial e cancelada com `periodo_fim` vencido; atrasada com a tolerância de 7 dias esgotada), devolvendo `usuario_id`, `status` e `asaas_subscription_id`, para o cron da T137.
-**Where**: `backend/scripts/migrations/0014_funcoes_assinaturas_vencidas.ts`
+**Where**: `backend/scripts/migrations/0015_funcoes_assinaturas_vencidas.ts`
 **Depends on**: T136
 **Requirement**: PLANO-04, PLANO-10, PLANO-11
 
@@ -2778,10 +2779,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T140: Migration 0013: push
+### T140: Migration 0016: push
 
 **What**: Criar `push_subscription` (endpoint único) e `notificacao_enviada` (única por tipo e referência).
-**Where**: `backend/scripts/migrations/0013_push.ts`
+**Where**: `backend/scripts/migrations/0016_push.ts`
 **Depends on**: T139
 **Requirement**: PUSH-01, PUSH-02
 
@@ -2922,10 +2923,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T148: Migration 0014: exclusão de conta
+### T148: Migration 0017: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
-**Where**: `backend/scripts/migrations/0014_exclusao.ts`
+**Where**: `backend/scripts/migrations/0017_exclusao.ts`
 **Depends on**: T147
 **Requirement**: CONTA-03, CONTA-05
 

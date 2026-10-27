@@ -3,6 +3,7 @@ import { waitUntil } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { cabecalhos } from './middleware/cabecalhos.ts';
 import { limitePorIp } from './middleware/limite.ts';
+import { type ClienteAsaas, criarClienteAsaas } from './integracoes/asaas.ts';
 import { type ClienteEmail, criarClienteResend } from './integracoes/resend.ts';
 import { rotasReenviar2fa } from './rotas/auth-2fa-reenviar.ts';
 import { rotas2fa } from './rotas/auth-2fa.ts';
@@ -28,6 +29,7 @@ import { rotasPacientes } from './rotas/pacientes.ts';
 import { rotasPacientesAtivo } from './rotas/pacientes-ativo.ts';
 import { rotasPagamentos } from './rotas/pagamentos.ts';
 import { rotasPerfil } from './rotas/perfil.ts';
+import { rotasPlanoAssinar } from './rotas/plano-assinar.ts';
 import { rotasPrecos } from './rotas/precos.ts';
 import { rotasRascunhos } from './rotas/rascunhos.ts';
 import { health } from './rotas/health.ts';
@@ -48,11 +50,17 @@ interface OpcoesApp {
   email?: (env: Cloudflare.Env) => ClienteEmail;
   // Trabalho depois da resposta (padrão: waitUntil do Worker); os testes guardam e esperam.
   emSegundoPlano?: (tarefa: Promise<unknown>) => void;
+  // Os testes trocam o Asaas por um cliente simulado.
+  asaas?: (env: Cloudflare.Env) => ClienteAsaas;
 }
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
 const emailPadrao = (env: Cloudflare.Env): ClienteEmail =>
   criarClienteResend({ apiKey: env.RESEND_API_KEY ?? '', remetente: env.MAIL_FROM ?? '' });
+
+// Chave ou endpoint ausente faz a criação lançar: a rota trata como Asaas indisponível (503).
+const asaasPadrao = (env: Cloudflare.Env): ClienteAsaas =>
+  criarClienteAsaas({ apiKey: env.ASAAS_API_KEY ?? '', baseUrl: env.ASAAS_BASE_URL ?? '' });
 
 export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.Env }> {
   const capturarErro = opcoes.capturarErro ?? ((erro) => Sentry.captureException(erro));
@@ -106,6 +114,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasInicio);
   app.route('/api', rotasAuditoria);
   app.route('/api', rotasExportarProntuario);
+  app.route('/api', rotasPlanoAssinar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);

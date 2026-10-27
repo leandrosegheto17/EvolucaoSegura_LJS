@@ -45,6 +45,9 @@ export const ACOES_AUDITORIA = [
   'assinatura.atrasada',
   'assinatura.cancelada',
   'assinatura.free',
+  // PLANO-05: o profissional pediu o Pro e a cobrança foi criada no Asaas (o estado não muda até
+  // o pagamento). Decisão do usuário, 2026-10-27.
+  'assinatura.solicitada',
   // conta.exclusao_<etapa>: pedido (CONTA-02), confirmação (CONTA-03) e desistência (CONTA-04).
   // A purga (CONTA-05) apaga a própria trilha, então não tem evento.
   'conta.exclusao_pedida',

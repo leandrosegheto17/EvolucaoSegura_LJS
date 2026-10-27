@@ -59,6 +59,8 @@ describe('lista de ações', () => {
         'assinatura.atrasada',
         'assinatura.cancelada',
         'assinatura.free',
+        // T128 / PLANO-05: decisão do usuário (2026-10-27).
+        'assinatura.solicitada',
         'conta.exclusao_pedida',
         'conta.exclusao_confirmada',
         'conta.exclusao_desistida',
@@ -75,6 +77,7 @@ describe('lista de ações', () => {
     'assinatura.atrasada',
     'assinatura.cancelada',
     'assinatura.free',
+    'assinatura.solicitada',
     'conta.exclusao_pedida',
     'conta.exclusao_confirmada',
     'conta.exclusao_desistida',
