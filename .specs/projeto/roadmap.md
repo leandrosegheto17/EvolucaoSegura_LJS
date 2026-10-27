@@ -21,7 +21,7 @@ As 23 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan), reor
 | 15 | Etapa 11, parte 1: Auditoria (telas) e PDF do prontuário | Concluída |  |
 | 16 | Etapa 12, parte 1: Planos, Asaas e webhook | Concluída |  |
 | 17 | Etapa 12, parte 2: Meu plano, limite do Free e cron único | Concluída |  |
-| 18 | Etapa 13: Push | Não começada |  |
+| 18 | Etapa 13: Push | Concluída |  |
 | 19 | Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste) | Não começada | Ação do usuário antes da T122: criar Neon e Hyperdrive de teste |
 | 20 | Etapa 14, parte 1: Exclusão de conta | Não começada |  |
 | 21 | Etapa 14, parte 2: Termos, landing e PWA | Não começada | Ação do usuário na T156: checagem do Chrome instalável |
