@@ -14,6 +14,7 @@ Regras deste projeto que valem para toda tarefa:
 - Código do legado (`C:\Leandro\Projetos\EvolucaoSeguraWeb`) é somente leitura: copiar o arquivo, adaptar e trazer o teste.
 - Push, deploy, `wrangler deploy`, criação de recursos na Cloudflare, Neon, Asaas ou Resend e qualquer ação externa exigem confirmação específica.
 - Segredos nunca entram em arquivo versionado. O usuário fornece a chave do Asaas sandbox, o token do Resend e o DSN do Sentry quando a tarefa pedir.
+- Cada tarefa leva `**Estimativa**` e tem no máximo 2 horas de trabalho humano (regra do projeto). Estimativa das tarefas concluídas é aproximada; acima de 2h, divide-se a tarefa pendente.
 - Os spikes (T12 a T15) são descartáveis: código em `.specs/spikes/<slug>/codigo/`, fora do git, nunca integrado.
 
 ---
@@ -139,10 +140,10 @@ T98 -> T99 -> T100 -> T101 -> T102 -> T103 -> T104 -> T105 -> T106
 T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T166 -> T167 -> T168
 ```
 
-### Phase 15: Etapa 11: Auditoria (telas) e exportação
+### Phase 15: Etapa 11, parte 1: Auditoria (telas) e PDF do prontuário
 
 ```
-T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124
+T118 -> T119 -> T120 -> T121 -> T123
 ```
 
 ### Phase 16: Etapa 12, parte 1: Planos, Asaas e webhook
@@ -154,25 +155,43 @@ T125 -> T126 -> T127 -> T128 -> T169 -> T129 -> T130 -> T131 -> T132
 ### Phase 17: Etapa 12, parte 2: Meu plano, limite do Free e cron único
 
 ```
-T133 -> T134 -> T135 -> T136 -> T170 -> T137 -> T138 -> T139
+T133 -> T134 -> T135 -> T136 -> T170 -> T137 -> T138 -> T139 -> T196
 ```
 
 ### Phase 18: Etapa 13: Push
 
 ```
-T140 -> T141 -> T142 -> T143 -> T144 -> T145 -> T146 -> T147
+T140 -> T141 -> T142 -> T176 -> T177 -> T143 -> T144 -> T145 -> T146 -> T178 -> T147 -> T179
 ```
 
-### Phase 19: Etapa 14: Exclusão de conta, termos, landing e PWA
+### Phase 19: Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste)
 
 ```
-T148 -> T149 -> T150 -> T151 -> T152 -> T153 -> T154 -> T155 -> T156 -> T157
+T122 -> T171 -> T172 -> T173 -> T124 -> T174 -> T175
 ```
 
-### Phase 20: Etapa 15: Fechamento (e2e, restauração, README e runbook)
+### Phase 20: Etapa 14, parte 1: Exclusão de conta
 
 ```
-T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
+T148 -> T149 -> T180 -> T150 -> T181 -> T151 -> T152 -> T182 -> T183 -> T153
+```
+
+### Phase 21: Etapa 14, parte 2: Termos, landing e PWA
+
+```
+T154 -> T155 -> T156 -> T184 -> T157
+```
+
+### Phase 22: Etapa 15, parte 1: Testes de ponta a ponta (e2e)
+
+```
+T158 -> T185 -> T159 -> T186 -> T160 -> T187
+```
+
+### Phase 23: Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook)
+
+```
+T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T195 -> T165
 ```
 
 ---
@@ -182,6 +201,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T1: Primeiro commit e branch main
 
 **What**: Criar a branch `main` e versionar o que já existe (`.gitignore`, `.claude/`, `.specs/`).
+**Estimativa**: 30 min
 **Where**: `.gitignore`
 **Depends on**: None
 **Requirement**: OPS-11
@@ -200,6 +220,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T2: Monorepo pnpm e TypeScript estrito
 
 **What**: Criar a raiz pnpm com os 5 pacotes `@es/contrato`, `@es/dominio`, `@es/api`, `@es/scripts`, `@es/web`.
+**Estimativa**: 1,5h
 **Where**: `package.json`
 **Depends on**: T1
 **Requirement**: OPS-05
@@ -218,6 +239,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T3: Vitest e teste de fumaça
 
 **What**: Instalar o Vitest (modo projects) e um teste que roda, para fechar a infraestrutura mínima de testes.
+**Estimativa**: 1h
 **Where**: `backend/dominio/src/fumaca.test.ts`
 **Depends on**: T2
 **Requirement**: OPS-05
@@ -236,6 +258,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T4: ESLint, Prettier e `pnpm lint`
 
 **What**: Configurar lint e formatação na raiz com as regras do padrão LJS.
+**Estimativa**: 1h
 **Where**: `eslint.config.mjs`
 **Depends on**: T3
 **Requirement**: OPS-05
@@ -254,6 +277,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T5: Registrar a suíte em `testes.json`
 
 **What**: Gravar o comando da suíte para a checagem final e a trava de testes.
+**Estimativa**: 30 min
 **Where**: `.specs/projeto/testes.json`
 **Depends on**: T4
 **Requirement**: OPS-05
@@ -271,6 +295,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T6: Postgres 16 local com Docker
 
 **What**: Subir só o Postgres 16 com `docker compose`, com as roles preparadas na etapa 3.
+**Estimativa**: 1h
 **Where**: `docker-compose.yml`
 **Depends on**: T5
 **Requirement**: OPS-05
@@ -289,6 +314,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T7: gitleaks
 
 **What**: Configurar a varredura de segredos.
+**Estimativa**: 1h
 **Where**: `.gitleaks.toml`
 **Depends on**: T6
 **Requirement**: OPS-11
@@ -306,6 +332,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T8: Workflow `ci.yml`
 
 **What**: Criar o CI com lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e teste de isolamento.
+**Estimativa**: 2h
 **Where**: `.github/workflows/ci.yml`
 **Depends on**: T7
 **Requirement**: OPS-05
@@ -324,6 +351,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T9: Documentos `.md/` (PRD, PRD-TECNICO, SDD)
 
 **What**: Derivar da spec e do design os três documentos de produto e arquitetura.
+**Estimativa**: 2h
 **Where**: `.md/`
 **Depends on**: T8
 **Requirement**: OPS-05
@@ -341,6 +369,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T10: Documentos `.md/` (GUARDRAILS, THREAT-MODEL)
 
 **What**: Escrever as regras de trabalho e o modelo de ameaças (STRIDE) com as fronteiras de confiança.
+**Estimativa**: 2h
 **Where**: `.md/`
 **Depends on**: T9
 **Requirement**: ISO-01
@@ -358,6 +387,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T11: ADRs 001 a 003
 
 **What**: Registrar stack e monorepo LJS, base de migrations consolidada e `@cloudflare/vitest-plugin` (AD-001).
+**Estimativa**: 1,5h
 **Where**: `.md/adr/`
 **Depends on**: T10
 **Requirement**: OPS-05
@@ -375,6 +405,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T12: Spike S1: Hyperdrive, Kysely e `SET LOCAL`
 
 **What**: Provar que `SET LOCAL` dentro de `BEGIN` vale só na transação com o pooler do Hyperdrive, que Kysely roda sobre um `pg.Client` por requisição e medir a CPU da exportação completa.
+**Estimativa**: 4h
 **Where**: `.specs/spikes/hyperdrive-kysely/`
 **Depends on**: T11
 **Requirement**: ISO-01, OPS-13, OPS-14
@@ -393,6 +424,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T13: Spike S2: rate limit no plano Free
 
 **What**: Provar se o binding `ratelimits` existe no Free; se não, decidir pelo contador em `limite_uso`.
+**Estimativa**: 3h
 **Where**: `.specs/spikes/rate-limit/`
 **Depends on**: T12
 **Requirement**: OPS-07
@@ -410,6 +442,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T14: Spike S3: Asaas sandbox
 
 **What**: Provar cliente com CPF/CNPJ, assinatura mensal por Pix, QR Code e webhook com token no sandbox.
+**Estimativa**: 5h
 **Where**: `.specs/spikes/asaas-sandbox/`
 **Depends on**: T13
 **Requirement**: PLANO-05, PLANO-06
@@ -428,6 +461,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T15: Spike S4: Web Push no Worker
 
 **What**: Provar o envio de push cifrado com `@block65/webcrypto-web-push` e VAPID ES256 a partir de um Worker.
+**Estimativa**: 4h
 **Where**: `.specs/spikes/push-worker/`
 **Depends on**: T14
 **Requirement**: PUSH-07
@@ -446,6 +480,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T16: Harness de teste do Worker
 
 **What**: Configurar `@cloudflare/vitest-plugin` com o `wrangler.jsonc` mínimo e o Hyperdrive local por `miniflare.hyperdrives`.
+**Estimativa**: 2h
 **Where**: `backend/api/vitest.config.ts`
 **Depends on**: T15
 **Requirement**: OPS-05
@@ -463,6 +498,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T17: GET /api/health
 
 **What**: Responder 200 sem tocar no banco.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/health.ts`
 **Depends on**: T16
 **Requirement**: OPS-06
@@ -480,6 +516,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T18: Cabeçalhos de segurança e no-store
 
 **What**: Aplicar CSP, HSTS, nosniff, Referrer-Policy e `frame-ancestors 'none'`; `Cache-Control: no-store` em `/api/*`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/middleware/cabecalhos.ts`
 **Depends on**: T17
 **Requirement**: OPS-09, PUB-05
@@ -498,6 +535,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T19: Schema de ambiente e `.env.example`
 
 **What**: Validar as variáveis do Worker com Zod e listá-las no `.env.example` com obrigatoriedade, formato e se é segredo.
+**Estimativa**: 1,5h
 **Where**: `backend/api/src/ambiente.ts`
 **Depends on**: T18
 **Requirement**: OPS-11
@@ -516,6 +554,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T20: Guardas de código
 
 **What**: Teste que falha se houver URL absoluta do app no código ou nas migrations, ou biblioteca de hash de senha ou de PDF em `backend/api`.
+**Estimativa**: 1,5h
 **Where**: `backend/scripts/test/guardas-codigo.test.ts`
 **Depends on**: T19
 **Requirement**: OPS-10, OPS-14
@@ -534,6 +573,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T21: Sentry no Worker
 
 **What**: Enviar erros com release igual ao SHA e remover corpo, cookie e e-mail antes do envio.
+**Estimativa**: 1,5h
 **Where**: `backend/api/src/sentry.ts`
 **Depends on**: T20
 **Requirement**: OPS-08
@@ -552,6 +592,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T22: Front mínimo (Vite, React 19, Router e Tailwind)
 
 **What**: Criar o esqueleto do front com base `/app`.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/vite.config.ts`
 **Depends on**: T21
 **Requirement**: PUB-02
@@ -569,6 +610,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T23: Sentry no front
 
 **What**: Configurar `@sentry/react` com release igual ao SHA e scrubbing.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/sentry.ts`
 **Depends on**: T22
 **Requirement**: OPS-08
@@ -586,6 +628,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T24: Worker serve assets e API
 
 **What**: Configurar `assets` com fallback de SPA e `run_worker_first: ["/api/*"]`.
+**Estimativa**: 2h
 **Where**: `wrangler.jsonc`
 **Depends on**: T23
 **Requirement**: PUB-05, OPS-03
@@ -604,6 +647,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T25: Workflow `deploy.yml`
 
 **What**: Criar o deploy manual, só pela `main`, environment `producao`, concurrency sem cancelamento, na ordem fixa.
+**Estimativa**: 1,5h
 **Where**: `.github/workflows/deploy.yml`
 **Depends on**: T24
 **Requirement**: OPS-03
@@ -622,6 +666,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T26: Teste do único `wrangler deploy`
 
 **What**: Falhar se `wrangler deploy` aparecer fora do `deploy.yml`.
+**Estimativa**: 1,5h
 **Where**: `backend/scripts/test/wrangler-deploy.test.ts`
 **Depends on**: T25
 **Requirement**: OPS-04
@@ -639,6 +684,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T27: Workflow `backup.yml` e ADR-004
 
 **What**: Criar o backup diário às 04:00 de Brasília com `pg_dump -Fc` pela role `backup_ro`, cifrado com `age`, artefato por 30 dias, também manual.
+**Estimativa**: 1,5h
 **Where**: `.github/workflows/backup.yml`
 **Depends on**: T26
 **Requirement**: OPS-01
@@ -657,6 +703,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T28: `migrar.ts` e `pnpm migrar`
 
 **What**: Rodar as migrations com `node-pg-migrate` 9 (ESM), uma por mudança, em transação.
+**Estimativa**: 2h
 **Where**: `backend/scripts/src/migrar.ts`
 **Depends on**: T27
 **Requirement**: OPS-05
@@ -675,6 +722,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T29: Migration 0001: roles e base
 
 **What**: Criar roles `owner`, `app` e `backup_ro`, `pgcrypto`, schema `tarefas` e helper `app_usuario_id()`.
+**Estimativa**: 3h
 **Where**: `backend/scripts/migrations/0001_base.ts`
 **Depends on**: T28
 **Requirement**: ISO-03, ISO-04
@@ -693,6 +741,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T30: Migration 0002: `audit_log`
 
 **What**: Criar a tabela de auditoria só de inclusão, com RLS forçada.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0002_auditoria.ts`
 **Depends on**: T29
 **Requirement**: AUD-01, ISO-01
@@ -711,6 +760,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T31: Contrato e lista de eventos de auditoria
 
 **What**: Definir o schema estrito do evento e a lista de ações e alvos permitidos.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/auditoria.ts`
 **Depends on**: T30
 **Requirement**: AUD-02
@@ -728,6 +778,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T32: Transação por requisição
 
 **What**: `comTransacao(env, usuarioId, fn)`: um `pg.Client` por requisição, `BEGIN`, `SET LOCAL app.usuario_id`, `COMMIT` ou `ROLLBACK`, `client.end()` em `ctx.waitUntil`.
+**Estimativa**: 3h
 **Where**: `backend/api/src/db.ts`
 **Depends on**: T31
 **Requirement**: ISO-01
@@ -747,6 +798,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T33: Repositório de auditoria
 
 **What**: Gravar o evento na mesma transação da operação, com IP truncado (/24 IPv4, /48 IPv6) e user-agent resumido.
+**Estimativa**: 2h
 **Where**: `backend/api/src/repositorios/auditoria.ts`
 **Depends on**: T32
 **Requirement**: AUD-01, AUD-02
@@ -765,6 +817,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T34: Cache do Hyperdrive desligado
 
 **What**: Gerar e documentar o comando de criação do Hyperdrive com cache desligado.
+**Estimativa**: 1,5h
 **Where**: `backend/scripts/src/hyperdrive.ts`
 **Depends on**: T33
 **Requirement**: OPS-13
@@ -782,6 +835,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T35: Harness de isolamento
 
 **What**: Teste que cria dois profissionais e, para cada tabela com `usuario_id`, exige `FORCE ROW LEVEL SECURITY` e que B não lê nem escreve linha de A.
+**Estimativa**: 3h
 **Where**: `backend/api/test/isolamento/isolamento.test.ts`
 **Depends on**: T34
 **Requirement**: ISO-01, ISO-02
@@ -800,6 +854,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T36: Teste das funções `tarefas.*` e ADR-005
 
 **What**: Garantir que toda função `SECURITY DEFINER` tem `search_path` fixo e que `app` só executa as listadas.
+**Estimativa**: 2h
 **Where**: `backend/scripts/test/funcoes-tarefas.test.ts`
 **Depends on**: T35
 **Requirement**: ISO-03
@@ -818,6 +873,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T37: Contrato de identidade
 
 **What**: Schemas Zod de cadastro, entrar, 2FA, recuperação e códigos de erro problem+json.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/identidade.ts`
 **Depends on**: T36
 **Requirement**: CAD-01, AUTH-02
@@ -836,6 +892,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T38: Política de senha
 
 **What**: Copiar `password-policy.ts` e a lista de 124 senhas comuns, com seus testes.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/identidade/politica-senha.ts`
 **Depends on**: T37
 **Requirement**: AUTH-11
@@ -853,6 +910,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T39: Regras de acesso puras
 
 **What**: Funções de expiração de sessão (15 min, 12 h), bloqueio (5 falhas em 15 min), 5 tentativas de 2FA e reenvio após 60 s.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/identidade/regras-acesso.ts`
 **Depends on**: T38
 **Requirement**: AUTH-05, AUTH-06, AUTH-07, AUTH-09
@@ -870,6 +928,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T40: Migration 0003: identidade
 
 **What**: Criar `usuario`, `credencial_senha`, `sessao`, `desafio_2fa`, `token_email`, `tentativa_login`, `aceite_termos`, com grants mínimos e funções de hash (`crypt`, `gen_salt('bf', 12)`).
+**Estimativa**: 3h
 **Where**: `backend/scripts/migrations/0003_identidade.ts`
 **Depends on**: T39
 **Requirement**: AUTH-12, CAD-03
@@ -888,6 +947,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T41: Migration 0004: assinatura e webhook
 
 **What**: Criar `assinatura` e `webhook_evento` com RLS forçada.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0004_assinatura.ts`
 **Depends on**: T40
 **Requirement**: PLANO-01, ISO-01
@@ -906,6 +966,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T42: Cliente Resend
 
 **What**: Enviar e-mail de texto puro por `fetch`, com erro tipado e alerta ao Sentry no primeiro 429.
+**Estimativa**: 2h
 **Where**: `backend/api/src/integracoes/resend.ts`
 **Depends on**: T41
 **Requirement**: CAD-08, AUTH-08
@@ -924,6 +985,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T43: Rate limit
 
 **What**: Aplicar o limite por IP (10/min em entrar, 2FA, cadastro e recuperação; 60/min nas demais públicas; limite do webhook) com o mecanismo escolhido no spike S2.
+**Estimativa**: 2h
 **Where**: `backend/api/src/middleware/limite.ts`
 **Depends on**: T42
 **Requirement**: OPS-07
@@ -943,6 +1005,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T44: POST /api/cadastro
 
 **What**: Cadastrar com resposta 202 igual para e-mail novo, existente e pendente, enviando o e-mail certo em cada caso.
+**Estimativa**: 3h
 **Where**: `backend/api/src/rotas/cadastro.ts`
 **Depends on**: T43
 **Requirement**: CAD-01, CAD-02, CAD-03, CAD-06, CAD-08
@@ -963,6 +1026,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T45: Confirmação de e-mail
 
 **What**: Ativar a conta, iniciar o trial de 14 dias, registrar o aceite dos termos com versão e auditar `conta.cadastrada`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/confirmar.ts`
 **Depends on**: T44
 **Requirement**: CAD-04, CAD-05, CAD-07, AUD-04
@@ -982,6 +1046,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T46: POST /api/auth/entrar
 
 **What**: Validar senha, enviar o código 2FA de 6 dígitos (CSPRNG, HMAC-SHA256) e recusar com 401 único e tempo equivalente.
+**Estimativa**: 3h
 **Where**: `backend/api/src/rotas/auth-entrar.ts`
 **Depends on**: T45
 **Requirement**: AUTH-01, AUTH-02, AUTH-03, AUTH-08, CAD-09
@@ -1002,6 +1067,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T47: Bloqueio por falhas
 
 **What**: Bloquear e-mail e IP por 15 min após 5 falhas em 15 min, com 429 e `Retry-After`, estado em `tentativa_login`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/auth-entrar.ts`
 **Depends on**: T46
 **Requirement**: AUTH-07
@@ -1021,6 +1087,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T48: POST /api/auth/2fa/verificar
 
 **What**: Validar o código, criar a sessão nova (`__Host-sid`) e devolver o token CSRF, auditando `auth.login_ok`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/auth-2fa.ts`
 **Depends on**: T47
 **Requirement**: AUTH-04, AUTH-05, AUTH-10, AUD-04
@@ -1040,6 +1107,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T49: Reenvio do código 2FA
 
 **What**: Responder 202 igual em todos os casos e só enviar se o último envio tem mais de 60 s pelo relógio do banco.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/auth-2fa-reenviar.ts`
 **Depends on**: T48
 **Requirement**: AUTH-06
@@ -1058,6 +1126,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T50: Middleware de sessão
 
 **What**: Resolver o cookie por SHA-256, expirar por inatividade (15 min) ou tempo absoluto (12 h) e renovar o último uso.
+**Estimativa**: 2h
 **Where**: `backend/api/src/middleware/sessao.ts`
 **Depends on**: T49
 **Requirement**: AUTH-09
@@ -1076,6 +1145,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T51: Middleware de CSRF
 
 **What**: Exigir `x-csrf-token` correto em métodos de escrita autenticados.
+**Estimativa**: 2h
 **Where**: `backend/api/src/middleware/csrf.ts`
 **Depends on**: T50
 **Requirement**: AUTH-17
@@ -1094,6 +1164,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T52: POST /api/auth/sair
 
 **What**: Encerrar a sessão sem DELETE, limpar o cookie com `Max-Age=0` e auditar `auth.logout`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/auth-sair.ts`
 **Depends on**: T51
 **Requirement**: AUTH-16, AUD-04
@@ -1112,6 +1183,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T53: Pipeline completo e GET /api/eu
 
 **What**: Montar `app.ts` na ordem do design (cabeçalhos, rate limit, sessão, CSRF, plano, transação, handler, auditoria) e expor o usuário logado.
+**Estimativa**: 3h
 **Where**: `backend/api/src/app.ts`
 **Depends on**: T52
 **Requirement**: ISO-01, OPS-07, AUTH-17
@@ -1131,6 +1203,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T54: Pedido de recuperação de senha
 
 **What**: Responder 202 vazio em todos os casos; se a conta existe, enviar link com token de 256 bits (30 min, uso único), invalidando pedidos anteriores.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/recuperar.ts`
 **Depends on**: T53
 **Requirement**: AUTH-13
@@ -1149,6 +1222,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T55: Nova senha
 
 **What**: Trocar o hash, encerrar todas as sessões e responder 204 sem abrir sessão; checar o token antes da política de senha.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/redefinir.ts`
 **Depends on**: T54
 **Requirement**: AUTH-14, AUTH-15
@@ -1168,6 +1242,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T56: Cliente de API e guarda de sessão no front
 
 **What**: Portar `lib/api` para o prefixo `/api`, com o token CSRF em toda escrita e TanStack Query.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/lib/api.ts`
 **Depends on**: T55
 **Requirement**: AUTH-17, PUB-02
@@ -1186,6 +1261,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T57: Telas de cadastro e confirmação
 
 **What**: Telas `/cadastro` e `/confirmar` com aceite dos termos e mensagens de erro do contrato.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/publico/cadastro.tsx`
 **Depends on**: T56
 **Requirement**: CAD-01, CAD-05
@@ -1204,6 +1280,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T58: Telas de entrar e código 2FA
 
 **What**: Telas `/entrar` e do código, com reenvio.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/publico/entrar.tsx`
 **Depends on**: T57
 **Requirement**: AUTH-01, AUTH-04, AUTH-06
@@ -1222,6 +1299,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T59: Telas de recuperação
 
 **What**: Telas `/recuperar` e `/redefinir`.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/publico/recuperar.tsx`
 **Depends on**: T58
 **Requirement**: AUTH-13, AUTH-14
@@ -1239,6 +1317,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T60: Aviso de inatividade e sessão expirada
 
 **What**: Diálogo com contagem regressiva nos últimos 120 s, renovação, limpeza do cache e `/sessao-expirada` preservando rascunhos.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/app/inatividade.tsx`
 **Depends on**: T59
 **Requirement**: AUTH-18, AUTH-19
@@ -1257,6 +1336,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T61: Migration 0005: perfil e configurações
 
 **What**: Criar `perfil` e `configuracao_usuario` com RLS forçada.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0005_perfil.ts`
 **Depends on**: T60
 **Requirement**: PERF-02, PERF-03, PERF-08
@@ -1275,6 +1355,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T62: GET e PUT /api/perfil
 
 **What**: Ler e salvar perfil e especialidade (`psicologia`, `nutricao`, `fisioterapia`, `outra` com nome), auditando só nomes de campo.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/perfil.ts`
 **Depends on**: T61
 **Requirement**: PERF-02, PERF-03, PERF-09
@@ -1294,6 +1375,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T63: GET e PUT /api/configuracoes
 
 **What**: Salvar `privacidade_agenda`, sem opção de inatividade, auditando `configuracao.alterada`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/configuracoes.ts`
 **Depends on**: T62
 **Requirement**: PERF-08, PERF-09
@@ -1312,6 +1394,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T64: Design system do front
 
 **What**: Copiar `ui`, tokens, fontes e ícones do legado.
+**Estimativa**: 4h
 **Where**: `frontend/web/src/ui/`
 **Depends on**: T63
 **Requirement**: PUB-02
@@ -1329,6 +1412,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T65: Shell `/app` e guarda de perfil
 
 **What**: Portar layout, navegação e roteamento sob `/app` e levar qualquer rota a `/app/perfil` enquanto faltarem nome e especialidade.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/shell.tsx`
 **Depends on**: T64
 **Requirement**: PERF-01, PUB-02
@@ -1346,6 +1430,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T66: Tela de perfil e configurações
 
 **What**: Portar a tela com especialidade única e configurações.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/perfil/perfil.tsx`
 **Depends on**: T65
 **Requirement**: PERF-02, PERF-03, PERF-08
@@ -1364,6 +1449,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T67: Migration 0006: pacientes e TCLE
 
 **What**: Criar `paciente` e `consentimento_tcle` com RLS forçada, sem colunas de IA.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0006_pacientes.ts`
 **Depends on**: T66
 **Requirement**: PAC-01, PAC-05, PAC-07
@@ -1382,6 +1468,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T68: Contrato de pacientes
 
 **What**: Schemas de paciente, listagem e TCLE.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/pacientes.ts`
 **Depends on**: T67
 **Requirement**: PAC-01, PAC-02, PAC-05
@@ -1400,6 +1487,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T69: Criar, buscar e listar pacientes
 
 **What**: `POST`, `GET` lista com `q`, `ativo`, `limit` e `offset`, sem rota de exclusão.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/pacientes.ts`
 **Depends on**: T68
 **Requirement**: PAC-01, PAC-02, PAC-07
@@ -1420,6 +1508,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T70: Inativar e reativar
 
 **What**: Trocar só o flag `ativo`, sem tocar em prontuário nem sessões futuras, auditando.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/pacientes-ativo.ts`
 **Depends on**: T69
 **Requirement**: PAC-03, PAC-04
@@ -1438,6 +1527,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T71: TCLE
 
 **What**: Registrar o consentimento só por inclusão.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/tcle.ts`
 **Depends on**: T70
 **Requirement**: PAC-05
@@ -1456,6 +1546,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T72: Ficha do paciente
 
 **What**: Abrir a ficha e auditar `paciente.consultado`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/paciente-ficha.ts`
 **Depends on**: T71
 **Requirement**: PAC-06
@@ -1473,6 +1564,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T73: Telas de pacientes
 
 **What**: Lista, ficha e TCLE portadas do legado.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/pacientes/pacientes.tsx`
 **Depends on**: T72
 **Requirement**: PAC-02, PAC-03, PAC-05
@@ -1491,6 +1583,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T74: Migration 0007: agenda
 
 **What**: Criar `serie_recorrencia` e `sessao_atendimento` com RLS forçada e `cobravel` com padrão falso.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0007_agenda.ts`
 **Depends on**: T73
 **Requirement**: AGE-10, AGE-17
@@ -1509,6 +1602,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T75: Contrato da agenda
 
 **What**: Schemas de sessão, listagem e mudança de status.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/agenda.ts`
 **Depends on**: T74
 **Requirement**: AGE-01, AGE-03
@@ -1527,6 +1621,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T76: Transições de status
 
 **What**: Copiar `session.ts` e acrescentar realizada para cancelada com guarda e `cobravel` padrão falso.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/agenda/sessao.ts`
 **Depends on**: T75
 **Requirement**: AGE-07, AGE-08, AGE-10
@@ -1546,6 +1641,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T77: Conflito e dia habilitado
 
 **What**: Copiar conflito e disponibilidade por dia da semana.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/agenda/conflito.ts`
 **Depends on**: T76
 **Requirement**: AGE-04, AGE-06, AGE-09
@@ -1564,6 +1660,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T78: POST /api/sessoes
 
 **What**: Criar sessão avulsa com conflito, dia habilitado e paciente ativo.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/sessoes.ts`
 **Depends on**: T77
 **Requirement**: AGE-01, AGE-04, AGE-05, AGE-06, AGE-12
@@ -1583,6 +1680,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T79: GET /api/sessoes
 
 **What**: Listar por intervalo com cursor keyset.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/sessoes-lista.ts`
 **Depends on**: T78
 **Requirement**: AGE-03
@@ -1601,6 +1699,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T80: Editar e mover sessão
 
 **What**: Alterar horário e dados com `row_version`, reaplicando conflito, dia e paciente.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/sessoes-editar.ts`
 **Depends on**: T79
 **Requirement**: AGE-11, AGE-04, AGE-06, AGE-12
@@ -1619,6 +1718,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T81: Mudar status da sessão
 
 **What**: Aplicar as transições, reaplicando checagens ao voltar para agendada e gravando `cobravel`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/sessoes-status.ts`
 **Depends on**: T80
 **Requirement**: AGE-07, AGE-09, AGE-10, AGE-11
@@ -1637,6 +1737,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T82: Fim de semana desligado com sessões futuras
 
 **What**: No `PUT /api/perfil`, responder 409 `WEEKEND_DAY_HAS_SESSIONS` com a contagem, ou salvar mantendo as sessões com `confirmar: true`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/perfil.ts`
 **Depends on**: T81
 **Requirement**: PERF-06, PERF-07
@@ -1655,6 +1756,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T83: Geração e deslocamento de ocorrências
 
 **What**: Copiar `series.ts`: gerar 2 a 52 ocorrências semanais ou quinzenais e deslocar a partir de uma data.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/agenda/serie.ts`
 **Depends on**: T82
 **Requirement**: AGE-13, AGE-15
@@ -1673,6 +1775,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T84: POST /api/series
 
 **What**: Criar a série inteira ou nenhuma ocorrência.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/series.ts`
 **Depends on**: T83
 **Requirement**: AGE-13, AGE-14
@@ -1691,6 +1794,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T85: Alterar série a partir de uma data
 
 **What**: Deslocar só as ocorrências `agendada` a partir da data, ignorando as próprias ocorrências no conflito.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/series-alterar.ts`
 **Depends on**: T84
 **Requirement**: AGE-15
@@ -1709,6 +1813,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T86: Cancelar série a partir de uma data
 
 **What**: Marcar série e ocorrências `agendada` como canceladas, sem apagar, de forma idempotente.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/series-cancelar.ts`
 **Depends on**: T85
 **Requirement**: AGE-16, AGE-17
@@ -1727,6 +1832,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T87: Tela da agenda
 
 **What**: Semana, criação de sessão e durações 30, 45, 50, 60 e 90 com 50 pré-selecionado.
+**Estimativa**: 4h
 **Where**: `frontend/web/src/app/agenda/agenda.tsx`
 **Depends on**: T86
 **Requirement**: AGE-02, AGE-01
@@ -1745,6 +1851,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T88: Série, conflito e status na tela
 
 **What**: Criação de série, diálogo de conflito e mudança de status.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/agenda/serie.tsx`
 **Depends on**: T87
 **Requirement**: AGE-04, AGE-13, AGE-14, AGE-07
@@ -1763,6 +1870,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T89: Migration 0008: anamnese
 
 **What**: Criar `modelo_anamnese`, `modelo_anamnese_item`, `anamnese` e `anamnese_retificacao` com RLS forçada.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0008_anamnese.ts`
 **Depends on**: T88
 **Requirement**: ANA-03, ANA-04
@@ -1781,6 +1889,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T90: Regras do modelo de anamnese
 
 **What**: Copiar `model.domain.ts` e `presets.ts`: limites de itens, rótulos e bloqueio quando há anamnese.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/anamnese/modelo.ts`
 **Depends on**: T89
 **Requirement**: ANA-01, ANA-02, ANA-03
@@ -1801,6 +1910,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T91: Regras dos valores
 
 **What**: Copiar `anamnesis-values.domain.ts` sem o schema morto de 20.000 e 5.000.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/anamnese/valores.ts`
 **Depends on**: T90
 **Requirement**: ANA-04
@@ -1818,6 +1928,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T92: Contrato da anamnese
 
 **What**: Schemas de modelo, anamnese e retificação.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/anamnese.ts`
 **Depends on**: T91
 **Requirement**: ANA-01, ANA-04, ANA-06
@@ -1835,6 +1946,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T93: Modelo padrão e troca de especialidade
 
 **What**: Criar o modelo padrão ao definir a especialidade e bloquear a troca quando há anamnese.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/perfil.ts`
 **Depends on**: T92
 **Requirement**: PERF-04, PERF-05
@@ -1852,6 +1964,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T94: Rotas do modelo
 
 **What**: Ler e editar o modelo respeitando o bloqueio.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/modelo-anamnese.ts`
 **Depends on**: T93
 **Requirement**: ANA-01, ANA-02, ANA-03
@@ -1870,6 +1983,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T95: Registrar e editar a anamnese no dia
 
 **What**: Uma anamnese por paciente, editável até a meia-noite de Brasília pelo relógio do banco.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/anamnese.ts`
 **Depends on**: T94
 **Requirement**: ANA-04, ANA-05
@@ -1888,6 +2002,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T96: Retificar a anamnese
 
 **What**: Criar nova versão com motivo depois do dia do cadastro, preservando a original.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/anamnese-retificar.ts`
 **Depends on**: T95
 **Requirement**: ANA-06, ANA-07, ANA-08
@@ -1906,6 +2021,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T97: Tela de anamnese e editor do modelo
 
 **What**: Portar as telas com os selos "Editável hoje" e "Registrada" e o alerta marcado.
+**Estimativa**: 4h
 **Where**: `frontend/web/src/app/anamnese/anamnese.tsx`
 **Depends on**: T96
 **Requirement**: ANA-09
@@ -1924,6 +2040,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T98: Migration 0009: evolução e rascunho
 
 **What**: Criar `evolucao`, `evolucao_retificacao`, `rascunho` e `modelo_texto`, com índice único parcial em `sessao_id`.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0009_evolucao.ts`
 **Depends on**: T97
 **Requirement**: EVO-02, RAS-01, RAS-03
@@ -1942,6 +2059,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T99: Regras de janela, rascunho e modelos
 
 **What**: Copiar `edit-window.ts`, `draft.ts` e `templates.domain.ts`, com modelo só do tipo `evolucao`.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/clinico/janela-edicao.ts`
 **Depends on**: T98
 **Requirement**: EVO-04, RAS-02, RAS-03
@@ -1960,6 +2078,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T100: Contrato de evolução e rascunho
 
 **What**: Schemas de evolução, retificação, rascunho e modelo de texto.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/clinico.ts`
 **Depends on**: T99
 **Requirement**: EVO-01, EVO-05, RAS-01
@@ -1978,6 +2097,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T101: POST /api/evolucoes
 
 **What**: Registrar a evolução e, se a sessão estava agendada, mudá-la para realizada na mesma transação.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/evolucoes.ts`
 **Depends on**: T100
 **Requirement**: EVO-01, EVO-02, EVO-03
@@ -1997,6 +2117,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T102: Editar a evolução no dia
 
 **What**: Permitir edição no dia do cadastro com `row_version` obrigatório.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/evolucoes-editar.ts`
 **Depends on**: T101
 **Requirement**: EVO-04
@@ -2014,6 +2135,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T103: Retificar a evolução
 
 **What**: Criar retificação com texto novo e motivo depois do dia do cadastro; sem rota de exclusão.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/evolucoes-retificar.ts`
 **Depends on**: T102
 **Requirement**: EVO-05, EVO-06, EVO-07
@@ -2032,6 +2154,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T104: Rascunhos
 
 **What**: Upsert por (profissional, tipo, ref) com `If-Match`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/rascunhos.ts`
 **Depends on**: T103
 **Requirement**: RAS-01, RAS-02
@@ -2050,6 +2173,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T105: Modelos de texto
 
 **What**: Criar, listar e arquivar modelos do tipo `evolucao`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/modelos-texto.ts`
 **Depends on**: T104
 **Requirement**: RAS-03
@@ -2068,6 +2192,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T106: Telas de evolução, rascunho e modelos
 
 **What**: Portar as telas e oferecer restaurar o rascunho no próximo acesso após expirar a sessão.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/evolucao/evolucao.tsx`
 **Depends on**: T105
 **Requirement**: RAS-04, EVO-04, EVO-05
@@ -2086,6 +2211,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T107: Migration 0010: financeiro
 
 **What**: Criar `preco_paciente`, `preco_sessao` (com revisões) e `pagamento` com valores em `bigint` centavos e um pagamento por sessão.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0010_financeiro.ts`
 **Depends on**: T106
 **Requirement**: FIN-01, FIN-02
@@ -2105,6 +2231,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T108: Contrato do financeiro em centavos e ADR-007
 
 **What**: Schemas de preço, pagamento e débitos em centavos inteiros.
+**Estimativa**: 1,5h
 **Where**: `backend/contrato/src/financeiro.ts`
 **Depends on**: T107
 **Requirement**: FIN-01, FIN-03
@@ -2123,6 +2250,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T109: Regras de débito, pagamento e preço
 
 **What**: Copiar `debts.ts`, `payment.ts` e `price.ts` trocando decimal por centavos.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/financeiro/debitos.ts`
 **Depends on**: T108
 **Requirement**: FIN-04, FIN-05, FIN-06
@@ -2141,6 +2269,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T110: Preços do paciente e da sessão
 
 **What**: Definir preço por paciente e ajuste por sessão, com revisão e `row_version`, auditando.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/precos.ts`
 **Depends on**: T109
 **Requirement**: FIN-02, FIN-08
@@ -2159,6 +2288,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T111: Pagamentos
 
 **What**: Registrar e corrigir pagamento, sem exclusão.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/pagamentos.ts`
 **Depends on**: T110
 **Requirement**: FIN-03, FIN-04, FIN-05, FIN-08
@@ -2177,6 +2307,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T112: Débitos e total pendente
 
 **What**: Listar débitos com filtro e somar o pendente em centavos.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/debitos.ts`
 **Depends on**: T111
 **Requirement**: FIN-06, FIN-07
@@ -2195,6 +2326,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T113: Guarda de cancelamento com registros
 
 **What**: Ligar a guarda realizada para cancelada à existência de evolução ou pagamento.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/sessoes-status.ts`
 **Depends on**: T112
 **Requirement**: AGE-08
@@ -2212,6 +2344,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T114: Regras do resumo do Início
 
 **What**: Copiar `summary.ts`.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/inicio/resumo.ts`
 **Depends on**: T113
 **Requirement**: INI-01, INI-03
@@ -2230,6 +2363,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T115: GET /api/inicio
 
 **What**: Montar o resumo da semana e a lista de hoje (no máximo 6, sem canceladas nem remarcadas).
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/inicio.ts`
 **Depends on**: T114
 **Requirement**: INI-01, INI-02, INI-03
@@ -2248,6 +2382,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T116: Tela do financeiro
 
 **What**: Débitos com filtro na URL e total pendente.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/financeiro/financeiro.tsx`
 **Depends on**: T115
 **Requirement**: FIN-07
@@ -2266,6 +2401,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T117: Tela do Início
 
 **What**: Semana, contadores e lista de hoje.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/inicio/inicio.tsx`
 **Depends on**: T116
 **Requirement**: INI-01, INI-02, INI-03
@@ -2284,6 +2420,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T166: Telas de preço do paciente e da sessão
 
 **What**: Definir o preço do paciente e ajustar o preço da sessão, com leitura do valor atual, `row_version` e erro 409.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/app/financeiro/preco.tsx`, `frontend/web/src/app/financeiro/api.ts` e `frontend/web/src/rotas.tsx`
 **Depends on**: T117
 **Requirement**: FIN-09
@@ -2304,6 +2441,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T167: Tela de registrar pagamento
 
 **What**: Registrar ou corrigir o pagamento de uma sessão (data, meio, valor opcional), com confirmação de duplicidade.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/app/financeiro/pagamento.tsx`, `frontend/web/src/app/financeiro/api.ts` e `frontend/web/src/rotas.tsx`
 **Depends on**: T166
 **Requirement**: FIN-09
@@ -2324,6 +2462,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T168: Atalho "Pagamento" na lista de hoje do Início
 
 **What**: Sessão pendente de pagamento na lista de hoje ganha o atalho para a tela de pagamento.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/app/inicio/inicio.tsx`
 **Depends on**: T167
 **Requirement**: FIN-09, INI-03
@@ -2342,6 +2481,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T118: GET /api/auditoria
 
 **What**: Trilha da conta e histórico do paciente, páginas de 50, filtros e sem `paciente.consultado`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/auditoria.ts`
 **Depends on**: T168
 **Requirement**: AUD-03
@@ -2361,6 +2501,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T119: Tela de auditoria
 
 **What**: Portar a tela com "Carregar mais".
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/app/auditoria/auditoria.tsx`
 **Depends on**: T118
 **Requirement**: AUD-03
@@ -2379,6 +2520,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T120: Migration 0011: limites de uso
 
 **What**: Criar `limite_uso` e a função que conta por janela.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0011_limite_uso.ts`
 **Depends on**: T119
 **Requirement**: EXP-05
@@ -2396,6 +2538,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T121: GET prontuário do paciente
 
 **What**: Devolver anamnese (versões e retificações) e evoluções do período em JSON.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/exportar-prontuario.ts`
 **Depends on**: T120
 **Requirement**: EXP-01, EXP-07, EXP-06
@@ -2411,31 +2554,12 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T122: GET exportação completa paginada
-
-**What**: Entregar todos os dados do profissional, sem credenciais nem sessões, em páginas por tabela com cursor (D-32), com rate limit no início da exportação.
-**Where**: `backend/api/src/rotas/exportar-tudo.ts`
-**Depends on**: T121
-**Requirement**: EXP-03, EXP-04, EXP-05, EXP-06
-
-**Done when**:
-
-- [ ] Primeiro, medir no Hyperdrive real a CPU de uma página de tamanho fixo (ex.: 300 evoluções de 1.500 caracteres) e fixar o tamanho máximo de página que cabe com folga em 10 ms; se nenhum tamanho útil couber, parar e abrir novo spike
-- [ ] Página acima do máximo ou cursor inválido responde 400 sem auditar
-- [ ] Mais de 5 exportações iniciadas em 60 s responde 429
-- [ ] Sem hash de senha nem sessão no corpo
-- [ ] Audita `exportacao.concluida` só ao servir a última página
-
-**Tests**: integration
-**Gate**: full
-
----
-
 ### T123: PDF do prontuário no navegador e ADR-008
 
 **What**: Portar o documento de `record-pdf.ts` para pdfmake no navegador, em chunk sob demanda.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/export/pdf-prontuario.ts`
-**Depends on**: T122
+**Depends on**: T121
 **Requirement**: EXP-02
 
 **Done when**:
@@ -2450,29 +2574,12 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T124: Zip da exportação completa e tela de exportação
-
-**What**: Juntar as páginas da exportação no navegador, montar `.zip` com `dados.json` e um PDF por paciente com fflate, e a tela de exportação.
-**Where**: `frontend/web/src/export/zip-completo.ts`
-**Depends on**: T123
-**Requirement**: EXP-03, EXP-02
-
-**Done when**:
-
-- [ ] Zip contém `dados.json` e um PDF por paciente
-- [ ] Chunk carregado só ao exportar
-- [ ] Erro 413 e 429 tratados na tela
-
-**Tests**: unit
-**Gate**: build
-
----
-
 ### T125: Regras da assinatura e do limite do Free
 
 **What**: Máquina de estados e `limitePacientes`.
+**Estimativa**: 2h
 **Where**: `backend/dominio/src/plano/assinatura.ts`
-**Depends on**: T124
+**Depends on**: T123
 **Requirement**: PLANO-01, PLANO-02, PLANO-03, PLANO-04, PLANO-10, PLANO-11
 
 **Done when**:
@@ -2490,6 +2597,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T126: Migration 0012: funções `tarefas.*` de assinatura
 
 **What**: Funções `SECURITY DEFINER` para localizar e atualizar assinatura por id do Asaas, sem RLS do usuário.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0012_funcoes_plano.ts`
 **Depends on**: T125
 **Requirement**: PLANO-08, ISO-03
@@ -2508,6 +2616,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T127: Cliente Asaas
 
 **What**: Criar cliente e assinatura mensal de 1990 centavos por Pix, buscar o QR e cancelar, com tempo limite.
+**Estimativa**: 2h
 **Where**: `backend/api/src/integracoes/asaas.ts`
 **Depends on**: T126
 **Requirement**: PLANO-05, PLANO-12
@@ -2526,6 +2635,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T128: POST /api/plano/assinar
 
 **What**: Assinar o Pro com nome e CPF/CNPJ validado por dígito verificador.
+**Estimativa**: 3h
 **Where**: `backend/api/src/rotas/plano-assinar.ts`, `backend/contrato/src/plano.ts` e `backend/scripts/migrations/0013_ids_asaas.ts` (função `public.gravar_ids_asaas`, porque a `app` não tem UPDATE na assinatura)
 **Decisões do usuário (2026-10-27)**: ids do Asaas gravados pela função da migration 0013 (a do webhook passou a ser a 0014 e as seguintes subiram um número); assinar só em trial e free, os demais estados respondem 409; primeiro vencimento hoje em America/Sao_Paulo; auditoria pela ação nova `assinatura.solicitada`. PREMISSA: 409 também sem assinatura e em trial que já tem assinatura no Asaas; cliente do Asaas criado a cada assinatura.
 **Depends on**: T127
@@ -2545,6 +2655,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T169: Migration 0014: função `tarefas.*` do webhook
 
 **What**: Função `SECURITY DEFINER` para gravar `webhook_evento` (idempotente por `event_id`) e marcar `processado_em`, porque a `app` só lê essa tabela.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0014_funcoes_webhook.ts`
 **Depends on**: T128
 **Requirement**: PLANO-06, PLANO-07
@@ -2564,6 +2675,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T129: Webhook: autenticação e idempotência
 
 **What**: Validar `asaas-access-token`, gravar `webhook_evento` antes de processar e ignorar repetição.
+**Estimativa**: 3h
 **Where**: `backend/api/src/rotas/webhook-asaas.ts`
 **Depends on**: T169
 **Requirement**: PLANO-06, PLANO-07
@@ -2583,6 +2695,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T130: Webhook: pagamento recebido ou confirmado
 
 **What**: Mudar para `ativa` e definir `periodo_fim` pelo próximo vencimento.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/webhook-pago.ts`
 **Depends on**: T129
 **Requirement**: PLANO-08
@@ -2602,6 +2715,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T131: Webhook: cobrança vencida
 
 **What**: Mudar para `atrasada` e registrar o início da tolerância.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/webhook-vencida.ts`
 **Depends on**: T130
 **Requirement**: PLANO-09
@@ -2620,6 +2734,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T132: POST /api/plano/cancelar
 
 **What**: Cancelar no Asaas, ficar `cancelada` e manter o Pro até `periodo_fim`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/plano-cancelar.ts`
 **Depends on**: T131
 **Requirement**: PLANO-11, PLANO-12
@@ -2639,6 +2754,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T133: Middleware de plano e limite do Free
 
 **What**: `exigePlano('pro')` e bloqueio de criar e reativar paciente no Free com 5 ativos.
+**Estimativa**: 2h
 **Where**: `backend/api/src/middleware/plano.ts`
 **Depends on**: T132
 **Requirement**: PLANO-02, PLANO-03, PLANO-15
@@ -2659,6 +2775,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T134: GET /api/plano
 
 **What**: Plano atual, renovação ou fim e Pix pendente (QR buscado na hora).
+**Estimativa**: 3h
 **Where**: `backend/api/src/rotas/plano.ts`
 **Depends on**: T133
 **Requirement**: PLANO-14, PLANO-05
@@ -2678,6 +2795,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T135: Tela Meu plano
 
 **What**: Plano, renovação, Pix copia-e-cola e QR, assinatura com CPF/CNPJ e cancelamento.
+**Estimativa**: 3h
 **Where**: `frontend/web/src/app/plano/meu-plano.tsx`
 **Depends on**: T134
 **Requirement**: PLANO-05, PLANO-11, PLANO-14
@@ -2696,6 +2814,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T136: Despachante do cron e ADR-010
 
 **What**: Um Cron Trigger `*/5 * * * *` que chama as tarefas em ordem, com orçamento de CPU e idempotência.
+**Estimativa**: 4h
 **Where**: `backend/api/src/tarefas/despachar.ts`
 **Depends on**: T135
 **Requirement**: PUSH-07, PLANO-04
@@ -2715,6 +2834,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T170: Migration 0015: função `tarefas.*` das assinaturas vencidas
 
 **What**: Função `SECURITY DEFINER` que lista, entre todos os usuários, as assinaturas cujo tempo acabou (trial e cancelada com `periodo_fim` vencido; atrasada com a tolerância de 7 dias esgotada), devolvendo `usuario_id`, `status` e `asaas_subscription_id`, para o cron da T137.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0015_funcoes_assinaturas_vencidas.ts`
 **Depends on**: T136
 **Requirement**: PLANO-04, PLANO-10, PLANO-11
@@ -2736,6 +2856,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T137: Tarefa: transições da assinatura
 
 **What**: Trial vencido para free, atraso de 7 dias para free (cancelando no Asaas) e fim do período cancelado para free.
+**Estimativa**: 3h
 **Where**: `backend/api/src/tarefas/assinaturas.ts`
 **Depends on**: T170
 **Requirement**: PLANO-04, PLANO-10, PLANO-11
@@ -2756,6 +2877,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T138: E-mails transacionais de cobrança
 
 **What**: Cobrança gerada, pagamento confirmado e cobrança vencida.
+**Estimativa**: 3h
 **Where**: `backend/api/src/integracoes/emails-cobranca.ts`
 **Depends on**: T137
 **Requirement**: PLANO-13
@@ -2776,6 +2898,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T139: Tarefa: limpeza de tokens e sessões vencidos
 
 **What**: Marcar como vencidos tokens e sessões antigos por função `tarefas.*`, sem DELETE pela `app`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/tarefas/limpeza.ts`
 **Depends on**: T138
 **Requirement**: CAD-03, AUTH-09
@@ -2793,11 +2916,31 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
+### T196: Desvincular o id do Asaas também na cancelada que cai para free
+
+**What**: Fazer a tarefa de transições (T137) desvincular o `asaas_subscription_id` também quando a assinatura cancelada vira `free`, para o `GET /api/plano` não consultar o Asaas com uma assinatura já cancelada. Teste primeiro.
+**Estimativa**: 1h
+**Where**: `backend/api/src/tarefas/assinaturas.ts`
+**Depends on**: T139
+**Requirement**: PLANO-11
+
+**Done when**:
+
+- [ ] Cancelada que cai para free fica sem `asaas_subscription_id`
+- [ ] Reexecução não repete efeitos
+- [ ] `GET /api/plano` de quem está sem id não chama o Asaas
+
+**Tests**: integration
+**Gate**: full
+
+---
+
 ### T140: Migration 0017: push
 
 **What**: Criar `push_subscription` (endpoint único) e `notificacao_enviada` (única por tipo e referência).
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0017_push.ts`
-**Depends on**: T139
+**Depends on**: T196
 **Requirement**: PUSH-01, PUSH-02
 
 **Done when**:
@@ -2814,6 +2957,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T141: Janelas de envio
 
 **What**: Regras puras: 15 a 10 minutos antes da sessão, 20:00 de Brasília, trial a 3 dias do fim.
+**Estimativa**: 1,5h
 **Where**: `backend/dominio/src/push/janelas.ts`
 **Depends on**: T140
 **Requirement**: PUSH-02, PUSH-03, PUSH-04
@@ -2829,18 +2973,52 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T142: Cliente de push
+### T142: JWT VAPID assinado sem `iat`
 
-**What**: Enviar push cifrado com VAPID ES256 e remover a assinatura em 404 ou 410.
-**Where**: `backend/api/src/integracoes/push.ts`
+**What**: Assinar o JWT VAPID ES256 por conta própria, sem a claim `iat`.
+**Estimativa**: 2h
+**Where**: `backend/api/src/integracoes/push-vapid.ts`
 **Depends on**: T141
+**Requirement**: PUSH-06
+
+**Done when**:
+
+- [ ] Assinar o JWT VAPID por conta própria, sem a claim `iat` (o FCM recusa JWT com `iat`, como o da biblioteca 2.0.0); teste que confere as claims (spike push-worker)
+- [ ] JWT assinado com `crypto.subtle`
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T176: Envio de push cifrado e remoção de assinatura morta
+
+**What**: Enviar o push cifrado usando só a cifra da biblioteca e remover a assinatura em 404 ou 410.
+**Estimativa**: 2h
+**Where**: `backend/api/src/integracoes/push.ts`
+**Depends on**: T142
 **Requirement**: PUSH-06, PUSH-07
 
 **Done when**:
 
-- [ ] Assinar o JWT VAPID por conta própria, sem a claim `iat` (o FCM recusa JWT com `iat`, como o da biblioteca 2.0.0), e usar só a cifra da biblioteca; teste que confere as claims (spike push-worker)
-- [ ] JWT assinado com `crypto.subtle`
+- [ ] Só a cifra da biblioteca é usada; o JWT vem da T142
 - [ ] 404 e 410 removem a assinatura
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T177: Envio de push em lotes e ADR-011
+
+**What**: Enviar em lotes com `ctx.waitUntil` e gravar o ADR-011.
+**Estimativa**: 1,5h
+**Where**: `backend/api/src/integracoes/push-lotes.ts`
+**Depends on**: T176
+**Requirement**: PUSH-07
+
+**Done when**:
+
 - [ ] Lotes com `ctx.waitUntil`
 - [ ] ADR-011 gravado
 
@@ -2852,8 +3030,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T143: Ativar e desativar push
 
 **What**: Guardar e remover a assinatura do dispositivo.
+**Estimativa**: 1,5h
 **Where**: `backend/api/src/rotas/push.ts`
-**Depends on**: T142
+**Depends on**: T177
 **Requirement**: PUSH-01
 
 **Done when**:
@@ -2870,6 +3049,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T144: Tarefa: sessão próxima
 
 **What**: Enviar o aviso de 15 minutos antes, uma vez por sessão.
+**Estimativa**: 2h
 **Where**: `backend/api/src/tarefas/push-sessao.ts`
 **Depends on**: T143
 **Requirement**: PUSH-02, PUSH-05
@@ -2887,6 +3067,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T145: Tarefa: evolução pendente às 20:00
 
 **What**: Enviar a contagem de sessões realizadas sem evolução, uma vez por dia.
+**Estimativa**: 2h
 **Where**: `backend/api/src/tarefas/push-pendente.ts`
 **Depends on**: T144
 **Requirement**: PUSH-03, PUSH-05
@@ -2902,9 +3083,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T146: Push de cobrança e fim de trial
+### T146: Push de cobrança
 
-**What**: Cobrança gerada, pagamento confirmado, cobrança vencida e trial a 3 dias do fim.
+**What**: Cobrança gerada, pagamento confirmado e cobrança vencida.
+**Estimativa**: 2h
 **Where**: `backend/api/src/tarefas/push-cobranca.ts`
 **Depends on**: T145
 **Requirement**: PUSH-04, PUSH-05
@@ -2919,18 +3101,182 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T147: Service worker e preferência de push
+### T178: Push de fim de trial
 
-**What**: Handlers de `push` e `notificationclick`, abrindo sessão, Início ou Meu plano, e o interruptor por dispositivo nas configurações.
-**Where**: `frontend/web/src/pwa/sw.ts`
+**What**: Aviso do trial a 3 dias do fim.
+**Estimativa**: 1,5h
+**Where**: `backend/api/src/tarefas/push-trial.ts`
 **Depends on**: T146
-**Requirement**: PUSH-01, PUSH-08
+**Requirement**: PUSH-04, PUSH-05
+
+**Done when**:
+
+- [ ] Uma vez por evento
+- [ ] Corpo sem dado clínico
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T147: Service worker: push e clique
+
+**What**: Handlers de `push` e `notificationclick`, abrindo sessão, Início ou Meu plano.
+**Estimativa**: 2h
+**Where**: `frontend/web/src/pwa/sw.ts`
+**Depends on**: T178
+**Requirement**: PUSH-01
 
 **Done when**:
 
 - [ ] Clique abre a tela relacionada
-- [ ] Permissão negada tratada
 - [ ] Teste do roteamento do clique
+
+**Tests**: unit
+**Gate**: build
+
+---
+
+### T179: Preferência de push por dispositivo
+
+**What**: Interruptor por dispositivo nas configurações.
+**Estimativa**: 2h
+**Where**: `frontend/web/src/app/configuracoes/push.tsx`
+**Depends on**: T147
+**Requirement**: PUSH-01, PUSH-08
+
+**Done when**:
+
+- [ ] Interruptor ativa e desativa o push do dispositivo
+- [ ] Permissão negada tratada
+
+**Tests**: unit
+**Gate**: build
+
+---
+
+### T122: Medição de CPU da exportação no Hyperdrive real
+
+**What**: Medir no Hyperdrive real a CPU de uma página de tamanho fixo (ex.: 300 evoluções de 1.500 caracteres) e fixar o tamanho máximo de página. Pré-requisito do usuário: Neon e Hyperdrive de teste criados.
+**Estimativa**: 1,5h
+**Where**: `.specs/features/evolucao-segura/medicao-exportacao.md`
+**Depends on**: T179
+**Requirement**: EXP-03
+
+**Done when**:
+
+- [ ] Medição registrada com ambiente, tamanho de página e CPU
+- [ ] Tamanho máximo de página fixado com folga em 10 ms; se nenhum tamanho útil couber, parar e abrir novo spike
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T171: GET exportação completa paginada por tabela
+
+**What**: Entregar os dados do profissional em páginas por tabela, com cursor (D-32), no tamanho máximo fixado na T122.
+**Estimativa**: 2h
+**Where**: `backend/api/src/rotas/exportar-tudo.ts`
+**Depends on**: T122
+**Requirement**: EXP-03, EXP-04
+
+**Done when**:
+
+- [ ] Cada tabela é entregue em páginas com cursor, sem repetir nem perder linha
+- [ ] Página acima do máximo ou cursor inválido responde 400 sem auditar
+- [ ] Isolamento coberto
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T172: Limite de 5 exportações em 60 s
+
+**What**: Aplicar `contar_uso` só ao início da exportação completa e acrescentar `limite_uso` ao tipo `Banco` de `db.ts`.
+**Estimativa**: 1,5h
+**Where**: `backend/api/src/middleware/limite-exportacao.ts`
+**Depends on**: T171
+**Requirement**: EXP-05
+
+**Done when**:
+
+- [ ] Mais de 5 exportações iniciadas em 60 s responde 429
+- [ ] A rota do prontuário não conta no limite
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T173: Exportação sem credenciais e auditoria da conclusão
+
+**What**: Garantir que o corpo da exportação não traz credenciais nem sessões e auditar a conclusão.
+**Estimativa**: 1,5h
+**Where**: `backend/api/src/rotas/exportar-tudo.ts`
+**Depends on**: T172
+**Requirement**: EXP-06
+
+**Done when**:
+
+- [ ] Sem hash de senha nem sessão no corpo
+- [ ] Audita `exportacao.concluida` só ao servir a última página
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T124: Junção das páginas e `dados.json` no navegador
+
+**What**: Juntar no navegador as páginas da exportação completa e montar o `.zip` com `dados.json` (fflate).
+**Estimativa**: 2h
+**Where**: `frontend/web/src/export/zip-completo.ts`
+**Depends on**: T173
+**Requirement**: EXP-03
+
+**Done when**:
+
+- [ ] Páginas juntas na ordem, sem perder linha
+- [ ] `dados.json` no zip com todas as tabelas
+- [ ] Chunk do fflate carregado só ao exportar
+
+**Tests**: unit
+**Gate**: build
+
+---
+
+### T174: PDF por paciente dentro do zip
+
+**What**: Acrescentar ao `.zip` um PDF por paciente, reusando `baixarPdfProntuario` da T123.
+**Estimativa**: 2h
+**Where**: `frontend/web/src/export/zip-pdfs.ts`
+**Depends on**: T124
+**Requirement**: EXP-02
+
+**Done when**:
+
+- [ ] Zip contém um PDF por paciente
+
+**Tests**: unit
+**Gate**: build
+
+---
+
+### T175: Tela de exportação completa
+
+**What**: Tela de exportação com progresso e tratamento dos erros 413 e 429.
+**Estimativa**: 2h
+**Where**: `frontend/web/src/app/exportar/exportar.tsx`
+**Depends on**: T174
+**Requirement**: EXP-03
+
+**Done when**:
+
+- [ ] Exportação inicia e baixa o zip
+- [ ] Erro 413 tratado na tela
+- [ ] Erro 429 tratado na tela
 
 **Tests**: unit
 **Gate**: build
@@ -2940,8 +3286,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T148: Migration 0018: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
+**Estimativa**: 2h
 **Where**: `backend/scripts/migrations/0018_exclusao.ts`
-**Depends on**: T147
+**Depends on**: T175
 **Requirement**: CONTA-03, CONTA-05
 
 **Done when**:
@@ -2954,9 +3301,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T149: Pedir a exclusão
+### T149: Pedir a exclusão: validações
 
-**What**: Exigir exportação completa servida nas últimas 24 h, declaração de guarda e senha, e enviar o link de confirmação.
+**What**: Exigir exportação completa servida nas últimas 24 h (a rota vem da T173, na Phase 19, que precede esta fase), declaração de guarda e senha.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/conta-excluir.ts`
 **Depends on**: T148
 **Requirement**: CONTA-01, CONTA-02
@@ -2964,6 +3312,22 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 **Done when**:
 
 - [ ] Cada requisito que falta é indicado no 422
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T180: Pedir a exclusão: token e e-mail de confirmação
+
+**What**: Gerar o token de confirmação e enviar o link.
+**Estimativa**: 2h
+**Where**: `backend/api/src/rotas/conta-excluir-email.ts`
+**Depends on**: T149
+**Requirement**: CONTA-01
+
+**Done when**:
+
 - [ ] Token de 256 bits, SHA-256, 30 min, uso único
 - [ ] Auditoria `conta.exclusao_pedida`
 
@@ -2972,16 +3336,34 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T150: Confirmar a exclusão
+### T150: Confirmar a exclusão: bloqueio
 
-**What**: Bloquear a conta, encerrar sessões, cancelar a assinatura no Asaas e enviar o e-mail com a data da purga e o link de desistência.
+**What**: Bloquear a conta e encerrar as sessões.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/conta-excluir-confirmar.ts`
-**Depends on**: T149
+**Depends on**: T180
 **Requirement**: CONTA-03
 
 **Done when**:
 
 - [ ] Login recusado depois de confirmar
+- [ ] Sessões abertas encerradas
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T181: Confirmar a exclusão: Asaas e e-mail
+
+**What**: Cancelar a assinatura no Asaas e enviar o e-mail com a data da purga e o link de desistência.
+**Estimativa**: 2h
+**Where**: `backend/api/src/integracoes/emails-exclusao.ts`
+**Depends on**: T150
+**Requirement**: CONTA-03, CONTA-04
+
+**Done when**:
+
 - [ ] Asaas cancelado
 - [ ] Link de desistência válido por 30 dias
 
@@ -2993,8 +3375,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T151: Desistir da exclusão
 
 **What**: Desbloquear a conta antes da purga.
+**Estimativa**: 2h
 **Where**: `backend/api/src/rotas/conta-desistir.ts`
-**Depends on**: T150
+**Depends on**: T181
 **Requirement**: CONTA-04
 
 **Done when**:
@@ -3008,18 +3391,54 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T152: Purga e ADR-012
+### T152: Função de purga
 
-**What**: Função `SECURITY DEFINER` que apaga todas as linhas do profissional após 30 dias e guarda só `conta_excluida`, chamada pelo cron.
+**What**: Função `SECURITY DEFINER` que apaga todas as linhas do profissional após 30 dias e guarda só `conta_excluida`.
+**Estimativa**: 2h
 **Where**: `backend/api/src/tarefas/purga.ts`
 **Depends on**: T151
 **Requirement**: CONTA-05
 
 **Done when**:
 
-- [ ] Após 30 dias nenhuma tabela tem linha do profissional, auditoria inclusive (varredura pelo catálogo)
-- [ ] `conta_excluida` com id, data do pedido e data da purga
 - [ ] Antes de 30 dias nada é apagado
+- [ ] `conta_excluida` com id, data do pedido e data da purga
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T182: Varredura da purga pelo catálogo
+
+**What**: Teste que varre o catálogo e prova que nenhuma tabela guarda linha do profissional depois da purga, auditoria inclusive.
+**Estimativa**: 2h
+**Where**: `backend/api/test/tarefas/purga-varredura.test.ts`
+**Depends on**: T152
+**Requirement**: CONTA-05
+
+**Done when**:
+
+- [ ] Após 30 dias nenhuma tabela tem linha do profissional, auditoria inclusive (varredura pelo catálogo)
+- [ ] Dados de outro profissional intactos
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T183: Purga no cron e ADR-012
+
+**What**: Registrar a purga no despachante do cron (posição reservada em `registro.ts`) e gravar o ADR-012.
+**Estimativa**: 1,5h
+**Where**: `backend/api/src/tarefas/registro.ts`
+**Depends on**: T182
+**Requirement**: CONTA-05
+
+**Done when**:
+
+- [ ] Purga chamada pelo cron
+- [ ] Reexecução é inofensiva
 - [ ] ADR-012 gravado
 
 **Tests**: integration
@@ -3030,8 +3449,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T153: Tela de exclusão de conta
 
 **What**: Fluxo com exportação, declaração de guarda e senha.
+**Estimativa**: 2h
 **Where**: `frontend/web/src/app/conta/excluir.tsx`
-**Depends on**: T152
+**Depends on**: T183
 **Requirement**: CONTA-01
 
 **Done when**:
@@ -3047,6 +3467,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T154: Termos e privacidade
 
 **What**: Páginas `/termos` e `/privacidade` com versão e data, profissional como controlador e LJS como operadora.
+**Estimativa**: 2h
 **Where**: `frontend/web/src/publico/termos.tsx`
 **Depends on**: T153
 **Requirement**: CONTA-06, CAD-07
@@ -3064,6 +3485,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T155: Landing
 
 **What**: Proposta de valor, planos (Free até 5 pacientes ativos, Pro R$ 19,90, trial de 14 dias) e "Começar grátis".
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/publico/landing.tsx`
 **Depends on**: T154
 **Requirement**: PUB-01
@@ -3078,9 +3500,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T156: Manifest, ícones e página offline
+### T156: Manifest e ícones
 
-**What**: Manifest com ícones 192 e 512 maskable e `display: standalone`, precache do shell e página offline.
+**What**: Manifest com ícones 192 e 512 maskable e `display: standalone`.
+**Estimativa**: 2h
 **Where**: `frontend/web/vite.config.ts`
 **Depends on**: T155
 **Requirement**: PUB-03
@@ -3089,6 +3512,23 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 - [ ] Teste confere o manifest gerado
 - [ ] Chrome reconhece como instalável (checagem manual registrada)
+
+**Tests**: unit
+**Gate**: build
+
+---
+
+### T184: Precache do shell e página offline
+
+**What**: Precache do shell e página offline.
+**Estimativa**: 2h
+**Where**: `frontend/web/src/pwa/offline.ts`
+**Depends on**: T156
+**Requirement**: PUB-03
+
+**Done when**:
+
+- [ ] Shell servido do precache
 - [ ] Página offline servida sem rede
 
 **Tests**: unit
@@ -3099,8 +3539,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T157: Instrução de instalação no iOS
 
 **What**: Orientar "Compartilhar" e "Adicionar à Tela de Início" no Safari fora do modo instalado.
+**Estimativa**: 1,5h
 **Where**: `frontend/web/src/pwa/instrucao-ios.tsx`
-**Depends on**: T156
+**Depends on**: T184
 **Requirement**: PUB-04
 
 **Done when**:
@@ -3113,16 +3554,34 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T158: Playwright: cadastro e login
+### T158: Playwright: infraestrutura e2e
 
-**What**: Infraestrutura e2e e o fluxo cadastro, confirmação, login com 2FA, com e-mail capturado em teste.
-**Where**: `e2e/acesso.spec.ts`
+**What**: Playwright com o Worker local e o Postgres no ar, e e-mail capturado em teste.
+**Estimativa**: 2h
+**Where**: `e2e/playwright.config.ts`
 **Depends on**: T157
-**Requirement**: OPS-05, CAD-04, AUTH-04
+**Requirement**: OPS-05
 
 **Done when**:
 
 - [ ] `pnpm e2e` sobe o Worker local e o Postgres
+- [ ] E-mail capturado em teste
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T185: Playwright: cadastro e login
+
+**What**: Fluxo cadastro, confirmação e login com 2FA.
+**Estimativa**: 2h
+**Where**: `e2e/acesso.spec.ts`
+**Depends on**: T158
+**Requirement**: CAD-04, AUTH-04
+
+**Done when**:
+
 - [ ] Conta nova chega ao app com o trial de 14 dias
 
 **Tests**: e2e
@@ -3130,16 +3589,33 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T159: Playwright: assinar no sandbox
+### T159: Playwright: assinar e ver o Pix
 
-**What**: Assinar o Pro, simular o webhook de pagamento e ver `ativa`.
+**What**: Assinar o Pro no sandbox e ver Pix e QR.
+**Estimativa**: 1,5h
 **Where**: `e2e/plano.spec.ts`
-**Depends on**: T158
-**Requirement**: PLANO-05, PLANO-08
+**Depends on**: T185
+**Requirement**: PLANO-05
 
 **Done when**:
 
 - [ ] Pix e QR exibidos
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T186: Playwright: webhook de pagamento
+
+**What**: Simular o webhook de pagamento e ver `ativa`.
+**Estimativa**: 1,5h
+**Where**: `e2e/plano-webhook.spec.ts`
+**Depends on**: T159
+**Requirement**: PLANO-08
+
+**Done when**:
+
 - [ ] Depois do webhook, o plano aparece como ativo
 
 **Tests**: e2e
@@ -3147,49 +3623,139 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T160: Playwright: agenda, evolução e pagamento
+### T160: Playwright: agenda e evolução
 
-**What**: Fluxo principal do app.
+**What**: Criar a sessão e registrar a evolução.
+**Estimativa**: 2h
 **Where**: `e2e/fluxo-principal.spec.ts`
-**Depends on**: T159
-**Requirement**: AGE-01, EVO-03, FIN-03
+**Depends on**: T186
+**Requirement**: AGE-01, EVO-03
 
 **Done when**:
 
-- [ ] Sessão criada, evolução registrada (sessão vira realizada), pagamento registrado e débito some
+- [ ] Sessão criada, evolução registrada (sessão vira realizada)
 
 **Tests**: e2e
 **Gate**: full
 
 ---
 
-### T161: Comparação visual com o legado
+### T187: Playwright: pagamento
 
-**What**: Comparar cada tela do escopo com o legado e registrar diferenças.
-**Where**: `.specs/features/evolucao-segura/comparacao-visual.md`
+**What**: Registrar o pagamento e ver o débito sumir.
+**Estimativa**: 1,5h
+**Where**: `e2e/fluxo-pagamento.spec.ts`
 **Depends on**: T160
+**Requirement**: FIN-03
+
+**Done when**:
+
+- [ ] Pagamento registrado e débito some
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T161: Comparação visual: acesso e telas públicas
+
+**What**: Comparar com o legado as telas de acesso e as públicas e registrar as diferenças. Conferência feita com o usuário.
+**Estimativa**: 2h
+**Where**: `.specs/features/evolucao-segura/comparacao-visual.md`
+**Depends on**: T187
 **Requirement**: PUB-02
 
 **Done when**:
 
-- [ ] Sem diferença não justificada
-- [ ] Diferenças justificadas listadas
+- [ ] Tabela tela × diferença × decisão registrada para o grupo
+- [ ] Sem diferença não justificada; as justificadas listadas
 
 **Tests**: none
 **Gate**: build
 
 ---
 
-### T162: Script e teste de restauração
+### T188: Comparação visual: agenda e pacientes
 
-**What**: Adaptar `restore-test.sh` para restaurar o dump cifrado num Postgres limpo e comparar a contagem de linhas por tabela.
-**Where**: `infra/restore-test.sh`
+**What**: Comparar com o legado as telas de agenda e de pacientes e registrar as diferenças. Conferência feita com o usuário.
+**Estimativa**: 2h
+**Where**: `.specs/features/evolucao-segura/comparacao-visual.md`
 **Depends on**: T161
+**Requirement**: PUB-02
+
+**Done when**:
+
+- [ ] Tabela tela × diferença × decisão registrada para o grupo
+- [ ] Sem diferença não justificada; as justificadas listadas
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T189: Comparação visual: anamnese, evoluções e rascunhos
+
+**What**: Comparar com o legado as telas de anamnese, evolução e rascunhos e registrar as diferenças. Conferência feita com o usuário.
+**Estimativa**: 2h
+**Where**: `.specs/features/evolucao-segura/comparacao-visual.md`
+**Depends on**: T188
+**Requirement**: PUB-02
+
+**Done when**:
+
+- [ ] Tabela tela × diferença × decisão registrada para o grupo
+- [ ] Sem diferença não justificada; as justificadas listadas
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T190: Comparação visual: financeiro, plano, auditoria e conta
+
+**What**: Comparar com o legado as telas de financeiro, plano, auditoria e conta e registrar as diferenças. Conferência feita com o usuário.
+**Estimativa**: 2h
+**Where**: `.specs/features/evolucao-segura/comparacao-visual.md`
+**Depends on**: T189
+**Requirement**: PUB-02
+
+**Done when**:
+
+- [ ] Tabela tela × diferença × decisão registrada para o grupo
+- [ ] Sem diferença não justificada; as justificadas listadas
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T162: Script de restauração
+
+**What**: Adaptar `restore-test.sh` para restaurar o dump cifrado num Postgres limpo.
+**Estimativa**: 2h
+**Where**: `infra/restore-test.sh`
+**Depends on**: T190
 **Requirement**: OPS-02
 
 **Done when**:
 
 - [ ] Restaura a partir de cópia limpa
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T191: Comparação de contagens na restauração
+
+**What**: Comparar a contagem de linhas por tabela entre a origem e a restauração.
+**Estimativa**: 1,5h
+**Where**: `infra/comparar-contagens.sh`
+**Depends on**: T162
+**Requirement**: OPS-02
+
+**Done when**:
+
 - [ ] Contagem por tabela bate com a origem
 - [ ] Falha em qualquer divergência
 
@@ -3200,14 +3766,14 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ### T163: README
 
-**What**: Rodar local, variáveis, deploy e testar o webhook local.
+**What**: Escrever o README: rodar local, variáveis, deploy e testar o webhook local.
+**Estimativa**: 2h
 **Where**: `README.md`
-**Depends on**: T162
+**Depends on**: T191
 **Requirement**: OPS-12
 
 **Done when**:
 
-- [ ] Um agente sem contexto roda o projeto seguindo só o README
 - [ ] Cada comando citado foi executado
 
 **Tests**: none
@@ -3215,17 +3781,86 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T164: Runbook
+### T192: Validação do README por agente sem contexto
 
-**What**: Webhook falhou, reprocessar pagamento, reativar usuário, rotacionar segredos e restaurar backup, mais o plano B do Resend e a chave Pix do Asaas.
-**Where**: `docs/runbook.md`
+**What**: Um agente sem contexto roda o projeto seguindo só o README.
+**Estimativa**: 1,5h
+**Where**: `.specs/features/evolucao-segura/validacao-readme.md`
 **Depends on**: T163
 **Requirement**: OPS-12
 
 **Done when**:
 
+- [ ] Um agente sem contexto roda o projeto seguindo só o README
+- [ ] Tropeços registrados e corrigidos no README
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T164: Runbook: webhook, reprocessar e reativar
+
+**What**: Procedimentos para webhook que falhou, reprocessar pagamento e reativar usuário.
+**Estimativa**: 2h
+**Where**: `docs/runbook.md`
+**Depends on**: T192
+**Requirement**: OPS-12
+
+**Done when**:
+
 - [ ] Cada procedimento tem comandos verificados
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T193: Runbook: segredos e restauração do backup
+
+**What**: Procedimentos para rotacionar segredos e restaurar o backup.
+**Estimativa**: 2h
+**Where**: `docs/runbook.md`
+**Depends on**: T164
+**Requirement**: OPS-12
+
+**Done when**:
+
+- [ ] Cada procedimento tem comandos verificados
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T194: Runbook: pré-requisitos de publicação e plano B
+
+**What**: Pré-requisitos da publicação, plano B do Resend e chave Pix do Asaas.
+**Estimativa**: 1,5h
+**Where**: `docs/runbook.md`
+**Depends on**: T193
+**Requirement**: OPS-12
+
+**Done when**:
+
 - [ ] Pré-requisitos da publicação listados (conta Asaas de produção, chave Pix, domínio, revisão jurídica)
+- [ ] Plano B do Resend e chave Pix do Asaas descritos
+
+**Tests**: none
+**Gate**: build
+
+---
+
+### T195: Runbook: roles do Neon e fumaça do Hyperdrive
+
+**What**: Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon e teste de fumaça de vazamento de contexto. Ação do usuário no Neon.
+**Estimativa**: 2h
+**Where**: `docs/runbook.md`
+**Depends on**: T194
+**Requirement**: OPS-12
+
+**Done when**:
+
 - [ ] Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon (nascem `NOLOGIN`), com a ordem em relação ao primeiro deploy (pendência do lote 3, ADR-005)
 - [ ] Teste de fumaça de vazamento de contexto entre conexões reaproveitadas do Hyperdrive, depois do primeiro deploy (ADR-005)
 
@@ -3237,8 +3872,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ### T165: Restauração executada e registrada
 
 **What**: Executar o backup, restaurar numa cópia limpa e registrar data, tamanho do dump e contagens no runbook.
+**Estimativa**: 1,5h
 **Where**: `docs/runbook.md`
-**Depends on**: T164
+**Depends on**: T195
 **Requirement**: OPS-02, OPS-01
 
 **Done when**:
@@ -3254,7 +3890,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 ## Phase Execution Map
 
 ```
-Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20
+Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23
 ```
 
 Passagem entre fases (a primeira tarefa de cada fase depende da última da anterior):
@@ -3274,11 +3910,14 @@ T88 -> T89
 T97 -> T98
 T106 -> T107
 T168 -> T118
-T124 -> T125
+T123 -> T125
 T132 -> T133
-T139 -> T140
-T147 -> T148
+T196 -> T140
+T179 -> T122
+T175 -> T148
+T153 -> T154
 T157 -> T158
+T187 -> T161
 ```
 
 Execução estritamente sequencial; uma tarefa por vez, em ordem, com um commit atômico cada.

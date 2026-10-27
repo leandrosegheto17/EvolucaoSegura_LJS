@@ -1,11 +1,11 @@
 # Roadmap
 
-As 20 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan). A **Situação** usa o vocabulário fixo da skill `progresso` (`Concluída`, `Em andamento`, `Não começada`); troque-a no mesmo commit em que a fase fechar.
+As 23 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan), reorganizadas em 2026-10-27 (AD-013): cada tarefa tem até 2h de trabalho humano (`**Estimativa**`). É uma feature só, com uma linha por fase. A **Situação** usa o vocabulário fixo da skill `progresso` (`Concluída`, `Em andamento`, `Não começada`); troque-a no mesmo commit em que a fase fechar.
 
 | # | Fase | Situação | Observação |
 |---|---|---|---|
 | 1 | Etapa 1, parte 1: Preparação (monorepo, ferramentas, CI e documentos) | Concluída |  |
-| 2 | Etapa 1, parte 2: Spikes S1 a S4 (com participação do usuário) | Em andamento | 3 de 4 tarefas |
+| 2 | Etapa 1, parte 2: Spikes S1 a S4 (com participação do usuário) | Concluída |  |
 | 3 | Etapa 2: Esqueleto ponta a ponta (Worker, front mínimo, deploy e backup) | Concluída |  |
 | 4 | Etapa 3: Banco base (roles, RLS, auditoria, transação por requisição) | Concluída |  |
 | 5 | Etapa 4, parte 1: Acesso, cadastro e confirmação | Concluída |  |
@@ -18,9 +18,23 @@ As 20 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan). A **
 | 12 | Etapa 8: Anamnese configurável | Concluída |  |
 | 13 | Etapa 9: Evoluções, rascunhos e modelos de texto | Concluída |  |
 | 14 | Etapa 10: Financeiro e Início | Concluída |  |
-| 15 | Etapa 11: Auditoria (telas) e exportação | Em andamento | 5 de 7 tarefas |
-| 16 | Etapa 12, parte 1: Planos, Asaas e webhook | Não começada |  |
-| 17 | Etapa 12, parte 2: Meu plano, limite do Free e cron único | Não começada |  |
+| 15 | Etapa 11, parte 1: Auditoria (telas) e PDF do prontuário | Concluída |  |
+| 16 | Etapa 12, parte 1: Planos, Asaas e webhook | Concluída |  |
+| 17 | Etapa 12, parte 2: Meu plano, limite do Free e cron único | Em andamento | 8 de 9 tarefas; falta a T196 |
 | 18 | Etapa 13: Push | Não começada |  |
-| 19 | Etapa 14: Exclusão de conta, termos, landing e PWA | Não começada |  |
-| 20 | Etapa 15: Fechamento (e2e, restauração, README e runbook) | Não começada |  |
+| 19 | Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste) | Não começada | Ação do usuário antes da T122: criar Neon e Hyperdrive de teste |
+| 20 | Etapa 14, parte 1: Exclusão de conta | Não começada |  |
+| 21 | Etapa 14, parte 2: Termos, landing e PWA | Não começada | Ação do usuário na T156: checagem do Chrome instalável |
+| 22 | Etapa 15, parte 1: Testes de ponta a ponta (e2e) | Não começada |  |
+| 23 | Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook) | Não começada | Ações do usuário: conferência visual (T161, T188 a T190) e roles do Neon (T195) |
+
+## Pendências do usuário
+
+Ações que só o usuário faz; cada uma bloqueia a tarefa indicada e exige confirmação específica quando for externa.
+
+- **Antes da T122 (Phase 19):** criar Neon e Hyperdrive de teste para medir a CPU da exportação.
+- **T156 (Phase 21):** conferir no Chrome que o app é reconhecido como instalável.
+- **T161 e T188 a T190 (Phase 23):** conferência visual das telas contra o legado (as telas dos lotes 8 a 14 seguem com a conferência visual pendente).
+- **T195 (Phase 23):** provisionar login e senha das roles `owner`, `app` e `backup_ro` no Neon, depois do primeiro deploy.
+- **Antes da primeira liberação:** provar no Asaas com Pix real o evento de pagamento, a reentrega do webhook e o ciclo seguinte (ADR-009); conta Asaas de produção, chave Pix, domínio e revisão jurídica dos termos (T194).
+- **Sem prazo:** o CI do GitHub não roda por cobrança da conta `leandrosegheto17`; commits locais seguem sem push até confirmação específica.
