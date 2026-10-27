@@ -2762,9 +2762,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Um e-mail por evento, sem repetir em reenvio de webhook
-- [ ] Texto puro em português
-- [ ] Falha de envio não desfaz a mudança de estado
+- [x] Um e-mail por evento, sem repetir em reenvio de webhook
+- [x] Texto puro em português
+- [x] Falha de envio não desfaz a mudança de estado
+
+- O e-mail sai do webhook (T129 a T131) depois do COMMIT, em segundo plano: cobrança gerada em `PAYMENT_CREATED` (processador novo `rotas/webhook-gerada.ts`; assinatura não achada responde 500, como os outros eventos), pagamento confirmado só quando o pagamento muda o estado ou adianta `periodo_fim`, cobrança vencida só na mudança para `atrasada`. Sem função `tarefas.*` nova: a dedupe é o `event_id` mais o estado. PREMISSA: sem `RESEND_API_KEY` ou `MAIL_FROM` os e-mails de cobrança ficam desligados (sem erro no Sentry).
 
 **Tests**: integration
 **Gate**: full

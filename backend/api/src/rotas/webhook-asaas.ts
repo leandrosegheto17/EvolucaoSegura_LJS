@@ -3,6 +3,8 @@ import { sql } from 'kysely';
 import { type Trx, comTransacao } from '../db.ts';
 import { responderProblema } from '../http.ts';
 import type { ClienteAsaas } from '../integracoes/asaas.ts';
+import { type EmailCobranca, mensagemDeCobranca } from '../integracoes/emails-cobranca.ts';
+import type { ClienteEmail, MensagemEmail } from '../integracoes/resend.ts';
 
 // PLANO-06, PLANO-07: POST /api/webhooks/asaas, rota pública (sem sessão nem CSRF; limite próprio
 // LIMITE_WEBHOOK). Formatos do spike S3.
@@ -16,6 +18,9 @@ import type { ClienteAsaas } from '../integracoes/asaas.ts';
 // - Erro no processamento desfaz tudo, inclusive o registro do evento, e responde 500 (onError do
 //   app, com Sentry) para o Asaas reenviar; o reenvio chega como evento novo.
 // - PREMISSA: corpo sem `id` ou `event` em texto responde 422 `validacao` sem gravar nada.
+// - PLANO-13 (T138): o processador pode pedir o e-mail de cobrança do evento (só quando mudou algo).
+//   O destinatário é lido na mesma transação; o envio sai depois do COMMIT, em segundo plano, e a
+//   falha vai ao Sentry sem desfazer nada. Evento repetido e erro (500) não enviam.
 // - O reforço por payment.id + event sugerido no spike não é necessário: os processadores levam a
 //   assinatura a um estado, e o mesmo estado de novo não muda nada (tarefas.mudar_estado_assinatura).
 
@@ -55,12 +60,17 @@ export class AssinaturaNaoAchada extends Error {
 }
 
 // Devolve o profissional a quem o evento pertence (null quando não há um).
-export type ProcessadorWebhook = (ctx: ContextoWebhook) => Promise<{ usuarioId: string | null }>;
+export type ProcessadorWebhook = (
+  ctx: ContextoWebhook,
+) => Promise<{ usuarioId: string | null; email?: EmailCobranca | null }>;
 
 export interface OpcoesWebhookAsaas {
   asaas: (env: Cloudflare.Env) => ClienteAsaas;
   capturarErro: (erro: unknown) => void;
   processadores: Readonly<Record<string, ProcessadorWebhook>>;
+  // null = e-mails de cobrança desligados (sem Resend configurado).
+  email: (env: Cloudflare.Env) => ClienteEmail | null;
+  emSegundoPlano: (tarefa: Promise<unknown>) => void;
 }
 
 async function tokenConfere(recebido: string | undefined, esperado: string | undefined) {
@@ -80,7 +90,13 @@ function lerEvento(corpo: unknown): EventoAsaas | null {
   return corpo as EventoAsaas;
 }
 
-export const rotasWebhookAsaas = ({ asaas, capturarErro, processadores }: OpcoesWebhookAsaas) =>
+export const rotasWebhookAsaas = ({
+  asaas,
+  capturarErro,
+  processadores,
+  email,
+  emSegundoPlano,
+}: OpcoesWebhookAsaas) =>
   new Hono<{ Bindings: Cloudflare.Env }>().post('/webhooks/asaas', async (c) => {
     if (!(await tokenConfere(c.req.header('asaas-access-token'), c.env.ASAAS_WEBHOOK_TOKEN)))
       return responderProblema(c, 'credenciais_invalidas', 'Não autorizado');
@@ -92,15 +108,37 @@ export const rotasWebhookAsaas = ({ asaas, capturarErro, processadores }: Opcoes
       const { rows } = await sql<{ r: 'novo' | 'repetido' }>`
         select tarefas.gravar_webhook_evento(${evento.id}, ${evento.event},
                                              ${JSON.stringify(evento)}::jsonb) as r`.execute(trx);
-      if (rows[0]!.r === 'repetido') return 'repetido' as const;
+      if (rows[0]!.r === 'repetido') return { status: 'repetido' as const, mensagem: null };
       const processador = processadores[evento.event];
-      const { usuarioId } = processador
+      const { usuarioId, email: pedido = null } = processador
         ? await processador({ trx, evento, asaas: asaas(c.env), registrar: capturarErro })
         : { usuarioId: null };
       await sql`select tarefas.marcar_webhook_processado(${evento.id}, ${usuarioId}::uuid)`.execute(
         trx,
       );
-      return 'processado' as const;
+      let mensagem: MensagemEmail | null = null;
+      if (pedido !== null && usuarioId !== null) {
+        const usuario = await trx
+          .selectFrom('usuario')
+          .select('email')
+          .where('id', '=', usuarioId)
+          .executeTakeFirst();
+        if (usuario) mensagem = mensagemDeCobranca(pedido, usuario.email, c.env.URL_PUBLICA);
+      }
+      return { status: 'processado' as const, mensagem };
     });
-    return c.json({ status: resultado });
+
+    const { mensagem } = resultado;
+    if (mensagem !== null) {
+      const envio = (async () => {
+        try {
+          const cliente = email(c.env);
+          if (cliente !== null) await cliente.enviar(mensagem);
+        } catch (erro) {
+          capturarErro(erro);
+        }
+      })();
+      emSegundoPlano(envio);
+    }
+    return c.json({ status: resultado.status });
   });

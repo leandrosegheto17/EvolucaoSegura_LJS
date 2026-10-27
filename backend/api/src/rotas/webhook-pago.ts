@@ -21,6 +21,7 @@ import {
 // - Webhook antes da resposta da criação (edge case): sem os ids gravados, 500; o reenvio, depois
 //   de a criação gravar os ids, chega ao mesmo estado final.
 // - Audita assinatura.ativa (ator sistema) com os nomes dos campos que mudaram.
+// - PLANO-13: pede o e-mail de pagamento confirmado quando algum campo mudou.
 
 export const textoDoPagamento = (evento: EventoAsaas, campo: 'subscription' | 'customer') => {
   const valor = evento.payment?.[campo];
@@ -81,5 +82,9 @@ export const processarPagamento: ProcessadorWebhook = async ({ trx, evento, asaa
       camposAlterados: campos,
     });
   }
-  return { usuarioId: atual.usuario_id };
+  // PLANO-13: e-mail só quando o pagamento mudou algo (reenvio e evento duplicado não repetem).
+  return {
+    usuarioId: atual.usuario_id,
+    email: campos.length > 0 ? { tipo: 'pagamento_confirmado', proximoVencimento } : null,
+  };
 };

@@ -15,6 +15,7 @@ import { textoDoPagamento } from './webhook-pago.ts';
 //   registrada no Sentry (sem dado pessoal); o webhook responde 200.
 // - Assinatura não achada ou dueDate fora do formato: erro (500) para o Asaas reenviar.
 // - Audita assinatura.atrasada (ator sistema) com os nomes dos campos.
+// - PLANO-13: pede o e-mail de cobrança vencida quando muda para atrasada.
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -59,5 +60,9 @@ export const processarVencida: ProcessadorWebhook = async ({ trx, evento, regist
       camposAlterados: ['status', 'vencimento_atraso'],
     });
   }
-  return { usuarioId: atual.usuario_id };
+  // PLANO-13: e-mail só na mudança para atrasada (nova vencida em atrasada não repete).
+  return {
+    usuarioId: atual.usuario_id,
+    email: resultado === 'permitida' ? { tipo: 'cobranca_vencida', vencimento } : null,
+  };
 };

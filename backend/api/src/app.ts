@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { cabecalhos } from './middleware/cabecalhos.ts';
 import { limitePorIp } from './middleware/limite.ts';
 import { type ClienteAsaas, criarClienteAsaas } from './integracoes/asaas.ts';
+import { emailCobrancaPadrao } from './integracoes/emails-cobranca.ts';
 import { type ClienteEmail, criarClienteResend } from './integracoes/resend.ts';
 import { rotasReenviar2fa } from './rotas/auth-2fa-reenviar.ts';
 import { rotas2fa } from './rotas/auth-2fa.ts';
@@ -45,6 +46,7 @@ import { rotasSessoesEditar } from './rotas/sessoes-editar.ts';
 import { rotasSessoesLista } from './rotas/sessoes-lista.ts';
 import { rotasSessoesStatus } from './rotas/sessoes-status.ts';
 import { rotasTcle } from './rotas/tcle.ts';
+import { processarCobrancaGerada } from './rotas/webhook-gerada.ts';
 import { processarPagamento } from './rotas/webhook-pago.ts';
 import { processarVencida } from './rotas/webhook-vencida.ts';
 import { type ProcessadorWebhook, rotasWebhookAsaas } from './rotas/webhook-asaas.ts';
@@ -63,7 +65,9 @@ interface OpcoesApp {
 
 // PLANO-08, PLANO-09: processadores do webhook do Asaas por tipo de evento.
 // O spike S3 viu PAYMENT_RECEIVED; PAYMENT_CONFIRMED é aceito por segurança (Pix real).
+// PLANO-13: PAYMENT_CREATED só pede o e-mail de cobrança gerada.
 const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {
+  PAYMENT_CREATED: processarCobrancaGerada,
   PAYMENT_RECEIVED: processarPagamento,
   PAYMENT_CONFIRMED: processarPagamento,
   PAYMENT_OVERDUE: processarVencida,
@@ -105,6 +109,8 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
       asaas: opcoes.asaas ?? asaasPadrao,
       capturarErro,
       processadores: opcoes.processadoresWebhook ?? PROCESSADORES_WEBHOOK,
+      email: opcoes.email ?? emailCobrancaPadrao,
+      emSegundoPlano: opcoes.emSegundoPlano ?? waitUntil,
     }),
   );
   // Autenticadas: cada rota monta a lista `autenticada` (sessão, CSRF, transação).
