@@ -2514,9 +2514,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Endpoint do sandbox ou da produção por variável
-- [ ] Falha e tempo excedido viram erro tipado
-- [ ] Teste com `fetch` simulado dos formatos do spike S3
+- [x] Endpoint do sandbox ou da produção por variável
+- [x] Falha e tempo excedido viram erro tipado
+- [x] Teste com `fetch` simulado dos formatos do spike S3
 
 **Tests**: integration
 **Gate**: full
