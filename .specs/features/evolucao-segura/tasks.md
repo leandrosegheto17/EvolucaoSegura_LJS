@@ -3030,8 +3030,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Lotes com `ctx.waitUntil`
-- [ ] ADR-011 gravado
+- [x] Lotes com `ctx.waitUntil`
+- [x] ADR-011 gravado
+
+- Um único `waitUntil` por chamada; dentro dele, lotes em sequência com até 6 envios simultâneos (PREMISSA: limite de conexões de saída de uma execução do Worker). Envio com erro vai a `capturarErro` e não impede os demais. ADR em `.md/adr/011-web-push-com-web-crypto.md`.
 
 **Tests**: integration
 **Gate**: full
