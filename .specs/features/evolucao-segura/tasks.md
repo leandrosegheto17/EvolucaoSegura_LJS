@@ -2477,10 +2477,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Cada transição permitida aceita e as demais recusadas
-- [ ] Tolerância de 7 dias em `atrasada`
-- [ ] Free com 5 ativos retorna `LIMITE_PLANO`, com 4 retorna ok
-- [ ] Tempo por parâmetro
+- [x] Cada transição permitida aceita e as demais recusadas
+- [x] Tolerância de 7 dias em `atrasada`
+- [x] Free com 5 ativos retorna `LIMITE_PLANO`, com 4 retorna ok
+- [x] Tempo por parâmetro
 
 **Tests**: unit
 **Gate**: quick
