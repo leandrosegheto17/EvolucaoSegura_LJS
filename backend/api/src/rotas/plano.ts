@@ -14,12 +14,13 @@ import { type PlanoAtual, lerPlano } from '../middleware/plano.ts';
 //   relógio do banco). Data: renovação em ativa (periodo_fim); fim em trial e cancelada
 //   (periodo_fim) e em atrasada (vencimento + 7 dias, D-21); free sem data.
 // - Pix: só com assinatura no Asaas e fora de cancelada (o cancelamento já encerrou a assinatura
-//   lá, PLANO-11). Lista as cobranças da assinatura; a pendente (status PENDING; vencida não
-//   entra) de vencimento mais antigo tem o QR buscado na hora. Nada do Asaas é gravado: a rota
+//   lá, PLANO-11). Lista as cobranças da assinatura; a em aberto (PENDING ou OVERDUE; decisão do
+//   usuário, 2026-10-27: a vencida também, para pagar na tolerância da D-21) de vencimento mais
+//   antigo tem o QR buscado na hora. Nada do Asaas é gravado: a rota
 //   não escreve no banco e a resposta sai com no-store (cabeçalhos do app).
 // - Asaas fora, lento ou sem configuração: 503 `cobranca_indisponivel` e o erro vai ao Sentry.
 
-const STATUS_PENDENTE = 'PENDING';
+const STATUS_EM_ABERTO: readonly string[] = ['PENDING', 'OVERDUE'];
 
 export interface OpcoesPlano {
   asaas: (env: Cloudflare.Env) => ClienteAsaas;
@@ -51,7 +52,7 @@ async function pixPendente(
   assinaturaId: string,
 ): Promise<PixPendente | null> {
   const pendentes = (await cliente.listarCobrancas(assinaturaId))
-    .filter((c) => c.status === STATUS_PENDENTE)
+    .filter((c) => STATUS_EM_ABERTO.includes(c.status))
     .sort((a, b) => a.vencimento.localeCompare(b.vencimento));
   const cobranca = pendentes[0];
   if (!cobranca) return null;

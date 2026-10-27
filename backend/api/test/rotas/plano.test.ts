@@ -16,8 +16,8 @@ import {
 // T134 / PLANO-14, PLANO-05: GET /api/plano ("Meu plano").
 // - Plano e estado efetivos agora, com a data de renovação (ativa) ou de fim (trial, cancelada,
 //   atrasada pela tolerância de 7 dias); free sem data.
-// - Pix copia-e-cola e QR só com cobrança pendente (PENDING) da assinatura no Asaas; o QR é
-//   buscado na hora. Nada do Asaas é gravado; a rota não escreve no banco.
+// - Pix copia-e-cola e QR só com cobrança em aberto (PENDING ou OVERDUE, decisão do usuário) da
+//   assinatura no Asaas; o QR é buscado na hora. Nada do Asaas é gravado; a rota não escreve no banco.
 // - Asaas fora ou lento responde 503 `cobranca_indisponivel` (a tela mostra "Cobrança
 //   indisponível"). Sem assinatura no Asaas, o Asaas não é chamado.
 // - Isolamento: cada profissional vê só o próprio plano e o Pix da própria assinatura.
@@ -83,16 +83,20 @@ async function retrato(usuarioId: string): Promise<Record<string, string>> {
      where n.nspname = 'public' and c.relkind = 'r' and c.relforcerowsecurity
      order by 1`,
   );
-  const saida: Record<string, string> = {};
-  for (const { tabela } of tabelas) {
-    const [linha] = await comoAdmin<{ md5: string | null }>(
-      `select md5(string_agg(t::text, '|' order by t::text)) as md5
-       from public.${tabela} t where usuario_id = $1`,
-      [usuarioId],
-    );
-    saida[tabela] = linha!.md5 ?? 'vazia';
-  }
-  return saida;
+  // Uma consulta só para todas as tabelas (os nomes vêm do catálogo, nunca de entrada), para o
+  // retrato não somar dezenas de idas ao banco com a máquina carregada.
+  const linhas = await comoAdmin<{ tabela: string; md5: string | null }>(
+    tabelas
+      .map(
+        ({ tabela }) =>
+          `select '${tabela}' as tabela,
+                  (select md5(string_agg(t::text, '|' order by t::text))
+                   from public.${tabela} t where usuario_id = $1) as md5`,
+      )
+      .join(' union all '),
+    [usuarioId],
+  );
+  return Object.fromEntries(linhas.map((l) => [l.tabela, l.md5 ?? 'vazia']));
 }
 
 describe('autenticação', () => {
@@ -241,7 +245,39 @@ describe('Pix e QR só com cobrança pendente (PLANO-05)', () => {
     });
   });
 
-  it.each(['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH', 'OVERDUE', 'REFUNDED'])(
+  // Decisão do usuário (2026-10-27): a cobrança vencida (OVERDUE) também mostra o Pix, para quem
+  // está em atrasada pagar dentro da tolerância de 7 dias (D-21).
+  it('cobrança vencida (OVERDUE) mostra o Pix e busca o QR', async () => {
+    const vencida = cobranca({ status: 'OVERDUE', vencimento: '2026-10-20' });
+    const { sessao, asaas, app } = await cenario('atrasada', {
+      comAsaas: true,
+      periodoFim: daqui(-2 * DIA),
+      vencimentoAtraso: daqui(-2 * DIA),
+      cobrancas: [vencida],
+    });
+    expect(((await (await lerPlano(app, sessao)).json()) as RespostaPlano).pix).toMatchObject({
+      vencimento: '2026-10-20',
+      copia_e_cola: QR.copiaECola,
+    });
+    expect(asaas.chamadas.at(-1)).toEqual({ operacao: 'buscarQrPix', dados: vencida.id });
+  });
+
+  it('vencida e pendente juntas: a de vencimento mais antigo', async () => {
+    const vencida = cobranca({ status: 'OVERDUE', vencimento: '2026-10-20' });
+    const pendente = cobranca({ status: 'PENDING', vencimento: '2026-11-20' });
+    const { sessao, asaas, app } = await cenario('atrasada', {
+      comAsaas: true,
+      periodoFim: daqui(-2 * DIA),
+      vencimentoAtraso: daqui(-2 * DIA),
+      cobrancas: [pendente, vencida],
+    });
+    expect(((await (await lerPlano(app, sessao)).json()) as RespostaPlano).pix).toMatchObject({
+      vencimento: '2026-10-20',
+    });
+    expect(asaas.chamadas.at(-1)).toEqual({ operacao: 'buscarQrPix', dados: vencida.id });
+  });
+
+  it.each(['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH', 'REFUNDED'])(
     'cobrança %s não é pendente: sem Pix e sem buscar QR',
     async (status) => {
       const { sessao, asaas, app } = await cenario('trial', {

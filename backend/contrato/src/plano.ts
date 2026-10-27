@@ -65,8 +65,8 @@ export interface RespostaCancelar {
 //   periodo_fim e atrasada com os 7 dias esgotados já aparecem como free, antes do cron.
 // - `data`: renovação em ativa (periodo_fim); fim do Pro em trial e cancelada (periodo_fim) e em
 //   atrasada (fim da tolerância de 7 dias); null no free.
-// - `pix`: só com cobrança pendente (status PENDING no Asaas) da assinatura; o QR é buscado na
-//   hora e não é gravado. Mais de uma pendente: a de vencimento mais antigo.
+// - `pix`: só com cobrança em aberto (PENDING ou OVERDUE no Asaas; decisão do usuário) da
+//   assinatura; o QR é buscado na hora e não é gravado. Mais de uma: a de vencimento mais antigo.
 export type EstadoPlano = 'trial' | 'ativa' | 'atrasada' | 'cancelada' | 'free';
 
 export interface PixPendente {

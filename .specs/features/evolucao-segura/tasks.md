@@ -2668,7 +2668,7 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 - [x] Pix e QR só com cobrança pendente
 - [x] Dados do Asaas não persistidos além do necessário
 - [x] Isolamento coberto
-- PREMISSA: pendente = status `PENDING` no Asaas (vencida `OVERDUE` não mostra Pix, a confirmar); mais de uma pendente, a de vencimento mais antigo; cancelada não consulta o Asaas; `plano` e `status` efetivos pelas regras da T125; data de renovação em ativa e de fim em trial, cancelada e atrasada (vencimento + 7 dias); Asaas fora ou sem configuração = 503 `cobranca_indisponivel`; sem assinatura no Asaas, o Asaas não é chamado.
+- Decisão do usuário (2026-10-27): o Pix aparece com cobrança `PENDING` ou `OVERDUE` (a vencida também, para pagar na tolerância da D-21); com mais de uma, a de vencimento mais antigo. PREMISSA: cancelada não consulta o Asaas; `plano` e `status` efetivos pelas regras da T125; data de renovação em ativa e de fim em trial, cancelada e atrasada (vencimento + 7 dias); Asaas fora ou sem configuração = 503 `cobranca_indisponivel`; sem assinatura no Asaas, o Asaas não é chamado.
 
 **Tests**: integration
 **Gate**: full
