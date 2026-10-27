@@ -191,7 +191,7 @@ T158 -> T185 -> T159 -> T186 -> T160 -> T187
 ### Phase 23: Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook)
 
 ```
-T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T195 -> T165
+T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T197 -> T198 -> T199 -> T195 -> T165
 ```
 
 ---
@@ -3193,9 +3193,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 **Done when**:
 
 - [x] Medição registrada com ambiente, tamanho de página e CPU
-- [ ] Tamanho máximo de página fixado com folga em 10 ms; se nenhum tamanho útil couber, parar e abrir novo spike
+- [x] Tamanho máximo de página fixado em 25 linhas, JSON montado no Postgres (decisão do usuário, 2026-10-27)
 
-- 2026-10-27: medição em `medicao-exportacao.md`. Nenhum tamanho útil coube com folga (custo fixo de 5 ms de mediana e 10 ms de máximo com 1 linha); a tarefa parou e pede novo spike. Achado à parte: as migrations 0012 a 0015 e 0018 a 0021 falham no Neon (PG 18) por `SET app.tarefa_*` na definição das funções.
+- 2026-10-27: medição em `medicao-exportacao.md`. Nenhum tamanho útil coube com folga (custo fixo de 5 ms de mediana e 10 ms de máximo com 1 linha). Achado à parte: as migrations 0012 a 0015 e 0018 a 0021 falham no Neon (PG 18) por `SET app.tarefa_*` na definição das funções (tratado nas T197 a T199).
+- SPEC_DEVIATION (Done when): o critério mandava fixar com folga em 10 ms e, sem tamanho útil, abrir novo spike. O usuário aceitou o risco no plano Free e adiou o Workers Paid para quando o produto tiver mais clientes. Com 25 linhas: mediana 7,5 ms, máximo 13 ms, nenhuma execução cortada. A margem real do Free segue sem medir (PREMISSA). Se a exportação passar a ser cortada, abrir o spike de margem ou adotar o plano pago.
 
 **Tests**: none
 **Gate**: build
@@ -3215,6 +3216,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 - [ ] Cada tabela é entregue em páginas com cursor, sem repetir nem perder linha
 - [ ] Página acima do máximo ou cursor inválido responde 400 sem auditar
 - [ ] Isolamento coberto
+
+- Decisões de 2026-10-27: página de 25 linhas, JSON montado no Postgres (T122). Tabelas: a lista do legado (`export-full.domain.ts`) restrita às que existem aqui, mais `preco_sessao`, `preco_sessao_revisao` e `preco_paciente_revisao`, sem `relatorio` (D-01) e sem as novas (`assinatura`, `audit_log`, `push_subscription`, `notificacao_enviada`, `limite_uso`, `aceite_termos`). PREMISSA (a confirmar na T171): cursor opaco único com a tabela e a última chave, em `GET ?cursor=&limite=`; sem cursor é a primeira página (conta no limite da T172); `proximo_cursor: null` é a última (audita na T173).
 
 **Tests**: integration
 **Gate**: full
@@ -3880,12 +3883,67 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
+### T197: Migrations 0012 a 0015 aplicáveis por quem não é superusuário
+
+**What**: Tirar o `SET app.tarefa_* = ...` da definição das funções das migrations 0012, 0013, 0014 e 0015, que no Neon (PostgreSQL 18, `neondb_owner` sem superusuário) falha com `permission denied to set parameter`, mantendo o mesmo comportamento (por exemplo, `set_config(..., true)` dentro da função). Mexe em migrations já existentes: a mudança e os testes delas precisam da aprovação do usuário (concedida em 2026-10-27, ao escolher esta tarefa).
+**Estimativa**: 2h
+**Where**: `backend/scripts/migrations/0012_*.ts`, `0013_*.ts`, `0014_*.ts`, `0015_*.ts`
+**Depends on**: T194
+**Requirement**: OPS-03
+
+**Done when**:
+
+- [ ] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
+- [ ] Os testes de funções `tarefas.*` e de assinatura seguem verdes sem enfraquecer asserção
+- [ ] Achado registrado em `medicao-exportacao.md` marcado como tratado
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T198: Migrations 0018 a 0021 aplicáveis por quem não é superusuário
+
+**What**: Mesma correção da T197 nas migrations 0018, 0019, 0020 e 0021.
+**Estimativa**: 2h
+**Where**: `backend/scripts/migrations/0018_*.ts`, `0019_*.ts`, `0020_*.ts`, `0021_*.ts`
+**Depends on**: T197
+**Requirement**: OPS-03
+
+**Done when**:
+
+- [ ] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
+- [ ] Os testes de `tarefas.*`, push e aviso de sessão seguem verdes sem enfraquecer asserção
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T199: Teste de que toda migration aplica sem superusuário
+
+**What**: Teste que aplica todas as migrations com uma role que não é superusuário (como o `neondb_owner`) e falha se alguma exigir superusuário, para o problema não voltar.
+**Estimativa**: 2h
+**Where**: `backend/scripts/test/migrations-sem-superusuario.test.ts`
+**Depends on**: T198
+**Requirement**: OPS-03
+
+**Done when**:
+
+- [ ] Migrations 0001 em diante aplicam por uma role sem superusuário
+- [ ] O teste falha quando uma migration usa `SET` de parâmetro personalizado na definição de função (provado numa cópia, sem alterar teste existente)
+
+**Tests**: integration
+**Gate**: full
+
+---
+
 ### T195: Runbook: roles do Neon e fumaça do Hyperdrive
 
 **What**: Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon e teste de fumaça de vazamento de contexto. Ação do usuário no Neon.
 **Estimativa**: 2h
 **Where**: `docs/runbook.md`
-**Depends on**: T194
+**Depends on**: T199
 **Requirement**: OPS-12
 
 **Done when**:

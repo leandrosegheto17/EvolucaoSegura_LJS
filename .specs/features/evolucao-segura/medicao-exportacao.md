@@ -2,7 +2,7 @@
 
 **Data:** 2026-10-27
 **Requisito:** EXP-03, EXP-04
-**Resultado:** nenhum tamanho útil de página cabe com folga em 10 ms de CPU. A T122 para aqui, e o próximo passo é um novo spike (Done when da T122). O tamanho máximo de página **não foi fixado**.
+**Resultado:** nenhum tamanho útil de página cabe com folga em 10 ms de CPU. **Decisão do usuário (2026-10-27):** aceitar o risco no plano Free, com páginas de **25 linhas** e o JSON montado no Postgres; o plano Workers Paid fica para quando o produto tiver mais clientes. O spike de margem real do Free não será aberto agora.
 
 ## Ambiente
 
@@ -55,4 +55,4 @@ Todas as execuções terminaram com `outcome: ok` e HTTP 200. Nenhuma foi cortad
 
 As migrations 0012, 0013, 0014, 0015, 0018, 0019, 0020 e 0021 criam funções com `SET app.tarefa_* = '…'` na definição. No Neon, o usuário da migration (`neondb_owner`, que não é superusuário) recebe `permission denied to set parameter "app.tarefa_assinatura"`. O erro se repete com qualquer parâmetro personalizado (por exemplo, `xyz.teste`). Como as migrations rodam numa única transação, nada foi aplicado.
 
-No Postgres local, que roda como superusuário, o erro não aparece. Só para esta medição, as migrations foram aplicadas a partir de uma cópia fora do repositório, sem essas linhas `SET` (o que não afeta a leitura das tabelas medidas). Nenhuma migration do repositório foi alterada. Isso precisa de correção antes do primeiro deploy no Neon. [A ESCLARECER: tarefa e abordagem da correção]
+No Postgres local, que roda como superusuário, o erro não aparece. Só para esta medição, as migrations foram aplicadas a partir de uma cópia fora do repositório, sem essas linhas `SET` (o que não afeta a leitura das tabelas medidas). Nenhuma migration do repositório foi alterada. Isso precisa de correção antes do primeiro deploy no Neon. Decisão do usuário (2026-10-27): tarefas novas T197, T198 e T199 na Phase 23, antes da T195.
