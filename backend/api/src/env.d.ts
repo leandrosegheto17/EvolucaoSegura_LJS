@@ -21,6 +21,10 @@ declare namespace Cloudflare {
     ASAAS_API_KEY?: string;
     ASAAS_WEBHOOK_TOKEN?: string;
     ASAAS_BASE_URL?: string;
+    // PUSH-06, PUSH-07 (ADR-011): chaves VAPID; sem elas o push fica desligado.
+    VAPID_PUBLIC_KEY?: string;
+    VAPID_PRIVATE_KEY?: string;
+    VAPID_SUBJECT?: string;
     SENTRY_DSN?: string;
     SENTRY_RELEASE?: string;
   }

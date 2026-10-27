@@ -3071,8 +3071,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Sessão às 14:00 gera um envio entre 13:45 e 13:50 e nenhum outro
-- [ ] Corpo sem nome de paciente nem texto clínico
+- [x] Sessão às 14:00 gera um envio entre 13:45 e 13:50 e nenhum outro
+- [x] Corpo sem nome de paciente nem texto clínico
+
+- A função `tarefas.listar_sessoes_para_aviso(de, ate, limite)` vai na migration 0018 (`0018_funcoes_push_sessao.ts`), como a 0016 da T139 (decisão do usuário, 2026-10-27); por isso T148 passa a 0019. Policies só de SELECT para o owner, ligadas por `app.tarefa_push` dentro da função (desenho da 0012). A tarefa grava `notificacao_enviada` antes de enviar (no máximo uma vez), numa transação do profissional, e entrega os envios a `enviarEmLotes`. Corpo: "Sessão próxima" / "Sua sessão começa às HH:MM." (Brasília) / `/app/agenda`. PREMISSAS: TTL de 15 min; sem as chaves VAPID o push fica desligado (nada gravado nem enviado); a tela é a agenda (não há tela própria de sessão).
 
 **Tests**: integration
 **Gate**: full
@@ -3298,11 +3300,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
-### T148: Migration 0018: exclusão de conta
+### T148: Migration 0019: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
 **Estimativa**: 2h
-**Where**: `backend/scripts/migrations/0018_exclusao.ts`
+**Where**: `backend/scripts/migrations/0019_exclusao.ts` (era 0018; a T144 criou a 0018)
 **Depends on**: T175
 **Requirement**: CONTA-03, CONTA-05
 

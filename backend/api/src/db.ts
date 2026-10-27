@@ -304,6 +304,20 @@ export interface Banco {
     auth: string;
     criado_em: Generated<Date>;
   };
+  // Uma linha por envio (migration 0017); única por profissional, tipo e referência.
+  notificacao_enviada: {
+    id: Generated<string>;
+    usuario_id: string;
+    tipo:
+      | 'sessao_proxima'
+      | 'evolucao_pendente'
+      | 'cobranca_gerada'
+      | 'pagamento_confirmado'
+      | 'cobranca_vencida'
+      | 'trial_terminando';
+    ref: string;
+    enviada_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;
