@@ -148,13 +148,13 @@ T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124
 ### Phase 16: Etapa 12, parte 1: Planos, Asaas e webhook
 
 ```
-T125 -> T126 -> T127 -> T128 -> T129 -> T130 -> T131 -> T132
+T125 -> T126 -> T127 -> T128 -> T169 -> T129 -> T130 -> T131 -> T132
 ```
 
 ### Phase 17: Etapa 12, parte 2: Meu plano, limite do Free e cron único
 
 ```
-T133 -> T134 -> T135 -> T136 -> T137 -> T138 -> T139
+T133 -> T134 -> T135 -> T136 -> T170 -> T137 -> T138 -> T139
 ```
 
 ### Phase 18: Etapa 13: Push
@@ -2541,11 +2541,30 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
+### T169: Migration 0013: função `tarefas.*` do webhook
+
+**What**: Função `SECURITY DEFINER` para gravar `webhook_evento` (idempotente por `event_id`) e marcar `processado_em`, porque a `app` só lê essa tabela.
+**Where**: `backend/scripts/migrations/0013_funcoes_webhook.ts`
+**Depends on**: T128
+**Requirement**: PLANO-06, PLANO-07
+
+**Done when**:
+
+- [ ] Gravar evento novo devolve "novo"; `event_id` repetido devolve "repetido" sem alterar o registro
+- [ ] Marcar `processado_em` só em evento existente e só uma vez
+- [ ] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
+- [ ] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
+
+**Tests**: integration
+**Gate**: full
+
+---
+
 ### T129: Webhook: autenticação e idempotência
 
 **What**: Validar `asaas-access-token`, gravar `webhook_evento` antes de processar e ignorar repetição.
 **Where**: `backend/api/src/rotas/webhook-asaas.ts`
-**Depends on**: T128
+**Depends on**: T169
 **Requirement**: PLANO-06, PLANO-07
 
 **Done when**:
@@ -2686,11 +2705,30 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
+### T170: Migration 0014: função `tarefas.*` das assinaturas vencidas
+
+**What**: Função `SECURITY DEFINER` que lista, entre todos os usuários, as assinaturas cujo tempo acabou (trial e cancelada com `periodo_fim` vencido; atrasada com a tolerância de 7 dias esgotada), devolvendo `usuario_id`, `status` e `asaas_subscription_id`, para o cron da T137.
+**Where**: `backend/scripts/migrations/0014_funcoes_assinaturas_vencidas.ts`
+**Depends on**: T136
+**Requirement**: PLANO-04, PLANO-10, PLANO-11
+
+**Done when**:
+
+- [ ] Lista só os casos vencidos pelas regras da T125, com o tempo por parâmetro
+- [ ] Não devolve dado clínico nem de outro tipo além dos três campos
+- [ ] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
+- [ ] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
+
+**Tests**: integration
+**Gate**: full
+
+---
+
 ### T137: Tarefa: transições da assinatura
 
 **What**: Trial vencido para free, atraso de 7 dias para free (cancelando no Asaas) e fim do período cancelado para free.
 **Where**: `backend/api/src/tarefas/assinaturas.ts`
-**Depends on**: T136
+**Depends on**: T170
 **Requirement**: PLANO-04, PLANO-10, PLANO-11
 
 **Done when**:
