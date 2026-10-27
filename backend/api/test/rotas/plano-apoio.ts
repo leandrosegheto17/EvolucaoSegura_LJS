@@ -1,15 +1,22 @@
 import { env } from 'cloudflare:workers';
 import { criarApp } from '../../src/app.ts';
-import { type ClienteAsaas, ErroAsaas } from '../../src/integracoes/asaas.ts';
+import {
+  type ClienteAsaas,
+  type CobrancaAsaas,
+  ErroAsaas,
+  type QrPixAsaas,
+} from '../../src/integracoes/asaas.ts';
 import { comoAdmin, ipUnico, type sessaoDeTeste } from '../apoio.ts';
 
-// Apoio dos testes das rotas do plano (T128, T132): Asaas simulado que guarda as chamadas e pode
+// Apoio dos testes das rotas do plano (T128, T132, T134): Asaas simulado que guarda as chamadas e pode
 // falhar numa operação, assinatura semeada pelo superusuário e leitura da linha e da auditoria.
 
 export type Sessao = Awaited<ReturnType<typeof sessaoDeTeste>>;
 type Operacao = keyof ClienteAsaas;
 
-export function asaasSimulado(opcoes: { proximoVencimento?: string } = {}) {
+export function asaasSimulado(
+  opcoes: { proximoVencimento?: string; cobrancas?: CobrancaAsaas[]; qr?: QrPixAsaas } = {},
+) {
   const chamadas: { operacao: Operacao; dados: unknown }[] = [];
   let falha: { operacao: Operacao; erro: unknown } | null = null;
   const sufixo = () => crypto.randomUUID().slice(0, 12);
@@ -32,11 +39,11 @@ export function asaasSimulado(opcoes: { proximoVencimento?: string } = {}) {
     },
     async listarCobrancas(assinaturaId) {
       registrar('listarCobrancas', assinaturaId);
-      return [];
+      return opcoes.cobrancas ?? [];
     },
     async buscarQrPix(cobrancaId) {
       registrar('buscarQrPix', cobrancaId);
-      return { imagemPngBase64: 'x', copiaECola: 'y', expiraEm: 'z' };
+      return opcoes.qr ?? { imagemPngBase64: 'x', copiaECola: 'y', expiraEm: 'z' };
     },
     async cancelarAssinatura(assinaturaId) {
       registrar('cancelarAssinatura', assinaturaId);

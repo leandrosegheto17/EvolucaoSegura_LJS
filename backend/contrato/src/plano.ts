@@ -60,6 +60,30 @@ export interface RespostaCancelar {
   periodo_fim: string;
 }
 
+// 200 de GET /api/plano (PLANO-14, PLANO-05): "Meu plano".
+// - `plano` e `status` são os efetivos agora (regras da T125): trial ou cancelada depois de
+//   periodo_fim e atrasada com os 7 dias esgotados já aparecem como free, antes do cron.
+// - `data`: renovação em ativa (periodo_fim); fim do Pro em trial e cancelada (periodo_fim) e em
+//   atrasada (fim da tolerância de 7 dias); null no free.
+// - `pix`: só com cobrança pendente (status PENDING no Asaas) da assinatura; o QR é buscado na
+//   hora e não é gravado. Mais de uma pendente: a de vencimento mais antigo.
+export type EstadoPlano = 'trial' | 'ativa' | 'atrasada' | 'cancelada' | 'free';
+
+export interface PixPendente {
+  valor_centavos: number;
+  vencimento: string; // AAAA-MM-DD
+  copia_e_cola: string;
+  qr_code_png_base64: string;
+  expira_em: string; // como o Asaas devolve (AAAA-MM-DD HH:MM:SS)
+}
+
+export interface RespostaPlano {
+  plano: 'pro' | 'free';
+  status: EstadoPlano;
+  data: { tipo: 'renovacao' | 'fim'; em: string } | null;
+  pix: PixPendente | null;
+}
+
 const problema = (codigo: string, status: number, titulo: string): Problema => ({
   tipo: 'about:blank',
   titulo,
