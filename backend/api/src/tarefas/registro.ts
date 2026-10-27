@@ -1,6 +1,7 @@
 import { type ClienteAsaas, criarClienteAsaas } from '../integracoes/asaas.ts';
 import { tarefaAssinaturas } from './assinaturas.ts';
 import type { Tarefa } from './despachar.ts';
+import { tarefaLimpeza } from './limpeza.ts';
 
 // PUSH-07 (ADR-010): ponto único de registro das tarefas do cron. O despachante roda esta lista
 // em ordem, a cada 5 minutos. Ordem do design (tarefas do cron), cada uma entrando na sua tarefa:
@@ -16,4 +17,7 @@ import type { Tarefa } from './despachar.ts';
 const asaasPadrao = (env: Cloudflare.Env): ClienteAsaas =>
   criarClienteAsaas({ apiKey: env.ASAAS_API_KEY ?? '', baseUrl: env.ASAAS_BASE_URL ?? '' });
 
-export const TAREFAS: readonly Tarefa[] = [tarefaAssinaturas({ asaas: asaasPadrao })];
+export const TAREFAS: readonly Tarefa[] = [
+  tarefaAssinaturas({ asaas: asaasPadrao }),
+  tarefaLimpeza(),
+];

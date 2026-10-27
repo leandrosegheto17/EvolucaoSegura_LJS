@@ -2782,19 +2782,21 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Registros vencidos deixam de valer
-- [ ] Registros válidos intactos
-- [ ] Reexecução é inofensiva
+- [x] Registros vencidos deixam de valer
+- [x] Registros válidos intactos
+- [x] Reexecução é inofensiva
+
+- A função `tarefas.vencer_tokens_e_sessoes(agora)` vai na migration 0016 (`0016_funcoes_limpeza.ts`); por isso T140 passa a 0017 e T148 a 0018. Marca `token_email` (invalidado_em) e `sessao` (encerrada_em); `desafio_2fa` fica de fora (não é token nem sessão; o código já expira por `expira_em`).
 
 **Tests**: integration
 **Gate**: full
 
 ---
 
-### T140: Migration 0016: push
+### T140: Migration 0017: push
 
 **What**: Criar `push_subscription` (endpoint único) e `notificacao_enviada` (única por tipo e referência).
-**Where**: `backend/scripts/migrations/0016_push.ts`
+**Where**: `backend/scripts/migrations/0017_push.ts`
 **Depends on**: T139
 **Requirement**: PUSH-01, PUSH-02
 
@@ -2935,10 +2937,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 ---
 
-### T148: Migration 0017: exclusão de conta
+### T148: Migration 0018: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
-**Where**: `backend/scripts/migrations/0017_exclusao.ts`
+**Where**: `backend/scripts/migrations/0018_exclusao.ts`
 **Depends on**: T147
 **Requirement**: CONTA-03, CONTA-05
 
