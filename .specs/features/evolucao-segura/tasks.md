@@ -416,9 +416,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Chave do sandbox fornecida pelo usuário e fora do git
-- [ ] Campos exigidos pelo Asaas e eventos do webhook anotados
-- [ ] Veredito registrado
+- [x] Chave do sandbox fornecida pelo usuário e fora do git
+- [x] Campos exigidos pelo Asaas e eventos do webhook anotados
+- [x] Veredito registrado
 
 **Tests**: none (spike descartável, isento pelo CLAUDE.md)
 **Gate**: build (sem código de produto)
