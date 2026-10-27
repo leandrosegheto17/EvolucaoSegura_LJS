@@ -2702,10 +2702,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Tarefa que falha não impede as demais
-- [ ] Execução perdida é compensada na seguinte dentro da janela
-- [ ] `wrangler.jsonc` com um único cron
-- [ ] ADR-010 gravado
+- [x] Tarefa que falha não impede as demais
+- [x] Execução perdida é compensada na seguinte dentro da janela
+- [x] `wrangler.jsonc` com um único cron
+- [x] ADR-010 gravado
 
 **Tests**: integration
 **Gate**: full

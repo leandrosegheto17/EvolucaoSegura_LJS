@@ -20,6 +20,9 @@
     { "name": "LIMITE_PUBLICO", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
     { "name": "LIMITE_WEBHOOK", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
   ],
+  // PUSH-07 (ADR-010): um único Cron Trigger (a conta tem 5, divididos entre 3 apps); o
+  // despachante (backend/api/src/tarefas/despachar.ts) chama as tarefas em ordem.
+  "triggers": { "crons": ["*/5 * * * *"] },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
