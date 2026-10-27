@@ -118,6 +118,14 @@ export function AccountMenu() {
             <PersonIcon />
             <span>Editar perfil</span>
           </Link>
+          <Link
+            to="/app/plano"
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 items-center gap-3 rounded-card px-3 text-ink focus-visible:outline-4 focus-visible:outline-focus"
+          >
+            <PersonIcon />
+            <span>Meu plano</span>
+          </Link>
           <ThemeSwitch />
           <hr className="my-1 border-line" />
           <button

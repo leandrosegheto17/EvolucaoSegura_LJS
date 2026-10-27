@@ -176,8 +176,11 @@ describe('AccountMenu', () => {
     setup();
     await user.click(trigger());
     const link = screen.getByRole('link', { name: 'Editar perfil' });
+    const plano = screen.getByRole('link', { name: 'Meu plano' });
     const sw = screen.getByRole('switch', { name: 'Modo escuro' });
     const sair = screen.getByRole('button', { name: 'Sair' });
+    await user.keyboard('{ArrowDown}');
+    expect(plano).toHaveFocus();
     await user.keyboard('{ArrowDown}');
     expect(sw).toHaveFocus();
     await user.keyboard('{ArrowDown}');
@@ -245,6 +248,15 @@ describe('AccountMenu', () => {
     await user.click(trigger());
     await user.click(screen.getByRole('link', { name: 'Editar perfil' }));
     expect(screen.getByTestId('loc')).toHaveTextContent('/app/perfil');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('"Meu plano" navega para /app/plano e fecha', async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(trigger());
+    await user.click(screen.getByRole('link', { name: 'Meu plano' }));
+    expect(screen.getByTestId('loc')).toHaveTextContent('/app/plano');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
