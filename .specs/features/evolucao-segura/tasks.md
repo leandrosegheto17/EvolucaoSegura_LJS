@@ -2496,9 +2496,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] `search_path` fixo e parâmetros tipados
-- [ ] Teste das funções `tarefas.*` continua verde
-- [ ] `app` só executa as listadas
+- [x] `search_path` fixo e parâmetros tipados
+- [x] Teste das funções `tarefas.*` continua verde
+- [x] `app` só executa as listadas
 
 **Tests**: integration
 **Gate**: full

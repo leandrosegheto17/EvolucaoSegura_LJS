@@ -14,6 +14,9 @@ const EXECUTAVEIS_PELA_APP = [
   // T120 / EXP-05: contador de uso por chave e janela (migration 0011).
   'public.contar_uso(p_chave text, p_janela_segundos integer)',
   'public.definir_senha(p_usuario_id uuid, p_senha text)',
+  // T126 / PLANO-08: o webhook do Asaas e o cron acham e mudam a assinatura (migration 0012).
+  'tarefas.localizar_assinatura_asaas(p_asaas_subscription_id text, p_asaas_customer_id text)',
+  'tarefas.mudar_estado_assinatura(p_usuario_id uuid, p_status text, p_periodo_fim timestamp with time zone, p_vencimento_atraso timestamp with time zone)',
 ];
 
 // Funções criadas pelas migrations (fora do catálogo do sistema e das extensões, como o pgcrypto).
