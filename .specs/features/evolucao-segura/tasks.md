@@ -3132,8 +3132,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Uma vez por evento
-- [ ] Corpo sem dado clínico
+- [x] Uma vez por evento
+- [x] Corpo sem dado clínico
+
+- Tarefa do cron `push_trial`, quarta do despachante (antes das transições de assinatura), sem janela de compensação (o estado diz o que falta). A função `tarefas.listar_trials_terminando(agora, limite)` vai na migration 0021 (`0021_funcoes_push_trial.ts`, policy só de SELECT do owner em `assinatura` ligada por `app.tarefa_push`); por isso a T148 passa a 0022. Janela do domínio: `periodo_fim` em (agora, agora + 3 dias]. A ref ('trial_terminando', `periodo_fim` ISO UTC com milissegundos, microssegundos truncados como no `Date` do JS) vem pronta da função, no formato de `chaveTrialTerminando`. Corpo: "Seu teste está acabando" / "Seu período de teste termina em N dias. Assine em Meu plano para continuar no Pro." (N arredondado para cima, de 3 a 1; singular com 1) / `/app/plano`. PREMISSAS: TTL de 24 h; o aviso sai mesmo se o push for ativado já perto do fim, com os dias que faltam.
 
 **Tests**: integration
 **Gate**: full
@@ -3304,11 +3306,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
-### T148: Migration 0021: exclusão de conta
+### T148: Migration 0022: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
 **Estimativa**: 2h
-**Where**: `backend/scripts/migrations/0021_exclusao.ts` (era 0018; a T144 criou a 0018, a T145 a 0019 e a T146 a 0020)
+**Where**: `backend/scripts/migrations/0022_exclusao.ts` (era 0018; a T144 criou a 0018, a T145 a 0019, a T146 a 0020 e a T178 a 0021)
 **Depends on**: T175
 **Requirement**: CONTA-03, CONTA-05
 

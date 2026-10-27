@@ -28,6 +28,8 @@ const EXECUTAVEIS_PELA_APP = [
   'tarefas.listar_pendencias_evolucao(p_dia date, p_limite integer)',
   // T144 / PUSH-02: o cron lista as sessões que pedem o aviso "sessão próxima" (migration 0018).
   'tarefas.listar_sessoes_para_aviso(p_de timestamp with time zone, p_ate timestamp with time zone, p_limite integer)',
+  // T178 / PUSH-04: o cron lista os trials que terminam em até 3 dias (migration 0021).
+  'tarefas.listar_trials_terminando(p_agora timestamp with time zone, p_limite integer)',
   // T126 / PLANO-08: o webhook do Asaas e o cron acham e mudam a assinatura (migration 0012).
   'tarefas.localizar_assinatura_asaas(p_asaas_subscription_id text, p_asaas_customer_id text)',
   'tarefas.marcar_webhook_processado(p_event_id text, p_usuario_id uuid)',

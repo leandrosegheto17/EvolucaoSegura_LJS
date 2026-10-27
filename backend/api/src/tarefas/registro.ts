@@ -5,6 +5,7 @@ import { tarefaLimpeza } from './limpeza.ts';
 import { tarefaPushCobranca } from './push-cobranca.ts';
 import { tarefaPushPendente } from './push-pendente.ts';
 import { tarefaPushSessao } from './push-sessao.ts';
+import { tarefaPushTrial } from './push-trial.ts';
 
 // PUSH-07 (ADR-010): ponto único de registro das tarefas do cron. O despachante roda esta lista
 // em ordem, a cada 5 minutos. Ordem do design (tarefas do cron), cada uma entrando na sua tarefa:
@@ -24,6 +25,7 @@ export const TAREFAS: readonly Tarefa[] = [
   tarefaPushSessao(),
   tarefaPushPendente(),
   tarefaPushCobranca(),
+  tarefaPushTrial(),
   tarefaAssinaturas({ asaas: asaasPadrao }),
   tarefaLimpeza(),
 ];
