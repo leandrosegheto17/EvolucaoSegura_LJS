@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PROBLEMA_CURSOR_INVALIDO,
+  PROBLEMA_PAGINA_INVALIDA,
   PROBLEMA_PERIODO_INVALIDO,
   PROBLEMA_PRONTUARIO_NAO_ENCONTRADO,
+  TABELAS_EXPORTACAO,
+  TAMANHO_MAXIMO_PAGINA,
+  esquemaConsultaExportacao,
   esquemaConsultaProntuario,
 } from './exportacao.ts';
 
@@ -76,6 +81,94 @@ describe('problemas', () => {
       titulo: 'Não encontrado',
       status: 404,
       codigo: 'nao_encontrado',
+    });
+  });
+});
+
+// T171 / EXP-03, EXP-04 (D-32): consulta da exportação completa paginada,
+// GET /api/exportacao?cursor=&limite=. Tamanho máximo de página fixado na T122: 25 linhas.
+// Sem limite, a página tem o máximo; acima do máximo, zero, fração, texto ou parâmetro
+// desconhecido é recusado (400). O cursor é opaco: aqui só se exige texto não vazio; quem o
+// decodifica é a API.
+describe('consulta da exportação completa (EXP-03, EXP-04)', () => {
+  const lerPagina = (consulta: Record<string, string>) =>
+    esquemaConsultaExportacao.safeParse(consulta);
+
+  it('o tamanho máximo de página é 25 linhas (T122)', () => {
+    expect(TAMANHO_MAXIMO_PAGINA).toBe(25);
+  });
+
+  it('sem cursor nem limite: primeira página com o tamanho máximo', () => {
+    expect(lerPagina({})).toEqual({ success: true, data: { cursor: null, limite: 25 } });
+  });
+
+  it('limite de 1 até o máximo vale', () => {
+    expect(lerPagina({ limite: '1' }).data).toEqual({ cursor: null, limite: 1 });
+    expect(lerPagina({ limite: '25' }).data).toEqual({ cursor: null, limite: 25 });
+    expect(lerPagina({ cursor: 'abc', limite: '10' }).data).toEqual({ cursor: 'abc', limite: 10 });
+  });
+
+  it.each(['26', '100', '0', '-1', '1.5', '1e1', 'abc', '', ' 5', '05'])(
+    'limite fora de 1 a 25 ou fora do formato: %j',
+    (limite) => {
+      expect(lerPagina({ limite }).success).toBe(false);
+    },
+  );
+
+  it('cursor vazio é recusado', () => {
+    expect(lerPagina({ cursor: '' }).success).toBe(false);
+  });
+
+  it('parâmetro desconhecido é recusado', () => {
+    expect(lerPagina({ tabela: 'paciente' }).success).toBe(false);
+  });
+});
+
+describe('tabelas da exportação completa (EXP-03)', () => {
+  it('lista do legado que existe aqui, com os preços e as revisões de preço, na ordem', () => {
+    expect(TABELAS_EXPORTACAO).toEqual([
+      'perfil',
+      'modelo_anamnese',
+      'modelo_anamnese_item',
+      'paciente',
+      'consentimento_tcle',
+      'serie_recorrencia',
+      'sessao_atendimento',
+      'anamnese',
+      'anamnese_retificacao',
+      'evolucao',
+      'evolucao_retificacao',
+      'rascunho',
+      'modelo_texto',
+      'preco_paciente',
+      'preco_paciente_revisao',
+      'preco_sessao',
+      'preco_sessao_revisao',
+      'pagamento',
+      'pagamento_revisao',
+      'configuracao_usuario',
+    ]);
+  });
+
+  it('nenhuma tabela de credencial ou sessão entra', () => {
+    for (const proibida of ['usuario', 'credencial_senha', 'sessao', 'desafio_2fa', 'token_email'])
+      expect(TABELAS_EXPORTACAO).not.toContain(proibida);
+  });
+});
+
+describe('problemas da exportação completa (EXP-04)', () => {
+  it('página e cursor inválidos respondem 400', () => {
+    expect(PROBLEMA_PAGINA_INVALIDA).toEqual({
+      tipo: 'about:blank',
+      titulo: 'Página inválida',
+      status: 400,
+      codigo: 'pagina_invalida',
+    });
+    expect(PROBLEMA_CURSOR_INVALIDO).toEqual({
+      tipo: 'about:blank',
+      titulo: 'Cursor inválido',
+      status: 400,
+      codigo: 'cursor_invalido',
     });
   });
 });

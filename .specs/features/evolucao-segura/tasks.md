@@ -3213,11 +3213,12 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Cada tabela é entregue em páginas com cursor, sem repetir nem perder linha
-- [ ] Página acima do máximo ou cursor inválido responde 400 sem auditar
-- [ ] Isolamento coberto
+- [x] Cada tabela é entregue em páginas com cursor, sem repetir nem perder linha
+- [x] Página acima do máximo ou cursor inválido responde 400 sem auditar
+- [x] Isolamento coberto
 
 - Decisões de 2026-10-27: página de 25 linhas, JSON montado no Postgres (T122). Tabelas: a lista do legado (`export-full.domain.ts`) restrita às que existem aqui, mais `preco_sessao`, `preco_sessao_revisao` e `preco_paciente_revisao`, sem `relatorio` (D-01) e sem as novas (`assinatura`, `audit_log`, `push_subscription`, `notificacao_enviada`, `limite_uso`, `aceite_termos`). PREMISSA (a confirmar na T171): cursor opaco único com a tabela e a última chave, em `GET ?cursor=&limite=`; sem cursor é a primeira página (conta no limite da T172); `proximo_cursor: null` é a última (audita na T173).
+- 2026-10-27, feito: `GET /api/exportacao?cursor=&limite=` (contrato em `@es/contrato/exportacao`: `TABELAS_EXPORTACAO`, `TAMANHO_MAXIMO_PAGINA`, `esquemaConsultaExportacao`, `PaginaExportacao`). Cursor confirmado como PREMISSA: base64url de `{"t": tabela, "d": última chave ou null}`; a página que esgota a tabela aponta para o começo da próxima. Linhas inteiras via `to_jsonb` montadas no Postgres. PREMISSAS: 400 `pagina_invalida` para limite fora de 1 a 25, fora do formato (inteiro sem zero à esquerda) ou parâmetro desconhecido; 400 `cursor_invalido` para cursor que não decodifica, tabela fora da lista ou chave fora do tipo (uuid; bigint nas revisões); o cursor não é assinado, então quem o forja só anda pelos próprios dados (RLS e filtro por `usuario_id`).
 
 **Tests**: integration
 **Gate**: full

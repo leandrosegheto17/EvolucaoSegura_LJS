@@ -23,6 +23,7 @@ import { rotasEvolucoes } from './rotas/evolucoes.ts';
 import { rotasEvolucoesEditar } from './rotas/evolucoes-editar.ts';
 import { rotasEvolucoesRetificar } from './rotas/evolucoes-retificar.ts';
 import { rotasExportarProntuario } from './rotas/exportar-prontuario.ts';
+import { rotasExportarTudo } from './rotas/exportar-tudo.ts';
 import { rotasModeloAnamnese } from './rotas/modelo-anamnese.ts';
 import { rotasModelosTexto } from './rotas/modelos-texto.ts';
 import { rotasPacienteFicha } from './rotas/paciente-ficha.ts';
@@ -144,6 +145,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasInicio);
   app.route('/api', rotasAuditoria);
   app.route('/api', rotasExportarProntuario);
+  app.route('/api', rotasExportarTudo);
   app.route('/api', rotasPlano({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPlanoAssinar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPlanoCancelar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
