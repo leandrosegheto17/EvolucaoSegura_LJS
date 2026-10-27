@@ -2969,9 +2969,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Limites exatos de cada janela
-- [ ] Fuso de Brasília
-- [ ] Uma vez por sessão, por dia e por evento
+- [x] Limites exatos de cada janela
+- [x] Fuso de Brasília
+- [x] Uma vez por sessão, por dia e por evento
+
+- Limites: sessão próxima quando faltam de 15 a 10 minutos (os dois inclusive); pendência das 20:00 às 21:00 (exclusivo) em America/Sao_Paulo (PREMISSA aprovada pelo usuário em 2026-10-27: a hora seguinte compensa execução perdida do cron); trial de `periodo_fim` - 72 h (inclusive) até `periodo_fim` (exclusivo). Chaves de `notificacao_enviada`: id da sessão, dia de Brasília, `periodo_fim` ISO e id da cobrança.
 
 **Tests**: unit
 **Gate**: quick
