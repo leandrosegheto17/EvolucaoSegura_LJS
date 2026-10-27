@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { sql } from 'kysely';
 import { lerCorpo } from '../http.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
+import { exigeVagaDePaciente } from '../middleware/plano.ts';
 import { COLUNAS_PACIENTE, paraPaciente } from '../repositorios/pacientes.ts';
 
 // PAC-01, PAC-02, PAC-07: POST e GET /api/pacientes, rotas autenticadas (sessão, CSRF na
@@ -22,7 +23,8 @@ import { COLUNAS_PACIENTE, paraPaciente } from '../repositorios/pacientes.ts';
 const escaparLike = (texto: string): string => texto.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 export const rotasPacientes = new Hono<AmbienteAutenticado>()
-  .post('/pacientes', ...autenticada, async (c) => {
+  // PLANO-03: no Free com 5 ou mais ativos, 403 LIMITE_PLANO antes de ler o corpo.
+  .post('/pacientes', ...autenticada, exigeVagaDePaciente, async (c) => {
     const leitura = await lerCorpo(c, esquemaPacienteEntrada);
     if (!leitura.ok) return leitura.resposta;
     const linha = await c.var.trx

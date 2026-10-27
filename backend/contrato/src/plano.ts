@@ -76,6 +76,9 @@ export const PROBLEMA_ASSINATURA_ESTADO = problema(
   409,
   'A assinatura não permite esta operação no estado atual',
 );
+// PLANO-03, D-20: Free com 5 ou mais pacientes ativos ao criar ou reativar paciente; também o
+// 403 do exigePlano('pro') (design: aviso com link para "Meu plano").
+export const PROBLEMA_LIMITE_PLANO = problema('LIMITE_PLANO', 403, 'Limite do plano Free atingido');
 // PLANO-12: Asaas fora ou lento (design: "Cobrança indisponível, tente em instantes").
 export const PROBLEMA_COBRANCA_INDISPONIVEL = problema(
   'cobranca_indisponivel',

@@ -2,6 +2,7 @@ import { PROBLEMA_PACIENTE_NAO_ENCONTRADO } from '@es/contrato/pacientes';
 import { type Context, Hono } from 'hono';
 import { sql } from 'kysely';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
+import { respostaLimitePlano, temVagaDePaciente } from '../middleware/plano.ts';
 import { registrarAuditoria } from '../repositorios/auditoria.ts';
 import { COLUNAS_PACIENTE, idValido, paraPaciente } from '../repositorios/pacientes.ts';
 
@@ -12,7 +13,8 @@ import { COLUNAS_PACIENTE, idValido, paraPaciente } from '../repositorios/pacien
 // paciente.reativado (só o nome do campo), na mesma transação. Pedir o estado atual responde 200
 // com o paciente, sem subir row_version nem auditar. Paciente de outro profissional (RLS),
 // inexistente ou com id malformado: o mesmo 404 (ISO-02).
-// O limite do plano Free ao reativar (PLANO-03) entra na etapa de cobrança.
+// PLANO-03: reativar no Free com 5 ou mais ativos responde 403 LIMITE_PLANO, depois do 404 e do
+// "já está ativo" (PAC-04 responde sucesso sem mudança), para não mudar essas respostas.
 
 const trocarAtivo = (ativo: boolean) =>
   async function (c: Context<AmbienteAutenticado>): Promise<Response> {
@@ -32,6 +34,7 @@ const trocarAtivo = (ativo: boolean) =>
         'Content-Type': 'application/problem+json',
       });
     if (atual.ativo === ativo) return c.json(paraPaciente(atual));
+    if (ativo && !(await temVagaDePaciente(trx, usuarioId))) return respostaLimitePlano(c);
 
     const alterado = await trx
       .updateTable('paciente')

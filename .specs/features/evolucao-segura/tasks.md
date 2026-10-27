@@ -2645,10 +2645,11 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Free com 5 ativos responde 403 `LIMITE_PLANO` ao criar e reativar
-- [ ] Tudo o que existe segue editável
-- [ ] Inativar um libera
-- [ ] Trial, ativa, atrasada e cancelada no período liberam tudo
+- [x] Free com 5 ativos responde 403 `LIMITE_PLANO` ao criar e reativar
+- [x] Tudo o que existe segue editável
+- [x] Inativar um libera
+- [x] Trial, ativa, atrasada e cancelada no período liberam tudo
+- PREMISSA: sem linha de assinatura conta como Free; reativar paciente já ativo ou inexistente segue 200 (PAC-04) ou 404 antes do limite; contagem com advisory lock por profissional (pedidos simultâneos não passam do limite). SPEC_DEVIATION: o exigePlano roda dentro da transação, depois da lista `autenticada`, não entre o CSRF e a transação.
 
 **Tests**: integration
 **Gate**: full
