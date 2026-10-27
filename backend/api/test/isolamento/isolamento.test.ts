@@ -63,6 +63,9 @@ const VALORES_POR_TABELA: Record<string, Record<string, string>> = {
   modelo_texto: { tipo: "'evolucao'" },
   // T107: meio do pagamento só da lista.
   pagamento: { meio: "'pix'" },
+  // T140: endpoint https e único; tipo de notificação só da lista.
+  push_subscription: { endpoint: "'https://push.exemplo.com/' || gen_random_uuid()" },
+  notificacao_enviada: { tipo: "'sessao_proxima'" },
 };
 
 const admin = new pg.Client({
@@ -274,6 +277,12 @@ describe('harness de isolamento', () => {
 
   it('cobre a tabela de limites de uso (T120: limite_uso)', () => {
     expect(tabelas.map((t) => t.tabela)).toContain('limite_uso');
+  });
+
+  it('cobre as tabelas de push (T140: push_subscription e notificacao_enviada)', () => {
+    expect(tabelas.map((t) => t.tabela)).toEqual(
+      expect.arrayContaining(['push_subscription', 'notificacao_enviada']),
+    );
   });
 
   it('toda tabela com usuario_id tem RLS ativa e forçada, fora as exceções declaradas', () => {

@@ -2947,9 +2947,12 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Duplicar o envio viola a restrição
-- [ ] RLS forçada
-- [ ] Entra no teste de isolamento
+- [x] Duplicar o envio viola a restrição
+- [x] RLS forçada
+- [x] Entra no teste de isolamento
+
+- `notificacao_enviada` é única por (usuario_id, tipo, ref): a ref do dia (PUSH-03) é a mesma para todos; a app só grava e lê. `push_subscription` com endpoint único global; a app tem SELECT, INSERT, DELETE (desativar remove; ISO-03 não cobre a assinatura) e UPDATE só nas chaves.
+- `pacientes-ativo.test.ts` ("não toca em nenhum outro dado"): `retratoDoResto` passou a consultar as tabelas em paralelo (`Promise.all`), porque com as duas tabelas novas o teste passava de 5 s; a asserção não mudou. Mudança aprovada pelo usuário em 2026-10-27.
 
 **Tests**: integration
 **Gate**: full

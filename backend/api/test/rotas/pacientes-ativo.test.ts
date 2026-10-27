@@ -34,15 +34,20 @@ async function retratoDoResto(usuarioId: string): Promise<Record<string, string>
        and c.relname not in ('audit_log', 'paciente')
      order by 1`,
   );
-  const retrato: Record<string, string> = {};
-  for (const { tabela } of tabelas) {
-    const [linha] = await comoAdmin<{ md5: string | null }>(
-      `select md5(string_agg(t::text, '|' order by t::text)) as md5
-       from public.${tabela} t where usuario_id = $1`,
-      [usuarioId],
-    );
-    retrato[tabela] = linha!.md5 ?? 'vazia';
-  }
+  // Uma consulta por tabela, em paralelo. Em série o tempo crescia com o número de tabelas e
+  // passou de 5 s na T140 (push_subscription e notificacao_enviada); mudança aprovada pelo usuário
+  // em 2026-10-27, mesma solução do harness de isolamento (T107). O retrato comparado não muda.
+  const linhas = await Promise.all(
+    tabelas.map(async ({ tabela }) => {
+      const [linha] = await comoAdmin<{ md5: string | null }>(
+        `select md5(string_agg(t::text, '|' order by t::text)) as md5
+         from public.${tabela} t where usuario_id = $1`,
+        [usuarioId],
+      );
+      return [tabela, linha!.md5 ?? 'vazia'] as const;
+    }),
+  );
+  const retrato: Record<string, string> = Object.fromEntries(linhas);
   return retrato;
 }
 
