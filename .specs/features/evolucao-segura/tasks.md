@@ -2990,8 +2990,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Assinar o JWT VAPID por conta própria, sem a claim `iat` (o FCM recusa JWT com `iat`, como o da biblioteca 2.0.0); teste que confere as claims (spike push-worker)
-- [ ] JWT assinado com `crypto.subtle`
+- [x] Assinar o JWT VAPID por conta própria, sem a claim `iat` (o FCM recusa JWT com `iat`, como o da biblioteca 2.0.0); teste que confere as claims (spike push-worker)
+- [x] JWT assinado com `crypto.subtle`
+
+- Claims `aud` (origem do endpoint), `exp` (agora + 12 h) e `sub`; chaves no formato do spike (pública P-256 crua e `d` do JWK, base64url); `cabecalhoAutorizacaoVapid` monta `vapid t=<jwt>, k=<chave pública>`.
 
 **Tests**: integration
 **Gate**: full
