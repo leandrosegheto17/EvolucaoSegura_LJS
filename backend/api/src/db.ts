@@ -295,6 +295,15 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Push (migration 0017): a app lê, grava e apaga a assinatura e só atualiza as chaves.
+  push_subscription: {
+    id: Generated<string>;
+    usuario_id: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    criado_em: Generated<Date>;
+  };
 }
 
 export type Trx = Transaction<Banco>;

@@ -3050,9 +3050,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Mesmo endpoint não duplica
-- [ ] Desativar remove
-- [ ] Isolamento coberto
+- [x] Mesmo endpoint não duplica
+- [x] Desativar remove
+- [x] Isolamento coberto
+
+- `POST /api/push/assinatura` (corpo = `PushSubscription.toJSON()`) e `DELETE /api/push/assinatura` (`{endpoint}`), autenticadas, 204 nas duas; contrato em `backend/contrato/src/push.ts`. Mesmo endpoint do profissional só troca as chaves. PREMISSAS: endpoint já ativo para outro profissional responde 409 `endpoint_em_uso` sem tocar na linha dele; desativar sem nada a remover responde 204; sem auditoria (a spec não lista evento de push).
 
 **Tests**: integration
 **Gate**: full

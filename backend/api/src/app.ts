@@ -34,6 +34,7 @@ import { rotasPlano } from './rotas/plano.ts';
 import { rotasPlanoAssinar } from './rotas/plano-assinar.ts';
 import { rotasPlanoCancelar } from './rotas/plano-cancelar.ts';
 import { rotasPrecos } from './rotas/precos.ts';
+import { rotasPush } from './rotas/push.ts';
 import { rotasRascunhos } from './rotas/rascunhos.ts';
 import { health } from './rotas/health.ts';
 import { rotasRecuperar } from './rotas/recuperar.ts';
@@ -146,6 +147,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasPlano({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPlanoAssinar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPlanoCancelar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
+  app.route('/api', rotasPush);
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);
