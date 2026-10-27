@@ -22,6 +22,8 @@ const EXECUTAVEIS_PELA_APP = [
   'tarefas.gravar_webhook_evento(p_event_id text, p_tipo text, p_payload jsonb)',
   // T170 / PLANO-04, PLANO-10, PLANO-11: o cron lista as assinaturas vencidas (migration 0015).
   'tarefas.listar_assinaturas_vencidas(p_agora timestamp with time zone, p_limite integer)',
+  // T145 / PUSH-03: o cron lista quem tem evolução pendente no dia (migration 0019).
+  'tarefas.listar_pendencias_evolucao(p_dia date, p_limite integer)',
   // T144 / PUSH-02: o cron lista as sessões que pedem o aviso "sessão próxima" (migration 0018).
   'tarefas.listar_sessoes_para_aviso(p_de timestamp with time zone, p_ate timestamp with time zone, p_limite integer)',
   // T126 / PLANO-08: o webhook do Asaas e o cron acham e mudam a assinatura (migration 0012).

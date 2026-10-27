@@ -3091,9 +3091,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Sem pendências, nada é enviado
-- [ ] Uma vez por dia
-- [ ] Corpo só com a quantidade
+- [x] Sem pendências, nada é enviado
+- [x] Uma vez por dia
+- [x] Corpo só com a quantidade
+
+- A função `tarefas.listar_pendencias_evolucao(dia, limite)` vai na migration 0019 (`0019_funcoes_push_pendente.ts`), no desenho da 0018 (policy só de SELECT do owner em `evolucao`, ligada por `app.tarefa_push` dentro da função). SPEC_DEVIATION da Retomada (que previa 0020 para T145 e T146, deixando 0019 à T148): `migrar.ts` usa `checkOrder: true`, então uma 0020 aplicada antes de uma 0019 quebraria a migração do banco local; segue o padrão da T144 e a T148 passa a 0020. Passos comuns (gravar a chave antes de enviar, montar os envios, entregar em lotes) em `tarefas/push-avisos.ts`, reaproveitados pela T146 e pela T178. Corpo: "Evoluções pendentes" / "Você tem N sessões de hoje sem evolução." (singular com 1) / `/app` (Início). Sessões do dia = `realizada` com início no dia de Brasília, sem evolução ligada. PREMISSAS: TTL de 3 h (vale até o fim do dia); até 10 profissionais por execução, o resto nas execuções seguintes da janela das 20:00 às 21:00.
 
 **Tests**: integration
 **Gate**: full
@@ -3300,11 +3302,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
-### T148: Migration 0019: exclusão de conta
+### T148: Migration 0020: exclusão de conta
 
 **What**: Criar `conta_excluida` e as colunas de bloqueio, e aceitar os tipos `exclusao` e `desistencia` em `token_email`.
 **Estimativa**: 2h
-**Where**: `backend/scripts/migrations/0019_exclusao.ts` (era 0018; a T144 criou a 0018)
+**Where**: `backend/scripts/migrations/0020_exclusao.ts` (era 0018; a T144 criou a 0018 e a T145 a 0019)
 **Depends on**: T175
 **Requirement**: CONTA-03, CONTA-05
 
