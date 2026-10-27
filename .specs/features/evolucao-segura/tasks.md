@@ -2721,10 +2721,12 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Lista só os casos vencidos pelas regras da T125, com o tempo por parâmetro
-- [ ] Não devolve dado clínico nem de outro tipo além dos três campos
-- [ ] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
-- [ ] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
+- [x] Lista só os casos vencidos pelas regras da T125, com o tempo por parâmetro
+- [x] Não devolve dado clínico nem de outro tipo além dos três campos
+- [x] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
+- [x] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
+
+- Decisão do usuário (2026-10-27): a mesma migration cria `tarefas.desvincular_assinatura_asaas(usuario)`, que limpa o `asaas_subscription_id` da assinatura já em `free` (a T137 a chama depois de cancelar no Asaas por atraso, para o `GET /api/plano` deixar de consultar o Asaas); mantém o `asaas_customer_id`. A listagem recebe também `p_limite` (lote do cron, ADR-010).
 
 **Tests**: integration
 **Gate**: full

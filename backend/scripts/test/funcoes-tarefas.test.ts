@@ -16,8 +16,12 @@ const EXECUTAVEIS_PELA_APP = [
   'public.definir_senha(p_usuario_id uuid, p_senha text)',
   // T128 / PLANO-05: a rota de assinar grava os ids do Asaas na própria assinatura (migration 0013).
   'public.gravar_ids_asaas(p_asaas_customer_id text, p_asaas_subscription_id text)',
+  // T170 / PLANO-10: o cron limpa o id da assinatura do Asaas já em free (migration 0015).
+  'tarefas.desvincular_assinatura_asaas(p_usuario_id uuid)',
   // T169 / PLANO-07: o webhook grava o evento e o marca como processado (migration 0014).
   'tarefas.gravar_webhook_evento(p_event_id text, p_tipo text, p_payload jsonb)',
+  // T170 / PLANO-04, PLANO-10, PLANO-11: o cron lista as assinaturas vencidas (migration 0015).
+  'tarefas.listar_assinaturas_vencidas(p_agora timestamp with time zone, p_limite integer)',
   // T126 / PLANO-08: o webhook do Asaas e o cron acham e mudam a assinatura (migration 0012).
   'tarefas.localizar_assinatura_asaas(p_asaas_subscription_id text, p_asaas_customer_id text)',
   'tarefas.marcar_webhook_processado(p_event_id text, p_usuario_id uuid)',
