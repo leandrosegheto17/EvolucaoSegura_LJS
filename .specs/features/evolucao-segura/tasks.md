@@ -2551,10 +2551,10 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Gravar evento novo devolve "novo"; `event_id` repetido devolve "repetido" sem alterar o registro
-- [ ] Marcar `processado_em` só em evento existente e só uma vez
-- [ ] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
-- [ ] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
+- [x] Gravar evento novo devolve "novo"; `event_id` repetido devolve "repetido" sem alterar o registro
+- [x] Marcar `processado_em` só em evento existente e só uma vez
+- [x] `search_path` fixo, parâmetros tipados, `app` executa só as funções listadas e `backup_ro` nenhuma
+- [x] Lista explícita de `funcoes-tarefas.test.ts` atualizada; teste de isolamento segue verde
 
 **Tests**: integration
 **Gate**: full

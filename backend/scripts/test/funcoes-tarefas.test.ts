@@ -16,8 +16,11 @@ const EXECUTAVEIS_PELA_APP = [
   'public.definir_senha(p_usuario_id uuid, p_senha text)',
   // T128 / PLANO-05: a rota de assinar grava os ids do Asaas na própria assinatura (migration 0013).
   'public.gravar_ids_asaas(p_asaas_customer_id text, p_asaas_subscription_id text)',
+  // T169 / PLANO-07: o webhook grava o evento e o marca como processado (migration 0014).
+  'tarefas.gravar_webhook_evento(p_event_id text, p_tipo text, p_payload jsonb)',
   // T126 / PLANO-08: o webhook do Asaas e o cron acham e mudam a assinatura (migration 0012).
   'tarefas.localizar_assinatura_asaas(p_asaas_subscription_id text, p_asaas_customer_id text)',
+  'tarefas.marcar_webhook_processado(p_event_id text, p_usuario_id uuid)',
   'tarefas.mudar_estado_assinatura(p_usuario_id uuid, p_status text, p_periodo_fim timestamp with time zone, p_vencimento_atraso timestamp with time zone)',
 ];
 
