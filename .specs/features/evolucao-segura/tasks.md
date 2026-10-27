@@ -2684,9 +2684,9 @@ T158 -> T159 -> T160 -> T161 -> T162 -> T163 -> T164 -> T165
 
 **Done when**:
 
-- [ ] Formulário valida CPF/CNPJ
-- [ ] "Cobrança indisponível" em 503
-- [ ] Cancelar pede confirmação
+- [x] Formulário valida CPF/CNPJ
+- [x] "Cobrança indisponível" em 503
+- [x] Cancelar pede confirmação
 
 **Tests**: unit
 **Gate**: quick

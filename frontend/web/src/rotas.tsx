@@ -9,6 +9,7 @@ import { FinanceiroPage } from './app/financeiro/financeiro.tsx';
 import { PagamentoPage } from './app/financeiro/pagamento.tsx';
 import { PrecoPacientePage, PrecoSessaoPage } from './app/financeiro/preco.tsx';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
+import { MeuPlanoPage } from './app/plano/meu-plano.tsx';
 import { Inicio } from './app/inicio/inicio.tsx';
 import { PatientFichaPage } from './app/pacientes/ficha.tsx';
 import { PatientFormPage } from './app/pacientes/novo.tsx';
@@ -78,6 +79,7 @@ export const rotas: RouteObject[] = [
                   { path: 'financeiro/preco/sessao/:id', element: <PrecoSessaoPage /> },
                   { path: 'financeiro/pagamento/:sessaoId', element: <PagamentoPage /> },
                   { path: 'auditoria', element: <AuditoriaPage /> },
+                  { path: 'plano', element: <MeuPlanoPage /> },
                   { path: 'modelo-anamnese', element: <ModeloAnamnesePage /> },
                   { path: 'modelos-texto', element: <ModelosTextoPage /> },
                   { path: '*', element: <Navigate to="/app" replace /> },
