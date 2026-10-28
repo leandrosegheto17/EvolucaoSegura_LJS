@@ -20,6 +20,7 @@ import { ExportarPage } from './app/exportar/exportar.tsx';
 import { SettingsPage } from './app/perfil/configuracoes.tsx';
 import { ProfilePage } from './app/perfil/perfil.tsx';
 import { GuardaPerfil, Shell } from './app/shell.tsx';
+import { InstrucaoIos } from './pwa/instrucao-ios.tsx';
 import { criarQueryClient } from './lib/api.ts';
 import { Cadastro, Confirmar } from './publico/cadastro.tsx';
 import { Entrar } from './publico/entrar.tsx';
@@ -48,6 +49,7 @@ function AreaDoApp() {
   return (
     <>
       <GuardaInatividade />
+      <InstrucaoIos />
       <Outlet />
     </>
   );

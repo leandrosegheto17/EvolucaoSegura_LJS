@@ -3615,8 +3615,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Aparece só no Safari do iOS fora do modo instalado
-- [ ] Dispensar lembra a escolha
+- [x] Aparece só no Safari do iOS fora do modo instalado
+- [x] Dispensar lembra a escolha
+
+- 2026-10-28, feito: `src/pwa/instrucao-ios.tsx`, montada na área `/app` (`rotas.tsx`). PREMISSAS: Chrome e Firefox do iOS ficam de fora; iPad em modo desktop conta como iOS; escolha de dispensar em localStorage (`es:instrucao-ios-dispensada`); texto do aviso escrito pelo implementador. Não testado em aparelho real.
 
 **Tests**: unit
 **Gate**: quick
