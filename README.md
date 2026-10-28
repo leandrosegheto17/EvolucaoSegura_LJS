@@ -124,6 +124,13 @@ pnpm e2e             # Playwright: sobe coletor de e-mail e Worker local, banco 
 
 O gate do projeto (`.specs/projeto/testes.json`) é `pnpm lint && pnpm typecheck && pnpm test`.
 
+Os testes não escrevem no banco de `DATABASE_URL`: ela só indica o servidor (sempre local: o
+globalSetup da API e o `migrar()` recusam host remoto). Os testes da API criam um banco temporário por execução
+(`es_api_<instante>_<aleatório>`, em `backend/api/test/preparar-banco.ts`) e o apagam no fim; os
+testes do banco em `backend/scripts/test` criam e apagam um banco por arquivo de teste. O projeto
+não usa `DATABASE_URL_TESTE`. Se uma execução for interrompida no meio, sobra um banco `es_api_*`;
+apague-o com `drop database <nome> with (force)`.
+
 Observações da execução na máquina de desenvolvimento (Windows):
 
 - Numa cópia limpa do repositório (validada seguindo só este README), `pnpm test` e
