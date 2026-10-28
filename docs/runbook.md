@@ -578,7 +578,7 @@ da migration 0001. Por isso o login das roles fica **entre a migração e o depl
    ```
 
    O `pnpm migrar` só vai a um banco remoto com `--alvo producao` (lê `NEON_URL_MIGRACAO`, branch
-   `main`) ou `--alvo dev` (lê `NEON_URL_MIGRACAO_DEV`, branch `dev`). Antes de conectar ele
+   `main`) ou `--alvo dev` (lê `NEON_URL_DEV`, branch `dev`). Antes de conectar ele
    valida a URL (`validarUrlNeon`: host `*.neon.tech`, sem `-pooler`, `sslmode=require` ou mais
    forte) e pede o host exato digitado; no GitHub Actions, `CI=true` dispensa a digitação. Sem
    `--alvo`, ele usa `DATABASE_URL` e recusa qualquer host que não seja local.

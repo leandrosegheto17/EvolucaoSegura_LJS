@@ -54,7 +54,7 @@ export const URL_LOCAL_PADRAO = 'postgres://postgres:postgres@localhost:5433/evo
 // Variável da URL da role de migração em cada branch do Neon.
 export const VARIAVEL_DO_ALVO: Record<Alvo, string> = {
   producao: 'NEON_URL_MIGRACAO',
-  dev: 'NEON_URL_MIGRACAO_DEV',
+  dev: 'NEON_URL_DEV',
 };
 
 export interface Conexao {
@@ -72,8 +72,9 @@ function lerAlvo(argv: readonly string[]): string | undefined {
 }
 
 // Decide a URL do `pnpm migrar`. Sem --alvo: DATABASE_URL (ou o Postgres local); a trava do
-// migrar() recusa host remoto. Com --alvo producao|dev: a NEON_URL_MIGRACAO(_DEV), validada como
-// URL do Neon; a trava ainda exige CI=true ou o host digitado na confirmação.
+// migrar() recusa host remoto. Com --alvo producao: NEON_URL_MIGRACAO; com --alvo dev:
+// NEON_URL_DEV. A URL é validada como do Neon, e a trava ainda exige CI=true ou o host digitado
+// na confirmação.
 export function resolverConexao(argv: readonly string[], ambiente: NodeJS.ProcessEnv): Conexao {
   const alvo = lerAlvo(argv);
   if (alvo === undefined) return { urlBanco: ambiente['DATABASE_URL'] ?? URL_LOCAL_PADRAO };

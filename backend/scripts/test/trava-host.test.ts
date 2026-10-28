@@ -110,11 +110,11 @@ describe('pnpm migrar: escolha da conexão', () => {
     expect(resolverConexao(['--alvo=producao'], ambiente).alvo).toBe('producao');
   });
 
-  it('--alvo dev lê NEON_URL_MIGRACAO_DEV', () => {
-    const ambiente = { NEON_URL_MIGRACAO: remota, NEON_URL_MIGRACAO_DEV: remota };
+  it('--alvo dev lê NEON_URL_DEV', () => {
+    const ambiente = { NEON_URL_MIGRACAO: remota, NEON_URL_DEV: remota };
     expect(resolverConexao(['--alvo', 'dev'], ambiente)).toEqual({ urlBanco: remota, alvo: 'dev' });
     expect(() => resolverConexao(['--alvo', 'dev'], { NEON_URL_MIGRACAO: remota })).toThrow(
-      /NEON_URL_MIGRACAO_DEV/,
+      /NEON_URL_DEV/,
     );
   });
 
