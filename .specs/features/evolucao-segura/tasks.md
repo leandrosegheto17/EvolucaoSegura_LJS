@@ -3375,8 +3375,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Token de 256 bits, SHA-256, 30 min, uso único
-- [ ] Auditoria `conta.exclusao_pedida`
+- [x] Token de 256 bits, SHA-256, 30 min, uso único
+- [x] Auditoria `conta.exclusao_pedida`
+
+- 2026-10-28, feito: com todos os requisitos, o pedido invalida os links de exclusão abertos, grava o token novo (`gerarToken`, 30 min pelo relógio do banco; o consumo é da T150) e audita `conta.exclusao_pedida` (alvo `conta`, sem e-mail, nome ou senha; IP truncado e UA resumido como em todo evento). O e-mail com `/confirmar-exclusao?token=` sai depois do COMMIT, em segundo plano; falha vai ao Sentry e a resposta segue 202; sem `RESEND_API_KEY`/`MAIL_FROM` fica desligado (reusa `emailCobrancaPadrao`). PREMISSAS: caminho `/confirmar-exclusao` da tela pública (T153); textos do e-mail escritos pelo implementador.
 
 **Tests**: integration
 **Gate**: full

@@ -151,7 +151,15 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
   app.route('/api', rotasPlanoAssinar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPlanoCancelar({ asaas: opcoes.asaas ?? asaasPadrao, capturarErro }));
   app.route('/api', rotasPush);
-  app.route('/api', rotasContaExcluir());
+  app.route(
+    '/api',
+    rotasContaExcluir({
+      // Mesmo padrão dos e-mails de cobrança: sem Resend configurado, desligado (null).
+      email: opcoes.email ?? emailCobrancaPadrao,
+      capturarErro,
+      emSegundoPlano: opcoes.emSegundoPlano ?? waitUntil,
+    }),
+  );
   // Erro não tratado: vai ao Sentry e o usuário recebe um 500 genérico, sem detalhe do erro.
   app.onError((erro, c) => {
     capturarErro(erro);
