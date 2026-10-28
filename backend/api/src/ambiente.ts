@@ -24,6 +24,18 @@ export const esquemaAmbiente = z.object({
     .optional(),
   // AUTH-03: obrigatória desde a T46 (chave do HMAC do código 2FA).
   HMAC_2FA_SEGREDO: z.string().min(32),
+  // OPS-05: só no e2e local; o schema recusa qualquer endereço fora de localhost.
+  E2E_EMAIL_CAPTURA_URL: z
+    .string()
+    .refine((valor) => {
+      const url = URL.parse(valor);
+      return (
+        url !== null &&
+        url.protocol === 'http:' &&
+        (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+      );
+    }, 'URL http em localhost')
+    .optional(),
   ASAAS_API_KEY: z.string().min(1).optional(),
   ASAAS_WEBHOOK_TOKEN: z.string().min(32).optional(),
   ASAAS_BASE_URL: z

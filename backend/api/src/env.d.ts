@@ -17,6 +17,8 @@ declare namespace Cloudflare {
     RESEND_API_KEY?: string;
     // AUTH-03: chave do HMAC-SHA256 do código 2FA, obrigatória (src/ambiente.ts).
     HMAC_2FA_SEGREDO: string;
+    // OPS-05: coletor de e-mail do e2e (só localhost; src/ambiente.ts).
+    E2E_EMAIL_CAPTURA_URL?: string;
     // PLANO-05, PLANO-06: cobrança pelo Asaas (src/ambiente.ts).
     ASAAS_API_KEY?: string;
     ASAAS_WEBHOOK_TOKEN?: string;

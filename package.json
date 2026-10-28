@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "build:web": "pnpm --filter @es/web build",
     "migrar": "pnpm --filter @es/scripts migrar",
-    "test:isolamento": "pnpm --filter @es/api test:isolamento"
+    "test:isolamento": "pnpm --filter @es/api test:isolamento",
+    "e2e": "pnpm --filter @es/e2e e2e"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

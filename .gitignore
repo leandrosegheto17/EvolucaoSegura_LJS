@@ -17,3 +17,7 @@ coverage/
 # Código descartável de spikes e evidências brutas
 .specs/spikes/*/codigo/
 evidencias/
+
+# Saídas do Playwright (e2e)
+test-results/
+playwright-report/

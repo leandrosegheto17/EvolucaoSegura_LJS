@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { cabecalhos } from './middleware/cabecalhos.ts';
 import { limitePorIp } from './middleware/limite.ts';
 import { type ClienteAsaas, criarClienteAsaas } from './integracoes/asaas.ts';
+import { criarClienteCaptura } from './integracoes/email-captura.ts';
 import { emailCobrancaPadrao } from './integracoes/emails-cobranca.ts';
 import { type ClienteEmail, criarClienteResend } from './integracoes/resend.ts';
 import { rotasReenviar2fa } from './rotas/auth-2fa-reenviar.ts';
@@ -80,7 +81,9 @@ const PROCESSADORES_WEBHOOK: Readonly<Record<string, ProcessadorWebhook>> = {
 
 // Chave ou remetente ausente faz a criação lançar: quem envia trata como falha de envio.
 const emailPadrao = (env: Cloudflare.Env): ClienteEmail =>
-  criarClienteResend({ apiKey: env.RESEND_API_KEY ?? '', remetente: env.MAIL_FROM ?? '' });
+  env.E2E_EMAIL_CAPTURA_URL
+    ? criarClienteCaptura(env.E2E_EMAIL_CAPTURA_URL)
+    : criarClienteResend({ apiKey: env.RESEND_API_KEY ?? '', remetente: env.MAIL_FROM ?? '' });
 
 // Chave ou endpoint ausente faz a criação lançar: a rota trata como Asaas indisponível (503).
 const asaasPadrao = (env: Cloudflare.Env): ClienteAsaas =>

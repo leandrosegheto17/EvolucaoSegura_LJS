@@ -1,4 +1,5 @@
 import type { ClienteEmail, MensagemEmail } from './resend.ts';
+import { criarClienteCaptura } from './email-captura.ts';
 import { criarClienteResend } from './resend.ts';
 
 // PLANO-13 (T138): e-mails transacionais de cobrança, um por evento do webhook do Asaas: cobrança
@@ -91,6 +92,8 @@ export function mensagemDeCobranca(
 // ficam desligados (null) em vez de virar erro no Sentry a cada webhook. Em produção as duas são
 // obrigatórias para o 2FA (sem elas o login já responde 503 e alerta).
 export const emailCobrancaPadrao = (env: Cloudflare.Env): ClienteEmail | null =>
-  env.RESEND_API_KEY && env.MAIL_FROM
-    ? criarClienteResend({ apiKey: env.RESEND_API_KEY, remetente: env.MAIL_FROM })
-    : null;
+  env.E2E_EMAIL_CAPTURA_URL
+    ? criarClienteCaptura(env.E2E_EMAIL_CAPTURA_URL)
+    : env.RESEND_API_KEY && env.MAIL_FROM
+      ? criarClienteResend({ apiKey: env.RESEND_API_KEY, remetente: env.MAIL_FROM })
+      : null;

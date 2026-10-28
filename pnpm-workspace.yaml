@@ -4,6 +4,7 @@ packages:
   - backend/api
   - backend/scripts
   - frontend/web
+  - e2e
 allowBuilds:
   esbuild: true
   workerd: true

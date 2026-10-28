@@ -3635,8 +3635,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] `pnpm e2e` sobe o Worker local e o Postgres
-- [ ] E-mail capturado em teste
+- [x] `pnpm e2e` sobe o Worker local e o Postgres
+- [x] E-mail capturado em teste
 
 **Tests**: e2e
 **Gate**: full
