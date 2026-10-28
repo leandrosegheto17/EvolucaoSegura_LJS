@@ -3336,8 +3336,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] `conta_excluida` sem dado pessoal
-- [ ] Bloqueio por `bloqueado_exclusao_em`
+- [x] `conta_excluida` sem dado pessoal
+- [x] Bloqueio por `bloqueado_exclusao_em`
+
+- 2026-10-28, feito: `conta_excluida` (id, `pedido_em`, `purgado_em`, sem FK, sem `usuario_id`), do `owner`, sem privilégio para a app, `backup_ro` só lê; índice parcial `usuario_bloqueado_exclusao_idx` para a purga. A coluna `bloqueado_exclusao_em` e os tipos `exclusao` e `desistencia` de `token_email` já existiam desde a 0003 (só testados de novo aqui). Sem função e sem `SET app.*` na migration (roda no Neon).
 
 **Tests**: integration
 **Gate**: full
