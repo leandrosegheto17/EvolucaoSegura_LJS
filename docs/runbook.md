@@ -148,13 +148,14 @@ parâmetro. Nenhuma linha: a assinatura não tem esses ids; não siga, investigu
 O script usa a mesma função do webhook (`tarefas.mudar_estado_assinatura`, migration 0012), com a
 máquina de estados do PLANO-01, e o mesmo cálculo do fim do período (dia seguinte ao vencimento,
 meia-noite em America/Sao_Paulo). Só grava, e só audita como `admin-cli`, se a função responder
-`permitida`; qualquer outro resultado desfaz a transação. Salve como `reprocessar.sql`:
+`permitida` e a assinatura não estava em `free`; qualquer outro caso desfaz a transação. Salve
+como `reprocessar.sql`:
 
 ```sql
 \set ON_ERROR_STOP on
 begin;
 select r.resultado, r.status_anterior,
-       r.resultado = 'permitida' as mudou
+       r.resultado = 'permitida' and r.status_anterior <> 'free' as mudou
 from tarefas.mudar_estado_assinatura(:'usuario'::uuid, 'ativa',
        (:'vencimento'::date + 1)::timestamp at time zone 'America/Sao_Paulo', null) r
 \gset
@@ -164,7 +165,6 @@ from tarefas.mudar_estado_assinatura(:'usuario'::uuid, 'ativa',
   insert into public.audit_log (usuario_id, ator, acao, alvo_tipo, alvo_id, campos_alterados)
   values (:'usuario'::uuid, 'admin-cli', 'assinatura.ativa', 'conta', :'usuario'::uuid,
           case :'status_anterior'
-            when 'free' then '{status,periodo_fim,plano}'
             when 'atrasada' then '{status,periodo_fim,vencimento_atraso}'
             else '{status,periodo_fim}' end::text[]);
   commit;
@@ -181,9 +181,14 @@ psql -X -q -v usuario=<usuario_id da 2.1> -v vencimento=<nextDueDate AAAA-MM-DD>
 
 Resultados possíveis:
 
-- `permitida`: mudou (trial, atrasada ou free passam a ativa) e o evento `assinatura.ativa` foi
+- `permitida`: mudou (trial ou atrasada passam a ativa) e o evento `assinatura.ativa` foi
   auditado. Observado: assinatura em `atrasada` foi a `ativa`, `vencimento_atraso` limpo,
   auditoria `{status,periodo_fim,vencimento_atraso}`.
+- `permitida (antes: free)`: desfeito de propósito. Ao ir para free, o cron cancela a assinatura
+  no Asaas e limpa o id dela (migration 0015, `tarefas/assinaturas.ts`); uma `ativa` feita à mão
+  ficaria sem cobrança seguinte e, como o cron nunca vence `ativa`, Pro para sempre. Em free, o
+  profissional assina de novo pelo "Meu plano"; se o pagamento dessa assinatura nova não chegou,
+  reenvie o evento (seção 1).
 - `mesmo_estado`: já estava ativa; nada é gravado (observado ao rodar de novo).
 - `transicao_invalida`: por exemplo, `cancelada` não volta a `ativa` (PLANO-01). Nada é gravado.
   Não force: o profissional assina de novo pelo "Meu plano" quando a assinatura estiver em free.
@@ -196,11 +201,13 @@ profissional, se for o caso. Contra o Neon: **não executado** (exige acesso ao 
 
 "Reativar" cobre três situações diferentes. Identifique qual antes de agir.
 
-### 3.1 Plano Pro em atraso ou em free, com pagamento feito
+### 3.1 Plano Pro em atraso ou em free
 
-É o reprocessamento da seção 2: `atrasada` e `free` passam a `ativa` pela mesma função. Se não
-há pagamento, o caminho é o profissional assinar ou pagar o Pix pendente em "Meu plano"; o
-webhook faz o resto.
+- Em `atrasada`, com o pagamento feito: é o reprocessamento da seção 2.
+- Em `atrasada`, sem pagamento: o profissional paga o Pix pendente em "Meu plano" (vale também
+  dentro dos 7 dias de tolerância); o webhook faz o resto.
+- Em `free`: o profissional assina de novo em "Meu plano". Não há reativação manual (seção 2,
+  caso `antes: free`).
 
 ### 3.2 Login bloqueado por tentativas
 
@@ -241,3 +248,157 @@ curl -s -w ' HTTP %{http_code}\n' -X POST http://localhost:8787/api/conta/desist
 Não há procedimento manual de operador para desbloquear: a regra de volta ao plano da rota não
 deve ser repetida à mão. Depois da purga não há o que reativar (os dados não existem mais).
 `[A ESCLARECER: reenvio do link de desistência quando o profissional o perdeu]`
+
+## 4. Rotacionar segredos
+
+Quando: suspeita de vazamento, saída de alguém com acesso, ou periodicamente. Regra geral: gere
+o valor novo, grave no destino, confira que o app funciona e **só então** revogue o antigo no
+serviço de origem. Nunca cole o valor em chamado, commit ou log; prefira que o comando leia da
+entrada padrão (sem `--body`), para o valor não ficar no histórico do shell.
+
+Comandos comuns (a partir da raiz do repositório):
+
+```bash
+# Valor aleatório para HMAC_2FA_SEGREDO e ASAAS_WEBHOOK_TOKEN (64 caracteres)
+openssl rand -base64 48
+
+# Segredo do Worker de produção (pede o valor; precisa de login na Cloudflare)
+pnpm --filter @es/api exec wrangler secret put <NOME> --config ../../wrangler.jsonc
+
+# Secret do GitHub no environment producao (lê o valor da entrada padrão)
+gh secret set <NOME> --env producao
+```
+
+O `openssl rand` foi executado (64 caracteres, acima do mínimo de 32 do `ambiente.ts`). A sintaxe
+do `wrangler secret put` e do `gh secret set --env` foi conferida com `--help`; a gravação em si
+**não foi executada** (exige as contas de produção e mudaria segredos reais).
+
+| Segredo                                        | Onde fica                                           | Como trocar                                                                                                     | Efeito da troca                                                                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HMAC_2FA_SEGREDO`                             | Worker                                              | `openssl rand`, `wrangler secret put`                                                                           | Códigos de 2FA já enviados deixam de valer; quem estava no meio do login pede outro código.                                                                 |
+| `ASAAS_WEBHOOK_TOKEN`                          | Worker e Asaas                                      | `wrangler secret put` e, logo em seguida, o mesmo valor no painel do Asaas (Integrações > Webhooks)             | Entre os dois passos o webhook responde `401` e o Asaas reenvia; se a fila pausar, reative-a (seção 1).                                                     |
+| `ASAAS_API_KEY`                                | Worker                                              | Chave nova no painel do Asaas, `wrangler secret put`, depois revogar a antiga                                   | Nenhum, nessa ordem.                                                                                                                                        |
+| `RESEND_API_KEY`                               | Worker                                              | Chave nova no painel do Resend, `wrangler secret put`, depois revogar a antiga                                  | Nenhum, nessa ordem. Sem chave válida os e-mails param, inclusive o de 2FA.                                                                                 |
+| `VAPID_PRIVATE_KEY` e `VAPID_PUBLIC_KEY`       | Worker                                              | Gerar o par (abaixo), `wrangler secret put VAPID_PRIVATE_KEY` e a pública como var do Worker                    | PREMISSA: as inscrições de push existentes usam a chave pública antiga e deixam de receber; cada profissional ativa o push de novo. Troque só em vazamento. |
+| `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`         | GitHub (`producao`)                                 | Senha nova da role no console do Neon (Roles > Reset password), `gh secret set`                                 | Deploy e backup usam a URL nova na próxima execução.                                                                                                        |
+| `NEON_URL_APP`                                 | GitHub e Hyperdrive                                 | Senha nova da role `app` no Neon, `gh secret set NEON_URL_APP --env producao` e atualizar o Hyperdrive (abaixo) | O Worker perde o banco entre a troca da senha e a atualização do Hyperdrive: faça as duas em seguida, fora do horário de uso.                               |
+| `NEON_API_KEY`, `CLOUDFLARE_API_TOKEN`         | GitHub (`producao`)                                 | Token novo no console (Neon ou Cloudflare), `gh secret set`, depois revogar o antigo                            | Nenhum, nessa ordem.                                                                                                                                        |
+| Par `age` (`AGE_PUBLIC_KEY` e a chave privada) | Pública no GitHub; privada fora de qualquer serviço | `age-keygen`, `gh secret set AGE_PUBLIC_KEY --env producao`                                                     | Backups novos só abrem com a privada nova. **Guarde a antiga por 30 dias** (retenção dos artefatos), senão os backups anteriores ficam ilegíveis.           |
+
+Par VAPID no formato do produto (pública P-256 crua de 65 bytes e privada como o `d` do JWK, em
+base64url; `backend/api/src/integracoes/push-vapid.ts`). Executado: gerou chaves de 65 e 32
+bytes.
+
+```bash
+node --input-type=module -e "const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']); const pub = Buffer.from(await crypto.subtle.exportKey('raw', k.publicKey)).toString('base64url'); const { d } = await crypto.subtle.exportKey('jwk', k.privateKey); console.log('VAPID_PUBLIC_KEY=' + pub); console.log('VAPID_PRIVATE_KEY=' + d);"
+```
+
+Par `age` (executado; a chave privada fica num arquivo que nunca vai para o repositório nem para
+o GitHub):
+
+```bash
+age-keygen -o chave-backup-<AAAA-MM>.txt   # imprime a chave pública (age1...)
+age-keygen -y chave-backup-<AAAA-MM>.txt   # mostra a pública de novo, se precisar
+```
+
+Hyperdrive depois de trocar a senha da role `app` (sintaxe conferida com `--help`; **não
+executado**, exige a conta Cloudflare; o id fica em `wrangler.jsonc`, `hyperdrive[0].id`):
+
+```bash
+pnpm --filter @es/api exec wrangler hyperdrive update <id do Hyperdrive> --connection-string="$NEON_URL_APP"
+```
+
+Depois de qualquer troca no Worker, confira `https://<domínio>/api/health` e um login completo.
+**Não executado** em produção.
+
+## 5. Restaurar o backup
+
+### Onde estão as cópias
+
+| Cópia                                 | Origem                                                                                                     | Retenção           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------ |
+| Artefato `backup-<run_id>`            | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias            |
+| Artefato `dump-pre-deploy-<run_id>`   | `deploy.yml`, antes de cada migração                                                                       | 30 dias            |
+| Branch `restauracao-<run_id>` no Neon | `deploy.yml`, antes de cada deploy                                                                         | as 2 mais recentes |
+
+Situação observada em 2026-10-28 (`gh run list --workflow backup.yml`): as execuções agendadas do
+`backup.yml` **falham** porque os secrets do environment `producao` ainda não existem (o `age`
+recebe a chave pública vazia e o `pg_dump` fica sem URL). Não há backup de produção até eles
+serem configurados.
+
+### 5.1 Baixar um backup
+
+```bash
+gh run list --workflow backup.yml --status success --limit 5
+gh run download <run_id> -n backup-<run_id>      # grava backup.dump.age na pasta atual
+```
+
+`gh run list` executado (só leitura). `gh run download` **não executado**: ainda não há execução
+com sucesso.
+
+### 5.2 Testar o backup antes de usar
+
+Sempre teste o arquivo baixado num Postgres descartável. O `infra/restore-test.sh` restaura,
+conta as linhas por tabela, compara com a origem (se informada) e apaga o banco. Executado com um
+backup cifrado do banco descartável `rb_demo` (todas as tabelas `OK`, `resultado=ok`):
+
+```bash
+U=postgresql://postgres:postgres@localhost:5433
+RESTORE_AGE_IDENTITY=chave-backup-<AAAA-MM>.txt RESTORE_SOURCE_URL=<url da origem> \
+  RESTORE_ADMIN_URL=$U/postgres infra/restore-test.sh backup.dump.age
+```
+
+Sem `RESTORE_SOURCE_URL` ele só conta. Só aceita `localhost` e `127.0.0.1`: nunca aponte
+`RESTORE_ADMIN_URL` para produção.
+
+### 5.3 Restaurar produção
+
+Antes: pare o que escreve no banco (o que vier depois do backup será perdido) e anote o horário
+do backup escolhido.
+
+**Opção A (preferida): pelo Neon.** No console do Neon, restaure a branch principal para um
+instante anterior ao problema, ou a partir de uma branch `restauracao-<run_id>` criada antes do
+deploy que causou o problema. **Não executado** (exige a conta do Neon). PREMISSA: a janela de
+restauração por instante depende do plano contratado no Neon.
+
+**Opção B: a partir do dump cifrado**, num banco novo e vazio, com a role de migração. Executado
+localmente no Postgres do docker-compose (banco `rb_restaurado`, a partir do backup do
+`rb_demo`):
+
+```bash
+DESTINO='<url do banco novo e vazio, role de migração>'
+ORIGEM_URL='<url do banco de onde veio o backup, se ainda existir>'
+
+# 1. Restaurar mantendo os donos (owner) e as permissões das tabelas
+age -d -i chave-backup-<AAAA-MM>.txt backup.dump.age | pg_restore --exit-on-error -d "$DESTINO"
+
+# 2. Permissões do próprio banco (o dump de um banco não as leva)
+psql -X -v ON_ERROR_STOP=1 "$DESTINO" <<'SQL'
+do $$
+begin
+  execute format('revoke all on database %I from public', current_database());
+  execute format('grant connect on database %I to "owner", app, backup_ro', current_database());
+end $$;
+SQL
+
+# 3. Conferir as contagens contra a origem (sai com 1 se divergir)
+infra/comparar-contagens.sh "$ORIGEM_URL" "$DESTINO"
+```
+
+Observado localmente: as 34 tabelas do app ficaram com dono `owner`, a RLS forçada se manteve, a
+role `app` conectou e leu a assinatura do usuário definido em `app.usuario_id`, e o
+`comparar-contagens.sh` deu `resultado=ok`.
+
+Depois, aponte o Worker para o banco restaurado atualizando o Hyperdrive com a URL da role `app`
+desse banco (comando da seção 4) e confira `/api/health` e um login. **Não executado** em
+produção. No Neon a restauração roda com `neondb_owner`, que não é superusuário: as funções do
+dump não podem ter `SET app.*` na definição (correção das migrations nas T197 e T198), senão o
+passo 1 falha com `permission denied to set parameter`.
+
+### 5.4 Depois de restaurar
+
+- Eventos do Asaas recebidos depois do horário do backup se perderam. No painel do Asaas, liste
+  os pagamentos confirmados desde então e reprocesse cada assinatura afetada (seção 2).
+- Contas, pacientes e registros criados depois do backup não existem mais: comunique os
+  profissionais afetados.
+- Registre a restauração (data, backup usado, contagens) no histórico do incidente.

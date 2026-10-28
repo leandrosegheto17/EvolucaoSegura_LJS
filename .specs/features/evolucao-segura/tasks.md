@@ -3897,7 +3897,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Cada procedimento tem comandos verificados
+- [x] Cada procedimento tem comandos verificados
 
 **Tests**: none
 **Gate**: build
