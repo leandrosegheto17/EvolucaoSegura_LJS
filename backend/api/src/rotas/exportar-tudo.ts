@@ -11,6 +11,7 @@ import { z } from 'zod';
 import type { Trx } from '../db.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
 import { limiteExportacao } from '../middleware/limite-exportacao.ts';
+import { registrarAuditoria } from '../repositorios/auditoria.ts';
 import { idValido } from '../repositorios/pacientes.ts';
 import { responderProblemaAgenda as responderProblema } from '../repositorios/sessoes.ts';
 
@@ -29,6 +30,10 @@ import { responderProblemaAgenda as responderProblema } from '../repositorios/se
 //   cursor que não decodifica, com tabela fora da lista ou chave fora do tipo da tabela: 400
 //   cursor_invalido. Nenhum dos dois audita.
 // - Início da exportação (sem cursor) conta no limite de 5 em 60 s (EXP-05, limite-exportacao.ts).
+// - Sem credenciais nem sessões (EXP-03): só as tabelas de TABELAS_EXPORTACAO, nenhuma delas de
+//   identidade (usuario, credencial_senha, sessao, desafio_2fa, token_email).
+// - Servida a última página (proximo_cursor null), audita exportacao.concluida com alvo
+//   exportação, sem alvo_id nem conteúdo (EXP-06); cada exportação concluída gera um evento.
 // Além do RLS, a consulta filtra por usuario_id; o cursor não leva usuário, então o de outro
 // profissional só anda pelo que é do próprio.
 
@@ -127,8 +132,19 @@ export const rotasExportarTudo = new Hono<AmbienteAutenticado>().get(
     if (cursor === null) return responderProblema(c, PROBLEMA_CURSOR_INVALIDO);
 
     const lida = await lerPagina(trx, usuarioId, cursor, limite);
+    const proximo = proximoCursor(cursor.t, lida);
+    // EXP-06: a última página conclui a exportação; audita sem conteúdo, na mesma transação.
+    if (proximo === null)
+      await registrarAuditoria(trx, {
+        usuarioId,
+        ator: usuarioId,
+        acao: 'exportacao.concluida',
+        alvoTipo: 'exportacao',
+        ip: c.req.header('CF-Connecting-IP') ?? null,
+        userAgent: c.req.header('User-Agent') ?? null,
+      });
     const corpo = `{"tabela":${JSON.stringify(cursor.t)},"proximo_cursor":${JSON.stringify(
-      proximoCursor(cursor.t, lida),
+      proximo,
     )},"linhas":${lida.linhas}}`;
     return c.body(corpo, 200, { 'Content-Type': 'application/json' });
   },

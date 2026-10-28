@@ -3255,8 +3255,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Sem hash de senha nem sessão no corpo
-- [ ] Audita `exportacao.concluida` só ao servir a última página
+- [x] Sem hash de senha nem sessão no corpo
+- [x] Audita `exportacao.concluida` só ao servir a última página
+
+- 2026-10-27, feito: servida a página com `proximo_cursor: null`, `GET /api/exportacao` audita `exportacao.concluida` com alvo `exportacao`, sem `alvo_id` nem campos, na transação da leitura; cada exportação concluída gera um evento (pedir de novo a última página audita de novo). O corpo só traz as tabelas de `TABELAS_EXPORTACAO`; o teste confere que hash da senha, sessão, 2FA e tokens de e-mail não aparecem.
 
 **Tests**: integration
 **Gate**: full
