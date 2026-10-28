@@ -3476,8 +3476,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Após 30 dias nenhuma tabela tem linha do profissional, auditoria inclusive (varredura pelo catálogo)
-- [ ] Dados de outro profissional intactos
+- [x] Após 30 dias nenhuma tabela tem linha do profissional, auditoria inclusive (varredura pelo catálogo)
+- [x] Dados de outro profissional intactos
+
+- 2026-10-28, feito: duas contas reais (A pede a exclusão, B é outro profissional) ganham uma linha em toda tabela do schema `public` com `usuario_id` achada pelo catálogo (valores pelo tipo da coluna, como o harness de isolamento, sem checar FKs), mais a `tentativa_login` do e-mail. A é bloqueada por último (1985) e a purga roda 30 dias depois. A varredura percorre todas as tabelas do `public` pelo catálogo e procura no texto de cada linha o id, o e-mail e o SHA-256 do e-mail de A: antes da purga acha A em toda tabela com `usuario_id`, em `usuario` e em `tentativa_login` (prova que a varredura enxerga); depois, só `conta_excluida` (id, `pedido_em`, `purgado_em`). As linhas de B ficam idênticas (texto completo). Tabela nova entra sozinha; sem valor genérico, o teste pede o valor em `VALORES_POR_TABELA`. A data exata da purga não é conferida aqui (outro arquivo pode purgar com `agora` mais tardio no banco compartilhado); é provada na T152.
 
 **Tests**: integration
 **Gate**: full
