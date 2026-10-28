@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { comandoCriarHyperdrive, VARIAVEL_CONEXAO } from '../src/hyperdrive.ts';
+import { comandoCriarHyperdrive, comandoValidado, VARIAVEL_CONEXAO } from '../src/hyperdrive.ts';
+import { UrlNeonRecusada } from '../src/neon/url-neon.ts';
 
 // T34 / OPS-13: o Hyperdrive é criado com o cache desligado (dado que muda por ação do usuário).
 // O comando gerado referencia a URL do banco por variável de ambiente: nenhum segredo no código.
@@ -42,10 +43,41 @@ describe('comando de criação do Hyperdrive', () => {
     expect(exemplo).toMatch(new RegExp(`^${VARIAVEL_CONEXAO}=$`, 'm'));
   });
 
+  // A URL de exemplo não tem senha e o host é fictício: o comando não conecta em nada.
+  const urlValida =
+    'postgresql://app@ep-exemplo-123456.sa-east-1.aws.neon.tech/banco?sslmode=require';
+
   it('a linha de comando só imprime o comando, sem executar nada', async () => {
     const { stdout } = await executar(process.execPath, ['src/hyperdrive.ts'], {
       cwd: raizDoPacote,
+      env: { ...process.env, [VARIAVEL_CONEXAO]: urlValida },
     });
     expect(stdout).toContain(comando);
+  });
+
+  it.each([
+    ['ausente', undefined],
+    ['do pooler', urlValida.replace('ep-exemplo-123456', 'ep-exemplo-123456-pooler')],
+    ['sem TLS', urlValida.replace('?sslmode=require', '')],
+    ['local', 'postgresql://app@localhost:5433/banco?sslmode=require'],
+  ])('a linha de comando recusa a NEON_URL_APP %s e não imprime o comando', async (_caso, url) => {
+    const ambiente: NodeJS.ProcessEnv = { ...process.env };
+    delete ambiente[VARIAVEL_CONEXAO];
+    if (url !== undefined) ambiente[VARIAVEL_CONEXAO] = url;
+
+    const execucao = executar(process.execPath, ['src/hyperdrive.ts'], {
+      cwd: raizDoPacote,
+      env: ambiente,
+    });
+
+    await expect(execucao).rejects.toMatchObject({ code: 1, stdout: '' });
+    await expect(execucao).rejects.toMatchObject({
+      stderr: expect.stringContaining(VARIAVEL_CONEXAO),
+    });
+  });
+
+  it('comandoValidado devolve o comando só com uma URL válida', () => {
+    expect(comandoValidado({ [VARIAVEL_CONEXAO]: urlValida })).toBe(comando);
+    expect(() => comandoValidado({})).toThrow(UrlNeonRecusada);
   });
 });

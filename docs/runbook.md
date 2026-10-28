@@ -319,7 +319,8 @@ Hyperdrive depois de trocar a senha da role `app` (sintaxe conferida com `--help
 executado**, exige a conta Cloudflare; o id fica em `wrangler.jsonc`, `hyperdrive[0].id`):
 
 ```bash
-pnpm --filter @es/api exec wrangler hyperdrive update <id do Hyperdrive> --connection-string="$NEON_URL_APP"
+node backend/scripts/src/neon/validar-url.ts NEON_URL_APP && \
+  pnpm --filter @es/api exec wrangler hyperdrive update <id do Hyperdrive> --connection-string="$NEON_URL_APP"
 ```
 
 Depois de qualquer troca no Worker, confira `https://<domínio>/api/health` e um login completo.
@@ -561,8 +562,15 @@ da migration 0001. Por isso o login das roles fica **entre a migração e o depl
 
    ```bash
    read -rs NEON_URL_MIGRACAO && export NEON_URL_MIGRACAO   # cole a URL; nada aparece na tela
-   DATABASE_URL="$NEON_URL_MIGRACAO" pnpm migrar
+   pnpm migrar --alvo producao    # pede o host exato antes de conectar
+   unset NEON_URL_MIGRACAO
    ```
+
+   O `pnpm migrar` só vai a um banco remoto com `--alvo producao` (lê `NEON_URL_MIGRACAO`, branch
+   `main`) ou `--alvo dev` (lê `NEON_URL_MIGRACAO_DEV`, branch `dev`). Antes de conectar ele
+   valida a URL (`validarUrlNeon`: host `*.neon.tech`, sem `-pooler`, `sslmode=require` ou mais
+   forte) e pede o host exato digitado; no GitHub Actions, `CI=true` dispensa a digitação. Sem
+   `--alvo`, ele usa `DATABASE_URL` e recusa qualquer host que não seja local.
 
    Rodar o `deploy.yml` neste ponto também migra, mas a execução para no passo "Deploy do
    Worker" por causa do id placeholder (PREMISSA: o `wrangler deploy` recusa um id de Hyperdrive
@@ -661,11 +669,16 @@ Cloudflare):
 
 ```bash
 read -rs SENHA_ROLE   # senha da app
-pnpm --filter @es/api exec wrangler hyperdrive create evolucao-segura \
-  --caching-disabled \
-  --connection-string="postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require"
+export NEON_URL_APP="postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require"
 unset SENHA_ROLE
+node backend/scripts/src/hyperdrive.ts   # valida NEON_URL_APP e imprime o comando abaixo
+pnpm --filter @es/api exec wrangler hyperdrive create evolucao-segura \
+  --connection-string="$NEON_URL_APP" --caching-disabled
+unset NEON_URL_APP
 ```
+
+O `hyperdrive.ts` passa a URL por `validarUrlNeon` (Neon, conexão direta, TLS) e sai com 1, sem
+imprimir o comando, se ela não servir.
 
 O comando imprime o id: troque o placeholder em `wrangler.jsonc` (`hyperdrive[0].id`). Não
 altere o `sslmode` da URL (o spike viu que o `pg` trata `require` como `verify-full`, sem efeito

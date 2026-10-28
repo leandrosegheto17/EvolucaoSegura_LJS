@@ -103,10 +103,21 @@ describe('deploy.yml (OPS-03)', () => {
     expect(dump?.run).not.toMatch(/pg_dump[^|\n]*(>|-f |--file)/);
   });
 
-  it('migra com a role owner (NEON_URL_MIGRACAO)', () => {
+  it('migra com a role owner (NEON_URL_MIGRACAO), com --alvo producao e sem DATABASE_URL', () => {
     const migracao = passos[indice(executa('pnpm migrar'))];
 
-    expect(migracao?.env?.['DATABASE_URL']).toBe('${{ secrets.NEON_URL_MIGRACAO }}');
+    expect(migracao?.env?.['NEON_URL_MIGRACAO']).toBe('${{ secrets.NEON_URL_MIGRACAO }}');
+    expect(migracao?.run).toMatch(/pnpm migrar --alvo producao(\s|$)/);
+    expect(migracao?.env).not.toHaveProperty('DATABASE_URL');
+  });
+
+  it('valida a NEON_URL_MIGRACAO (validarUrlNeon) antes do dump e da migração', () => {
+    const validar = indice(executa('src/neon/validar-url.ts NEON_URL_MIGRACAO'));
+
+    expect(validar).toBeGreaterThanOrEqual(0);
+    expect(passos[validar]?.env?.['NEON_URL_MIGRACAO']).toBe('${{ secrets.NEON_URL_MIGRACAO }}');
+    expect(validar).toBeLessThan(indice(executa('pg_dump')));
+    expect(validar).toBeLessThan(indice(executa('pnpm migrar')));
   });
 
   it('publica o Worker com URL_PUBLICA', () => {

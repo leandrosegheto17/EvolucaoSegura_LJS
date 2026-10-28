@@ -5,8 +5,12 @@
 // Como usar:
 //   1. Exporte NEON_URL_APP com a URL direta do Neon (sem -pooler) da role app, sem mudar o
 //      sslmode (ver .env.example e o spike set-local-hyperdrive). A URL é segredo: não grave.
-//   2. Rode o comando impresso por `node backend/scripts/src/hyperdrive.ts`.
+//   2. Rode `node backend/scripts/src/hyperdrive.ts`: ele valida a NEON_URL_APP (validarUrlNeon:
+//      Neon, conexão direta, TLS) e só então imprime o comando; URL inválida sai com 1. Rode o
+//      comando impresso.
 //   3. Copie o id devolvido para o "hyperdrive[0].id" do wrangler.jsonc.
+
+import { UrlNeonRecusada, validarUrlNeon } from './neon/url-neon.ts';
 
 export const NOME_HYPERDRIVE = 'evolucao-segura';
 export const VARIAVEL_CONEXAO = 'NEON_URL_APP';
@@ -20,6 +24,18 @@ export function comandoCriarHyperdrive(): string {
   ].join(' ');
 }
 
+// Valida a URL do ambiente e devolve o comando; lança UrlNeonRecusada se a URL não servir.
+export function comandoValidado(ambiente: NodeJS.ProcessEnv): string {
+  validarUrlNeon(ambiente[VARIAVEL_CONEXAO], VARIAVEL_CONEXAO);
+  return comandoCriarHyperdrive();
+}
+
 if (import.meta.main) {
-  process.stdout.write(`${comandoCriarHyperdrive()}\n`);
+  try {
+    process.stdout.write(`${comandoValidado(process.env)}\n`);
+  } catch (erro) {
+    if (!(erro instanceof UrlNeonRecusada)) throw erro;
+    process.stderr.write(`${erro.message}\n`);
+    process.exitCode = 1;
+  }
 }

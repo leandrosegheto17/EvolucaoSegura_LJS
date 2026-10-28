@@ -25,6 +25,16 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-18
 
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Validar a URL do Neon do backup
+        env:
+          NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
+        # validarUrlNeon: host *.neon.tech, conexão direta (sem -pooler) e sslmode exigindo TLS.
+        run: node backend/scripts/src/neon/validar-url.ts NEON_URL_BACKUP
+
       - name: Exigir conexão direta
         env:
           NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}

@@ -56,6 +56,18 @@ describe('backup.yml (OPS-01)', () => {
     expect(guarda?.run).toContain('exit 1');
   });
 
+  it('valida a NEON_URL_BACKUP (validarUrlNeon) antes do dump', () => {
+    const validar = passos.find((passo) =>
+      (passo.run ?? '').includes('src/neon/validar-url.ts NEON_URL_BACKUP'),
+    );
+
+    expect(validar?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
+    expect(passos.indexOf(validar as Passo)).toBeLessThan(passos.indexOf(passoDoDump as Passo));
+    const checkout = passos.findIndex((passo) => (passo.uses ?? '').startsWith('actions/checkout'));
+    expect(checkout).toBeGreaterThanOrEqual(0);
+    expect(checkout).toBeLessThan(passos.indexOf(validar as Passo));
+  });
+
   it('o artefato só é guardado depois do dump', () => {
     expect(passos.indexOf(passoDoArtefato as Passo)).toBeGreaterThan(
       passos.indexOf(passoDoDump as Passo),
