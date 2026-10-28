@@ -3496,9 +3496,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Purga chamada pelo cron
-- [ ] Reexecução é inofensiva
-- [ ] ADR-012 gravado
+- [x] Purga chamada pelo cron
+- [x] Reexecução é inofensiva
+- [x] ADR-012 gravado
+
+- 2026-10-28, feito: `tarefaPurga()` na 5ª posição do `TAREFAS` (depois das transições de assinatura, antes da limpeza), sem janela. Testes em `backend/api/test/tarefas/purga.test.ts`, em série com os da T152: o `scheduled` do Worker com o horário agendado em 1995 apaga a conta bloqueada há 30 dias (`conta_excluida` com `purgado_em` = horário do cron) e deixa a bloqueada há menos tempo; três execuções seguidas do despachante com a purga respondem ok, sem erro, e não mudam `conta_excluida`. [ADR-012](../../../.md/adr/012-exclusao-e-purga-de-conta.md) gravado (fluxo, purga, contexto sem `SET app.*`, exceção do trigger, cron, varredura e consequências: backups de 30 dias e cliente do Asaas guardam dado depois da purga; corrida do 2FA no instante da confirmação segue aberta). Sem entrada AD-012 no `STATE.md` (fica para a sessão principal).
 
 **Tests**: integration
 **Gate**: full

@@ -1,9 +1,11 @@
 import { env } from 'cloudflare:workers';
 import { describe, expect, it } from 'vitest';
 import { criarApp } from '../../src/app.ts';
-import type { ContextoTarefa } from '../../src/tarefas/despachar.ts';
+import worker from '../../src/index.ts';
+import { type ContextoTarefa, despachar } from '../../src/tarefas/despachar.ts';
 import { tarefaPurga } from '../../src/tarefas/purga.ts';
-import { comoAdmin, emailSimulado } from '../apoio.ts';
+import { TAREFAS } from '../../src/tarefas/registro.ts';
+import { comoAdmin, criarConta, emailSimulado } from '../apoio.ts';
 import { contaComSessao, postar } from '../rotas/conta-apoio.ts';
 
 // T152 / CONTA-05: a tarefa de purga, pela função tarefas.purgar_contas (migration 0023), apaga
@@ -138,5 +140,77 @@ describe('purga de contas (CONTA-05)', LENTO, () => {
     expect(entrar.status).toBe(401);
     const sessao = await app.request('/api/eu', { headers: { cookie: conta.cookie } }, env);
     expect(sessao.status).toBe(401);
+  });
+});
+
+// T183 / CONTA-05 (ADR-010, ADR-012): a purga roda pelo Cron Trigger único, na posição reservada
+// do despachante (5ª, depois das transições de assinatura e antes da limpeza), sem janela. As
+// contas daqui são bloqueadas em 1995 e o cron roda com o horário agendado em 1995: as outras
+// tarefas do cron não acham nada para fazer, e as purgas dos outros arquivos (com `agora` em 1980
+// e 1985) não alcançam estas contas. Ficam neste arquivo, em série com os testes da T152.
+describe('purga no cron (CONTA-05)', LENTO, () => {
+  async function contaBloqueadaEm(bloqueio: Date) {
+    const conta = await criarConta();
+    await bloquearEm(conta.id, bloqueio);
+    return conta;
+  }
+
+  const existe = async (id: string) =>
+    (await comoAdmin('select 1 from usuario where id = $1', [id])).length === 1;
+
+  async function rodarCron(agora: Date) {
+    const pendentes: Promise<unknown>[] = [];
+    await worker.scheduled!(
+      { scheduledTime: agora.getTime(), cron: '*/5 * * * *', noRetry() {} } as ScheduledController,
+      env,
+      { waitUntil: (p: Promise<unknown>) => void pendentes.push(p) } as unknown as ExecutionContext,
+    );
+    await Promise.all(pendentes);
+  }
+
+  it('está registrada na posição reservada, antes da limpeza, sem janela', () => {
+    expect(TAREFAS.map((t) => t.nome).slice(-3)).toEqual(['assinaturas', 'purga', 'limpeza']);
+    expect(TAREFAS.find((t) => t.nome === 'purga')?.janelaMs).toBeNull();
+  });
+
+  it('purga chamada pelo cron: a conta bloqueada há 30 dias é apagada', async () => {
+    const bloqueio = new Date('1995-02-01T12:00:00.000Z');
+    const conta = await contaBloqueadaEm(bloqueio);
+    const recente = await contaBloqueadaEm(new Date('1995-02-20T12:00:00.000Z'));
+    const agora = new Date(bloqueio.getTime() + TRINTA_DIAS);
+
+    await rodarCron(agora);
+
+    expect(await existe(conta.id)).toBe(false);
+    expect(await excluida(conta.id)).toEqual([
+      { id: conta.id, pedido_em: bloqueio, purgado_em: agora },
+    ]);
+    expect(await existe(recente.id)).toBe(true);
+  });
+
+  it('reexecução é inofensiva: a tarefa não falha e nada muda', async () => {
+    const bloqueio = new Date('1995-01-01T12:00:00.000Z');
+    const conta = await contaBloqueadaEm(bloqueio);
+    const agora = new Date(bloqueio.getTime() + 31 * DIA);
+    const erros: unknown[] = [];
+    const rodar = (quando: Date) =>
+      despachar(quando, env, {
+        tarefas: TAREFAS.filter((t) => t.nome === 'purga'),
+        capturarErro: (erro) => erros.push(erro),
+        emSegundoPlano: () => {},
+      });
+
+    expect(await rodar(agora)).toEqual([{ nome: 'purga', ok: true }]);
+    const depoisDaPrimeira = await excluida(conta.id);
+    expect(depoisDaPrimeira).toEqual([{ id: conta.id, pedido_em: bloqueio, purgado_em: agora }]);
+
+    expect(await rodar(agora)).toEqual([{ nome: 'purga', ok: true }]);
+    expect(await rodar(new Date(agora.getTime() + 5 * 60_000))).toEqual([
+      { nome: 'purga', ok: true },
+    ]);
+
+    expect(await excluida(conta.id)).toEqual(depoisDaPrimeira);
+    expect(await existe(conta.id)).toBe(false);
+    expect(erros).toEqual([]);
   });
 });

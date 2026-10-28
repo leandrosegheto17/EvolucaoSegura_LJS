@@ -2,6 +2,7 @@ import { type ClienteAsaas, criarClienteAsaas } from '../integracoes/asaas.ts';
 import { tarefaAssinaturas } from './assinaturas.ts';
 import type { Tarefa } from './despachar.ts';
 import { tarefaLimpeza } from './limpeza.ts';
+import { tarefaPurga } from './purga.ts';
 import { tarefaPushCobranca } from './push-cobranca.ts';
 import { tarefaPushPendente } from './push-pendente.ts';
 import { tarefaPushSessao } from './push-sessao.ts';
@@ -13,7 +14,7 @@ import { tarefaPushTrial } from './push-trial.ts';
 //   2. pendência das 20:00 (T145)
 //   3. avisos de plano e fim de trial (T146)
 //   4. transições de assinatura (T137)
-//   5. purga de contas (T152)
+//   5. purga de contas (T152, T183; ADR-012)
 //   6. limpeza de tokens e sessões vencidos (T139)
 // Tarefa nova: um objeto Tarefa (nome, janela, executar) na posição dela nesta lista.
 
@@ -27,5 +28,6 @@ export const TAREFAS: readonly Tarefa[] = [
   tarefaPushCobranca(),
   tarefaPushTrial(),
   tarefaAssinaturas({ asaas: asaasPadrao }),
+  tarefaPurga(),
   tarefaLimpeza(),
 ];
