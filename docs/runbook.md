@@ -577,9 +577,9 @@ da migration 0001. Por isso o login das roles fica **entre a migração e o depl
    forte) e pede o host exato digitado; no GitHub Actions, `CI=true` dispensa a digitação. Sem
    `--alvo`, ele usa `DATABASE_URL` e recusa qualquer host que não seja local.
 
-   Rodar o `deploy.yml` neste ponto também migra, mas a execução para no passo "Deploy do
-   Worker" por causa do id placeholder (PREMISSA: o `wrangler deploy` recusa um id de Hyperdrive
-   que não existe na conta).
+   Rodar o `deploy.yml` neste ponto **não** migra: o passo "Conferir que o cache do Hyperdrive
+   está desligado" vem antes do dump e da migração e falha com o id placeholder do
+   `wrangler.jsonc`.
 
 3. **Conferir as roles e o pgcrypto** (8.3) e **dar login e senha** a `app` e `backup_ro` (8.2).
 4. **Gravar as URLs** `NEON_URL_APP` e `NEON_URL_BACKUP` no environment `producao` (8.4).
@@ -685,7 +685,11 @@ unset NEON_URL_APP
 O `hyperdrive.ts` passa a URL por `validarUrlNeon` (Neon, conexão direta, TLS) e sai com 1, sem
 imprimir o comando, se ela não servir.
 
-O comando imprime o id: troque o placeholder em `wrangler.jsonc` (`hyperdrive[0].id`). Não
+O comando imprime o id: troque o placeholder em `wrangler.jsonc` (`hyperdrive[0].id`). A cada
+deploy, o `deploy.yml` consulta esse Hyperdrive na API da Cloudflare
+(`backend/scripts/src/operacao/cache-hyperdrive.ts`) e para antes do dump e da migração se a
+resposta não trouxer `caching.disabled = true`. O `CLOUDFLARE_API_TOKEN` precisa da permissão de
+leitura do Hyperdrive, além da de deploy do Worker. Não
 altere o `sslmode` da URL (o spike viu que o `pg` trata `require` como `verify-full`, sem efeito
 no resultado).
 

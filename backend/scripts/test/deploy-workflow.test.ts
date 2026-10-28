@@ -120,6 +120,20 @@ describe('deploy.yml (OPS-03)', () => {
     expect(validar).toBeLessThan(indice(executa('pnpm migrar')));
   });
 
+  it('confere o cache do Hyperdrive desligado antes do dump, da migração e do deploy', () => {
+    const cache = indice(executa('cache-hyperdrive'));
+
+    expect(cache).toBeGreaterThan(indice(executa('pnpm install')));
+    expect(cache).toBeLessThan(indice(executa('pg_dump')));
+    expect(cache).toBeLessThan(indice(executa('pnpm migrar')));
+    expect(cache).toBeLessThan(indice(executa(WRANGLER_DEPLOY)));
+    expect(passos[cache]?.env?.['CLOUDFLARE_API_TOKEN']).toBe(
+      '${{ secrets.CLOUDFLARE_API_TOKEN }}',
+    );
+    expect(passos[cache]?.env?.['CLOUDFLARE_ACCOUNT_ID']).toBe('${{ vars.CLOUDFLARE_ACCOUNT_ID }}');
+    expect(passos[cache]?.['continue-on-error' as keyof Passo]).toBeUndefined();
+  });
+
   it('publica o Worker com URL_PUBLICA', () => {
     const deploy = passos[indice(executa(WRANGLER_DEPLOY))];
 

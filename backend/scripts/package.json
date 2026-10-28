@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
-    "migrar": "node src/migrar.ts"
+    "migrar": "node src/migrar.ts",
+    "cache-hyperdrive": "node src/operacao/cache-hyperdrive.ts"
   },
   "devDependencies": {
     "@types/pg": "8.23.1",

@@ -44,6 +44,13 @@ jobs:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
         run: pnpm build:web
 
+      - name: Conferir que o cache do Hyperdrive está desligado
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        # OPS-13: falha fechado se a API não disser caching.disabled = true (ou com o id placeholder).
+        run: pnpm --filter @es/scripts cache-hyperdrive
+
       - name: Validar a URL do Neon da migração
         env:
           NEON_URL_MIGRACAO: ${{ secrets.NEON_URL_MIGRACAO }}
