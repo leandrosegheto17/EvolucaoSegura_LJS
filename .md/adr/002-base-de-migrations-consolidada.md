@@ -18,7 +18,7 @@ Regras da base:
 - Toda tabela de negócio tem `usuario_id`, RLS com `FORCE`, `criado_em`; as editáveis têm `row_version`.
 - A role `app` não recebe DELETE nem TRUNCATE em tabela de negócio.
 - Dinheiro em `bigint` de centavos.
-- Cada migration roda em transação (`node-pg-migrate` 9, ESM) e o CI aplica todas do zero num Postgres 16 de serviço.
+- Cada migration roda em transação (`node-pg-migrate` 9, ESM) e o CI aplica todas do zero num Postgres 18 de serviço.
 - Os testes de garantia do banco do legado são adaptados ao schema novo, não copiados às cegas.
 
 ## Consequências

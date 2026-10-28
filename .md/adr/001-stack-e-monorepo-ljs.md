@@ -16,8 +16,8 @@ Adotamos o padrão LJS como está, num monorepo pnpm com TypeScript estrito:
 - Node 24 (`engines` e `.nvmrc`), pnpm 11, `type: module` em todos os pacotes.
 - Cinco pacotes: `@es/contrato` (schemas Zod), `@es/dominio` (regras puras), `@es/api` (Hono no Worker), `@es/scripts` (migrations e operação) e `@es/web` (React 19, Vite, PWA).
 - API e front no mesmo Worker, com `assets` e `run_worker_first: ["/api/*"]`.
-- Banco Neon Postgres 16 por Hyperdrive, com Kysely e `pg`; um `Client` por requisição.
-- Ferramentas: Vitest 5 com `projects` na raiz, ESLint 10 com typescript-eslint, Prettier, gitleaks, Docker Compose só com o Postgres 16 local.
+- Banco Neon Postgres 18 por Hyperdrive (a mesma versão maior no Docker local, no CI e no `pg_dump` dos workflows; revisado em 2026-10-28, era 16), com Kysely e `pg`; um `Client` por requisição.
+- Ferramentas: Vitest 5 com `projects` na raiz, ESLint 10 com typescript-eslint, Prettier, gitleaks, Docker Compose só com o Postgres 18 local (`postgres:18`, por tag: o projeto não fixa imagem por digest).
 - Versões exatas no `package.json`, sem `^`.
 - Documentação em `.md/` e decisões em `.md/adr/`.
 

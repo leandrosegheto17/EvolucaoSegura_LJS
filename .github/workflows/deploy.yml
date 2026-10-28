@@ -31,12 +31,12 @@ jobs:
           cache: pnpm
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
-      - name: Instalar pg_dump 16 e age
+      - name: Instalar pg_dump 18 e age
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-common age
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-18
 
       - name: Build do web
         env:

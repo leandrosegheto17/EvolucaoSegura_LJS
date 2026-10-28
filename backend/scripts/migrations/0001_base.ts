@@ -31,7 +31,7 @@ BEGIN
 END $$;
 
 -- Quem roda a migration precisa poder assumir owner (ALTER DEFAULT PRIVILEGES FOR ROLE e
--- ALTER ... OWNER TO). No Neon o usuário da migration não é superusuário e, no PG 16, o vínculo
+-- ALTER ... OWNER TO). No Neon o usuário da migration não é superusuário e, a partir do PG 16, o vínculo
 -- que CREATE ROLE cria vem sem SET. Superusuário e o próprio owner já atendem: vira no-op.
 DO $$
 BEGIN

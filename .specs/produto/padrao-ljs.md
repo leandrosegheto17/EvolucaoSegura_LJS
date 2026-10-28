@@ -47,7 +47,7 @@ Antes de escrever código, apresente um plano com etapas, arquivos e riscos para
 
 ## 3. Desenvolvimento local
 
-- `docker-compose.yml` sobe só o Postgres 16. `wrangler dev` roda o Worker com
+- `docker-compose.yml` sobe só o Postgres 18. `wrangler dev` roda o Worker com
   `localConnectionString` do Hyperdrive apontando para ele; Vite com proxy de `/api`.
 - Comandos padrão na raiz: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm migrar`, `pnpm seed`, `pnpm dev`.
 - Testes: Vitest; `@cloudflare/vitest-pool-workers` para a API; Testing Library no front;

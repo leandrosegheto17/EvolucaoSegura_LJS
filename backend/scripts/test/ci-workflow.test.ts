@@ -50,8 +50,8 @@ describe('ci.yml (OPS-05)', () => {
     expect(indiceDoComando('pnpm migrar')).toBeLessThan(indiceDoComando('pnpm test:isolamento'));
   });
 
-  it('usa um Postgres 16 como serviço', () => {
+  it('usa um Postgres 18 como serviço (a versão do Neon)', () => {
     const imagens = trabalhos.flatMap((t) => Object.values(t.services ?? {}).map((s) => s.image));
-    expect(imagens).toContain('postgres:16');
+    expect(imagens).toContain('postgres:18');
   });
 });

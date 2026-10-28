@@ -14,7 +14,7 @@ puderam ser executados estão marcados como **não executado**.
 
 - Node.js 24 (`.nvmrc`; o `package.json` exige `>=24 <25`).
 - pnpm 11 (`packageManager: pnpm@11.23.0`).
-- Docker, para o Postgres 16 local (`docker-compose.yml`).
+- Docker, para o Postgres 18 local (`docker-compose.yml`).
 - Para o backup e a restauração (`infra/`): `psql`, `pg_restore` e `age` no PATH, e bash.
 
 ## Rodar localmente
@@ -23,7 +23,7 @@ puderam ser executados estão marcados como **não executado**.
 # 1. Dependências
 pnpm install --frozen-lockfile
 
-# 2. Postgres 16 local (porta 5433 no host; usuário/senha postgres, banco evolucao_segura)
+# 2. Postgres 18 local (porta 5433 no host; usuário/senha postgres, banco evolucao_segura)
 docker compose up -d
 
 # 3. Migrations (usa DATABASE_URL; sem ela, o Postgres local acima)
@@ -38,12 +38,17 @@ pnpm build:web
 
 O `docker-compose.yml` fixa o nome do container (`evolucao-segura-postgres`) e a porta 5433. Se
 outro Postgres seu já usa essa porta ou esse nome, o `docker compose up` falha; nesse caso suba um
-Postgres 16 à parte, por exemplo
-`docker run -d --name es-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=evolucao_segura -p 5440:5432 postgres:16`,
+Postgres 18 à parte, por exemplo
+`docker run -d --name es-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=evolucao_segura -p 5440:5432 postgres:18`,
 e aponte tudo para ele: `export DATABASE_URL=postgresql://postgres:postgres@localhost:5440/evolucao_segura`
 (vale para `pnpm migrar`, `pnpm test` e os scripts) e, para o Worker, a variável
 `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` com a mesma URL. O passo 3b então roda
 no seu container: `docker exec es-pg psql -U postgres -d evolucao_segura -c "alter role app with login password 'app'"`.
+
+Quem já tinha o Postgres 16 do compose: os dados do 16 não abrem no 18, e o compose usa um
+volume novo (`evolucao_segura_pgdata18`). Rode `docker compose down` e `docker compose up -d`, e
+refaça os passos 3 e 3b. O volume antigo (`<pasta>_evolucao_segura_pgdata`) fica intacto; apague-o
+com `docker volume rm` quando não precisar mais dele.
 
 Subir o Worker local (front e API juntos em http://localhost:8787), a partir da raiz:
 

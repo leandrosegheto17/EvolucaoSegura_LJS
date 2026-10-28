@@ -9,7 +9,7 @@
 | Custo       | Custo fixo mensal de R$ 0; nenhuma dependência paga                                      | Spec, Goals; padrão LJS §5 |
 | Runtime     | Um Cloudflare Worker serve o front (assets) e a API Hono em `/api/*`                     | Design, Architecture       |
 | CPU         | 10 ms por requisição; sem hash de senha nem PDF no Worker                                | OPS-14                     |
-| Banco       | Neon Postgres 16 (`sa-east-1`) por Hyperdrive; Kysely e `pg`, um `Client` por requisição | Design, Tech Decisions     |
+| Banco       | Neon Postgres 18 (`sa-east-1`) por Hyperdrive; Kysely e `pg`, um `Client` por requisição | Design, Tech Decisions     |
 | Repositório | Monorepo pnpm, Node 24, TypeScript estrito, `type: module`                               | Padrão LJS §1              |
 | Cron        | Um único Cron Trigger `*/5 * * * *` com despachante                                      | PUSH-07; design            |
 | Domínio     | `evolucaosegura.com.br`; nenhuma URL absoluta no código ou no banco, só `URL_PUBLICA`    | OPS-10, D-25               |

@@ -1,7 +1,7 @@
-# Só o Postgres 16 local. As roles owner, app e backup_ro nascem na migration 0001 (etapa 3).
+# Só o Postgres 18 local (a mesma versão maior do Neon e do CI). As roles owner, app e backup_ro nascem na migration 0001 (etapa 3).
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: evolucao-segura-postgres
     restart: unless-stopped
     environment:
@@ -11,7 +11,9 @@ services:
     ports:
       - '5433:5432'
     volumes:
-      - evolucao_segura_pgdata:/var/lib/postgresql/data
+      # A partir do 18 a imagem guarda os dados em /var/lib/postgresql/18/docker: o volume vai na
+      # pasta de cima. Volume novo (pgdata18): o do 16 não abre no 18.
+      - evolucao_segura_pgdata18:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d evolucao_segura']
       interval: 5s
@@ -19,4 +21,4 @@ services:
       retries: 10
 
 volumes:
-  evolucao_segura_pgdata:
+  evolucao_segura_pgdata18:

@@ -5,7 +5,8 @@ local, variáveis, deploy, testar o webhook).
 
 Como ler este documento:
 
-- Cada comando foi executado na máquina de desenvolvimento (Windows, Git Bash, `psql` 16) contra
+- Cada comando foi executado na máquina de desenvolvimento (Windows, Git Bash, `psql` 16; para o dump do Neon, que é Postgres 18, use `pg_dump` e
+  `pg_restore` 18) contra
   o Postgres local do `docker-compose.yml` (porta 5433) num **banco descartável** com as
   migrations aplicadas, ou contra o Worker local (`wrangler dev`). O que depende de conta externa
   (Asaas, Neon, Cloudflare, Resend) está marcado **não executado**, com o motivo.
