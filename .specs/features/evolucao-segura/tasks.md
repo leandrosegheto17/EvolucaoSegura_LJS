@@ -3845,7 +3845,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Cada comando citado foi executado
+- [x] Cada comando citado foi executado (2026-10-28, commit 7598015; aceito pelo usuário com ressalvas: `pnpm test:isolamento` falha aqui com `code.charCodeAt` (o README traz o equivalente pela raiz), e2e de plano e deploy não executados por dependerem de conta externa e estão marcados "não executado" no README)
 
 **Tests**: none
 **Gate**: build
