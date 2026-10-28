@@ -3456,8 +3456,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Antes de 30 dias nada é apagado
-- [ ] `conta_excluida` com id, data do pedido e data da purga
+- [x] Antes de 30 dias nada é apagado
+- [x] `conta_excluida` com id, data do pedido e data da purga
+
+- 2026-10-28, feito: migration 0023 com `tarefas.purgar_contas(agora, limite)` (SECURITY DEFINER do owner, `search_path` fixo, **sem `SET app.*` na definição**: `app.usuario_id`, `app.purga_usuario` e `app.tarefa_assinatura = 'off'` vão por `set_config` local em tempo de execução e voltam ao valor anterior no fim). Purga as contas com `bloqueado_exclusao_em + 720 h <= agora` (o mesmo cálculo do `purga_em` anunciado), das mais antigas para as mais novas, até `limite` (1 a 1000), com `FOR UPDATE SKIP LOCKED` (desistência em curso fica para a próxima). Por conta: grava `conta_excluida` (`pedido_em` = último `conta.exclusao_pedida` até o bloqueio, senão o bloqueio; `purgado_em` = agora) e apaga as linhas das 30 tabelas com `usuario_id`, auditoria e `token_email` inclusive, a linha de `tentativa_login` do SHA-256 do e-mail e, por fim, o `usuario`. `public.negar_alteracao` passou a aceitar só o DELETE de linha cuja purga está em curso (`app.purga_usuario` = `usuario_id`) e cuja conta está bloqueada há 30 dias ou mais pelo relógio do banco; UPDATE, TRUNCATE e DELETE fora disso seguem ES001. Tarefa `tarefaPurga` em `purga.ts` (o registro no cron é a T183). O teste "depois da purga" da T151 passou a rodar a purga real (bloqueio movido para 1980) e confere que a conta não existe mais, no lugar de `bloqueio not null`. PREMISSAS: 30 dias = 720 h; linhas de `tentativa_login` por IP ficam (não são do profissional); `pedido_em` como acima. Testes das tarefas usam datas antigas (1970 a 1999) para não purgar contas dos outros arquivos no banco compartilhado.
 
 **Tests**: integration
 **Gate**: full

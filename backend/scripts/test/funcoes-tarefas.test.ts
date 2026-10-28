@@ -34,6 +34,8 @@ const EXECUTAVEIS_PELA_APP = [
   'tarefas.localizar_assinatura_asaas(p_asaas_subscription_id text, p_asaas_customer_id text)',
   'tarefas.marcar_webhook_processado(p_event_id text, p_usuario_id uuid)',
   'tarefas.mudar_estado_assinatura(p_usuario_id uuid, p_status text, p_periodo_fim timestamp with time zone, p_vencimento_atraso timestamp with time zone)',
+  // T152 / CONTA-05: o cron purga as contas 30 dias depois da confirmação (migration 0023).
+  'tarefas.purgar_contas(p_agora timestamp with time zone, p_limite integer)',
   // T139 / CAD-03, AUTH-09: o cron marca tokens e sessões vencidos, sem apagar (migration 0016).
   'tarefas.vencer_tokens_e_sessoes(p_agora timestamp with time zone)',
 ];

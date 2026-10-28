@@ -1,7 +1,9 @@
 import { RESPOSTA_ENTRAR } from '@es/contrato/identidade';
+import { env } from 'cloudflare:workers';
 import { describe, expect, it } from 'vitest';
 import { criarApp } from '../../src/app.ts';
 import { grupoDaRota } from '../../src/middleware/limite.ts';
+import { tarefaPurga } from '../../src/tarefas/purga.ts';
 import { comoAdmin, emailSimulado } from '../apoio.ts';
 import {
   type App,
@@ -195,10 +197,27 @@ describe('link que não serve: 400 link_invalido sem mudar nada', LENTO, () => {
   it('depois da purga (os tokens do profissional já não existem)', async () => {
     const { app } = montar();
     const conta = await contaBloqueada();
-    // Simula a purga (T152): a função apaga todas as linhas do profissional.
-    await comoAdmin('delete from token_email where usuario_id = $1', [conta.usuarioId]);
+    // A purga real (T152): o bloqueio vai a 1980 e a tarefa roda 31 dias depois (datas antigas
+    // isolam este teste das contas bloqueadas hoje pelos outros arquivos).
+    const bloqueioAntigo = new Date('1980-03-01T12:00:00.000Z');
+    await comoAdmin('update usuario set bloqueado_exclusao_em = $2 where id = $1', [
+      conta.usuarioId,
+      bloqueioAntigo,
+    ]);
+    await tarefaPurga().executar({
+      agora: new Date(bloqueioAntigo.getTime() + 31 * DIA),
+      desde: null,
+      limite: 1000,
+      env,
+      emSegundoPlano: () => {},
+      capturarErro: () => {},
+    });
+    expect(
+      await comoAdmin('select id from conta_excluida where id = $1', [conta.usuarioId]),
+    ).toEqual([{ id: conta.usuarioId }]);
     await esperarInvalido(app, conta.token, conta.usuarioId);
-    expect(await bloqueio(conta.usuarioId)).not.toBeNull();
+    // A conta não foi desbloqueada: continua purgada (não existe mais).
+    expect(await comoAdmin('select id from usuario where id = $1', [conta.usuarioId])).toEqual([]);
   });
 
   it('passados os 30 dias, mesmo antes de a purga rodar', async () => {
