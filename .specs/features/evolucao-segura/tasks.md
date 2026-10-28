@@ -3315,9 +3315,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Exportação inicia e baixa o zip
-- [ ] Erro 413 tratado na tela
-- [ ] Erro 429 tratado na tela
+- [x] Exportação inicia e baixa o zip
+- [x] Erro 413 tratado na tela
+- [x] Erro 429 tratado na tela
+
+- 2026-10-27, feito: `ExportarPage` em `/app/exportar` (botão "Exportar meus dados", progresso por fase, baixa `evolucao-segura-exportacao.zip`); 429 (com Retry-After) e 413 mostram mensagem e devolvem o botão; link no cartão "Meus dados" das Configurações. O build mostra o fflate em chunk próprio (`browser-*.js`, 8,8 kB). PREMISSAS: textos escritos pelo implementador; não há mockup (`.specs/mockup/` não existe); a API não emite 413, a tela só trata o status; rota e link nas Configurações escolhidos pelo implementador.
 
 **Tests**: unit
 **Gate**: build

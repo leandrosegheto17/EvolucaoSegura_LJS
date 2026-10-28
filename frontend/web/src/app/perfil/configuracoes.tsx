@@ -2,6 +2,7 @@ import type { Configuracoes } from '@es/contrato/configuracoes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
 import { Alert, Button, Skeleton, Spinner } from '../../ui';
+import { Link } from 'react-router';
 import { useSignOut } from '../sair.ts';
 import { ThemeSwitch } from '../shell/ThemeSwitch.tsx';
 import { PushDispositivo } from '../configuracoes/push.tsx';
@@ -130,6 +131,15 @@ export function SettingsPage() {
             <p className="text-mut">
               {s.privacidade_agenda ? 'Agenda exibe iniciais.' : 'Agenda exibe o nome completo.'}
             </p>
+          </Card>
+
+          <Card id="cfg-dados" title="Meus dados">
+            <p className="text-mut">Baixe uma cópia de tudo o que está na sua conta.</p>
+            <div>
+              <Link to="/app/exportar" className="underline">
+                Exportar meus dados
+              </Link>
+            </div>
           </Card>
 
           <Card id="cfg-session" title="Sessão">

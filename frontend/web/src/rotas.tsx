@@ -15,6 +15,7 @@ import { PatientFichaPage } from './app/pacientes/ficha.tsx';
 import { PatientFormPage } from './app/pacientes/novo.tsx';
 import { PatientsListPage } from './app/pacientes/pacientes.tsx';
 import { PatientStatusPage } from './app/pacientes/situacao.tsx';
+import { ExportarPage } from './app/exportar/exportar.tsx';
 import { SettingsPage } from './app/perfil/configuracoes.tsx';
 import { ProfilePage } from './app/perfil/perfil.tsx';
 import { GuardaPerfil, Shell } from './app/shell.tsx';
@@ -65,6 +66,7 @@ export const rotas: RouteObject[] = [
                   { index: true, element: <Inicio /> },
                   { path: 'perfil', element: <ProfilePage /> },
                   { path: 'configuracoes', element: <SettingsPage /> },
+                  { path: 'exportar', element: <ExportarPage /> },
                   { path: 'agenda', element: <AgendaComAcoes /> },
                   { path: 'agenda/nova', element: <NovaSessaoPage /> },
                   { path: 'agenda/serie/nova', element: <NovaSeriePage /> },
