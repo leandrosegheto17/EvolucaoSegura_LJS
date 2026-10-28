@@ -3987,8 +3987,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon (nascem `NOLOGIN`), com a ordem em relação ao primeiro deploy (pendência do lote 3, ADR-005)
-- [ ] Teste de fumaça de vazamento de contexto entre conexões reaproveitadas do Hyperdrive, depois do primeiro deploy (ADR-005)
+- [x] Provisionamento de login e senha das roles `owner`, `app` e `backup_ro` no Neon (nascem `NOLOGIN`), com a ordem em relação ao primeiro deploy (pendência do lote 3, ADR-005)
+- [x] Teste de fumaça de vazamento de contexto entre conexões reaproveitadas do Hyperdrive, depois do primeiro deploy (ADR-005)
 
 **Tests**: none
 **Gate**: build

@@ -406,7 +406,8 @@ passo 1 falha com `permission denied to set parameter`.
 ## 6. Pré-requisitos da publicação
 
 Nada abaixo foi feito por este runbook: cada item é decisão e ação do dono do produto, em contas
-externas. Marque cada um antes do primeiro `deploy.yml`.
+externas. Marque cada um antes do primeiro `deploy.yml`. A ordem do primeiro deploy, com o login
+das roles do Neon e o Hyperdrive, está na seção 8.
 
 ### 6.1 Conta do Asaas de produção
 
@@ -518,3 +519,225 @@ boleto nem cartão como alternativa no código.
   seção 2. Se a assinatura já foi para free, o profissional assina de novo (seção 3.1).
 
 **Não executado**: exige a conta de produção do Asaas.
+
+## 8. Primeiro deploy: roles do Neon e Hyperdrive
+
+As roles `owner`, `app` e `backup_ro` nascem `NOLOGIN` e sem senha na migration 0001 (ADR-005):
+segredo nunca entra em migration. Login e senha são dados depois, à mão, por quem opera o Neon.
+Nada desta seção foi executado no Neon nem na Cloudflare (exige as contas); os comandos de banco
+foram executados no Postgres local, com uma role que simula o `neondb_owner` (`CREATEROLE` e
+`CREATEDB`, sem superusuário), como indicado em cada passo.
+
+### 8.1 Ordem
+
+O primeiro deploy tem uma dependência circular: o `wrangler deploy` precisa do id real do
+Hyperdrive no `wrangler.jsonc` (hoje é o placeholder `00000000000000000000000000000000`); o
+Hyperdrive só é criado com uma URL que conecta, a da role `app`; e a role `app` só existe depois
+da migration 0001. Por isso o login das roles fica **entre a migração e o deploy do Worker**:
+
+1. **Antes de tudo**: os secrets que não dependem das roles no environment `producao`
+   (`NEON_URL_MIGRACAO`, `NEON_API_KEY`, `AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`) e as variáveis
+   (`NEON_PROJECT_ID`, `NEON_ROLE_OWNER`, `NEON_DATABASE`, `CLOUDFLARE_ACCOUNT_ID`, `URL_PUBLICA`),
+   mais os itens da seção 6. `NEON_URL_MIGRACAO` é a URL da role de migração (`neondb_owner`), na
+   **conexão direta** (host sem `-pooler`). PREMISSA: `NEON_ROLE_OWNER` é o `neondb_owner`, que
+   já existe quando o `deploy.yml` cria a branch de restauração; a `owner` criada por SQL não
+   serve ali.
+2. **Aplicar as migrations** no Neon, da sua máquina, com o mesmo comando que o `deploy.yml` roda
+   (cria as três roles `NOLOGIN` e todo o schema):
+
+   ```bash
+   read -rs NEON_URL_MIGRACAO && export NEON_URL_MIGRACAO   # cole a URL; nada aparece na tela
+   DATABASE_URL="$NEON_URL_MIGRACAO" pnpm migrar
+   ```
+
+   Rodar o `deploy.yml` neste ponto também migra, mas a execução para no passo "Deploy do
+   Worker" por causa do id placeholder (PREMISSA: o `wrangler deploy` recusa um id de Hyperdrive
+   que não existe na conta).
+
+3. **Conferir as roles e o pgcrypto** (8.3) e **dar login e senha** a `app` e `backup_ro` (8.2).
+4. **Gravar as URLs** `NEON_URL_APP` e `NEON_URL_BACKUP` no environment `producao` (8.4).
+5. **Criar o Hyperdrive** com a URL da `app` e pôr o id no `wrangler.jsonc` (8.5); o commit vai
+   para a `main` pelo fluxo normal (o id não é segredo).
+6. **Rodar o `deploy.yml`** (`gh workflow run deploy.yml --ref main`): a migração não tem nada
+   novo e o Worker sobe.
+7. **Depois do deploy**: `https://<domínio>/api/health`, um login completo, o teste de fumaça do
+   isolamento (seção 9) e um backup à mão para provar a `backup_ro`:
+   `gh workflow run backup.yml` e, depois, `gh run list --workflow backup.yml --limit 1`.
+
+O roteiro (`roadmap.md`) diz "depois do primeiro deploy" para o provisionamento: leia como
+"depois da primeira migração". O passo 5 não pode vir antes do 3.
+
+### 8.2 Login e senha de uma role
+
+A senha nasce num gerenciador de senhas e é colada no terminal sem aparecer na tela; ela nunca
+vai para arquivo, commit, chamado ou histórico do shell. Use só letras e números (ela vai dentro
+de uma URL; com `/`, `@` ou `:` seria preciso codificar). Se o gerenciador não gerar, gere com
+`openssl rand -hex 32` (64 caracteres, 256 bits) e guarde no gerenciador antes de seguir.
+
+Uma vez por role, com a role de migração (que criou as roles na 0001 e por isso pode alterá-las):
+
+```bash
+ROLE=app     # depois, backup_ro
+read -rs SENHA_ROLE && export SENHA_ROLE     # cole a senha do gerenciador
+if [ "${#SENHA_ROLE}" -lt 32 ]; then
+  echo "senha vazia ou curta: nada foi alterado"
+else
+  psql -X -v ON_ERROR_STOP=1 -v role="$ROLE" "$NEON_URL_MIGRACAO" <<'SQL'
+\getenv senha SENHA_ROLE
+ALTER ROLE :"role" LOGIN PASSWORD :'senha';
+SQL
+fi
+unset SENHA_ROLE
+```
+
+O `\getenv` (psql 15 ou mais novo) lê a senha da variável de ambiente, então ela não aparece na
+linha de comando nem no texto do SQL. Executado no Postgres local: a role simulada passou de
+`NOLOGIN` a `LOGIN`, com a senha guardada como `SCRAM-SHA-256`, e conectou com ela; com a
+variável vazia, nada foi alterado. PREMISSA: o Neon exige senha com pelo menos 60 bits de
+entropia para role criada por SQL; os 64 caracteres hexadecimais atendem com folga.
+
+**`owner`**: nenhum fluxo de hoje conecta como `owner`. O deploy e os procedimentos deste runbook
+usam a role de migração e assumem `owner` com `SET ROLE` (seção "Conexões"). Dar login a ela é o
+mesmo comando com `ROLE=owner`, mas abre uma porta que nada usa.
+`[A ESCLARECER: dar LOGIN à owner ou mantê-la NOLOGIN (decisão do dono do produto)]`
+
+Trocar a senha depois (rotação, seção 4) é o mesmo comando; para a `app`, atualize em seguida o
+Hyperdrive.
+
+### 8.3 Conferir as roles e o pgcrypto
+
+Depois do passo 2 e de novo depois de 8.2 (executado no Postgres local):
+
+```bash
+psql -X -v ON_ERROR_STOP=1 "$NEON_URL_MIGRACAO" <<'SQL'
+select rolname, rolcanlogin, rolsuper, rolcreaterole, rolcreatedb, rolbypassrls
+from pg_roles where rolname in ('owner', 'app', 'backup_ro') order by 1;
+select has_function_privilege('owner', 'public.crypt(text, text)', 'execute') as crypt,
+       has_function_privilege('owner', 'public.gen_salt(text, integer)', 'execute') as gen_salt;
+SQL
+```
+
+Esperado: as três com `rolsuper`, `rolcreaterole`, `rolcreatedb` e `rolbypassrls` em `f`;
+`rolcanlogin` em `t` só nas que receberam login; `crypt` e `gen_salt` em `t` (o hash de senha
+roda como `owner`, migration 0003). Se algo vier diferente, pare: o login do app falharia ou uma
+role teria poder demais.
+
+### 8.4 URLs no GitHub
+
+As URLs são montadas na hora, a partir da conexão **direta** do console do Neon (host sem
+`-pooler`: o `backup.yml` recusa o pooler e o spike do Hyperdrive usou a direta), e vão para o
+`gh` pela entrada padrão:
+
+```bash
+HOST='<host da conexão direta, ep-...neon.tech>'; BANCO='<banco>'
+read -rs SENHA_ROLE   # senha da app
+printf '%s' "postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_APP --env producao
+read -rs SENHA_ROLE   # senha da backup_ro
+printf '%s' "postgresql://backup_ro:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_BACKUP --env producao
+unset SENHA_ROLE
+```
+
+**Não executado** (exige o repositório no GitHub com o environment `producao`).
+
+### 8.5 Criar o Hyperdrive
+
+Com cache **desligado**, como no spike `set-local-hyperdrive`, que mediu o isolamento nessa
+condição (sintaxe conferida com `--help` no wrangler 4.152.0; **não executado**, exige a conta
+Cloudflare):
+
+```bash
+read -rs SENHA_ROLE   # senha da app
+pnpm --filter @es/api exec wrangler hyperdrive create evolucao-segura \
+  --caching-disabled \
+  --connection-string="postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require"
+unset SENHA_ROLE
+```
+
+O comando imprime o id: troque o placeholder em `wrangler.jsonc` (`hyperdrive[0].id`). Não
+altere o `sslmode` da URL (o spike viu que o `pg` trata `require` como `verify-full`, sem efeito
+no resultado).
+
+## 9. Teste de fumaça do isolamento no Hyperdrive
+
+Quando: depois do primeiro deploy (passo 7 da seção 8.1) e depois de qualquer mudança no
+Hyperdrive, no `db.ts` ou na versão do `pg`. Por quê: o teste de isolamento do CI roda contra o
+Hyperdrive local, sem o pooler real; a garantia de que o contexto `app.usuario_id` não passa de
+uma requisição para outra numa conexão reaproveitada veio do spike e precisa ser repetida em
+produção (ADR-005).
+
+O teste repete o do spike: 1.000 requisições, 20 por vez, alternando duas contas. Cada uma lê
+`GET /api/perfil`, que só devolve a linha do profissional do contexto (RLS forçada). Se o
+contexto vazasse, a resposta traria o nome da outra conta ou nenhum perfil. Rotas autenticadas
+não passam pelo limite por IP (`middleware/limite.ts`), então as 1.000 requisições não dão `429`.
+
+### 9.1 Preparar
+
+1. Crie duas contas de teste pelo próprio app, com e-mails que você controla, e salve o perfil de
+   cada uma com um nome que não se repete em nenhum outro lugar, por exemplo `Fumaca A` e
+   `Fumaca B` (sem acento, para a comparação ser literal).
+2. Entre nas duas contas, cada uma num perfil de navegador diferente, e copie o valor do cookie
+   `__Host-sid` de cada uma (ferramentas do desenvolvedor > Aplicativo > Cookies). Esse valor é
+   uma sessão viva: trate como senha e nunca o grave em arquivo. A sessão vence com 15 minutos
+   sem uso; rode o teste logo em seguida.
+
+### 9.2 Rodar
+
+Salve como `fumaca.sh` fora do repositório (não tem segredo, mas não é código do produto):
+
+```bash
+#!/usr/bin/env bash
+# Duas sessões alternadas, em ondas paralelas; cada resposta precisa ser do próprio dono.
+set -u
+: "${BASE:?}" "${SID_A:?}" "${SID_B:?}" "${NOME_A:?}" "${NOME_B:?}"
+N="${N:-1000}"; P="${P:-20}"
+uma() {
+  local sid=$SID_B meu=$NOME_B outro=$NOME_A corpo
+  if (( $1 % 2 == 0 )); then sid=$SID_A meu=$NOME_A outro=$NOME_B; fi
+  corpo=$(curl -s -w '|%{http_code}' -H "cookie: __Host-sid=$sid" "$BASE/api/perfil")
+  if [[ "$corpo" != *'|200' ]]; then echo "http_${corpo##*|}"
+  elif [[ "$corpo" == *"\"nome\":\"$outro\""* ]]; then echo VAZOU
+  elif [[ "$corpo" == *"\"nome\":\"$meu\""* ]]; then echo ok
+  else echo sem_nome; fi
+}
+{
+  for (( i = 1; i <= N; i++ )); do
+    uma "$i" &
+    (( i % P == 0 )) && wait
+  done
+  wait
+} | sort | uniq -c
+```
+
+E rode (o script só imprime contagens, nunca o corpo nem o cookie):
+
+```bash
+read -rs SID_A; read -rs SID_B      # cole os dois cookies, um de cada vez
+BASE='https://<domínio>' NOME_A='Fumaca A' NOME_B='Fumaca B' SID_A="$SID_A" SID_B="$SID_B" bash fumaca.sh
+unset SID_A SID_B
+```
+
+### 9.3 Ler o resultado
+
+| Saída                    | Significa                                                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1000 ok`, e nada mais   | Passou.                                                                                                                                             |
+| qualquer `VAZOU`         | Uma conta leu o perfil da outra: **vazamento de contexto**. Não libere o app para usuários reais; abra um incidente de isolamento e guarde a saída. |
+| qualquer `sem_nome`      | Resposta `200` sem o nome esperado: o contexto pode ter chegado vazio ou errado. Trate como vazamento até provar o contrário.                       |
+| `http_401`               | A sessão venceu ou o cookie foi colado errado; entre de novo e repita.                                                                              |
+| `http_404`               | A conta não tem perfil salvo (passo 1 de 9.1). Se o perfil existe, o contexto chegou vazio: trate como `sem_nome`.                                  |
+| `http_5xx` ou `http_000` | Erro no Worker ou na rede; veja o Sentry e repita. Não conta como aprovado.                                                                         |
+
+Depois: saia das duas contas (encerra as sessões) e peça a exclusão delas pelo app (a purga roda
+30 dias depois, seção 3.3). Registre a data e a saída em 9.4.
+
+Verificação do próprio script, no Worker local (`wrangler dev`, Hyperdrive local, sem o pooler
+real), contra um banco descartável com duas contas e duas sessões semeadas: `1000 ok` em 42 s;
+com os nomes trocados de propósito, `20 VAZOU` em 20; com um cookie inválido, `5 http_401` e
+`5 ok`. Isso prova que o script detecta o vazamento, não que o Hyperdrive real isola.
+
+### 9.4 Registro
+
+| Data | Deploy (`run_id`) | Resultado |
+| ---- | ----------------- | --------- |
+
+**Pendente**: o teste em produção depende do primeiro deploy, que ainda não foi feito.
