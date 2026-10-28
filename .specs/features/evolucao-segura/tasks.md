@@ -3810,7 +3810,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Restaura a partir de cópia limpa
+- [x] Restaura a partir de cópia limpa
 
 **Tests**: none
 **Gate**: build
