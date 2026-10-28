@@ -3576,9 +3576,9 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 **Done when**:
 
 - [x] Teste confere o manifest gerado
-- [ ] Chrome reconhece como instalável (checagem manual registrada)
+- [x] Chrome reconhece como instalável (checagem manual registrada)
 
-- 2026-10-28, nota: manifest em `src/pwa/manifesto.ts` e `vite-plugin-pwa` 2.0.0 (`injectManifest`, `sw.ts` próprio com push, `injectionPoint` desligado até a T184). Ícones 192 e 512 são os da cópia do legado (quadrado verde liso, ocupa tudo: serve de maskable), PROVISÓRIOS. FALTA a checagem manual do Chrome: `pnpm --filter @es/web build`, `pnpm --filter @es/web exec vite preview`, abrir no Chrome, DevTools > Application > Manifest (sem erros, ícones maskable) e o ícone de instalar na barra de endereço; marcar o item e registrar a data.
+- 2026-10-28, nota: manifest em `src/pwa/manifesto.ts` e `vite-plugin-pwa` 2.0.0 (`injectManifest`, `sw.ts` próprio com push, `injectionPoint` desligado até a T184). Ícones 192 e 512 são os da cópia do legado (quadrado verde liso, ocupa tudo: serve de maskable), PROVISÓRIOS. Checagem manual do Chrome feita em 2026-10-28 (`vite preview`, localhost:4173/app): manifest sem erros, ícones 192 e 512 (any e maskable) e display standalone corretos, ícone de instalar na barra de endereço. Sobraram só dois avisos opcionais do DevTools (screenshots com form_factor para a UI de instalação mais rica; `id` não definido no manifest, que usa start_url); ícones seguem provisórios.
 
 **Tests**: unit
 **Gate**: build
