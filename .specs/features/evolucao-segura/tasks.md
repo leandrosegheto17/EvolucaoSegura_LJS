@@ -3969,8 +3969,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Migrations 0001 em diante aplicam por uma role sem superusuário
-- [ ] O teste falha quando uma migration usa `SET` de parâmetro personalizado na definição de função (provado numa cópia, sem alterar teste existente)
+- [x] Migrations 0001 em diante aplicam por uma role sem superusuário
+- [x] O teste falha quando uma migration usa `SET` de parâmetro personalizado na definição de função (provado numa cópia, sem alterar teste existente)
 
 **Tests**: integration
 **Gate**: full
