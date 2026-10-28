@@ -107,7 +107,15 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
     }),
   );
   app.route('/api', rotasRedefinir);
-  app.route('/api', rotasContaExcluirConfirmar());
+  app.route(
+    '/api',
+    rotasContaExcluirConfirmar({
+      asaas: opcoes.asaas ?? asaasPadrao,
+      email: opcoes.email ?? emailCobrancaPadrao,
+      capturarErro,
+      emSegundoPlano: opcoes.emSegundoPlano ?? waitUntil,
+    }),
+  );
   app.route(
     '/api',
     rotasWebhookAsaas({

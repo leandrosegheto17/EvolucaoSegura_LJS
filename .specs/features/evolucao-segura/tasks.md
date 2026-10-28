@@ -3415,8 +3415,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Asaas cancelado
-- [ ] Link de desistência válido por 30 dias
+- [x] Asaas cancelado
+- [x] Link de desistência válido por 30 dias
+
+- 2026-10-28, feito: na transação da confirmação, `cancelarAssinaturaDaExclusao` cancela no Asaas toda assinatura com id lá e estado diferente de `cancelada` (404 = já cancelada); `ativa` vira `cancelada` no app (auditada `assinatura.cancelada`); os demais estados ficam (o trial restante volta na desistência). Asaas fora: 503 `cobranca_indisponivel`, tudo desfeito (conta não bloqueada, link de confirmação ainda vale), erro ao Sentry. Link de desistência: token `desistencia` de 256 bits, só SHA-256, uso único, vencendo junto com a purga (bloqueio + 30 dias, mesmo `now()`). E-mail com a data da purga (DD/MM/AAAA, America/Sao_Paulo) e `/desistir-exclusao?token=`, depois do COMMIT; falha ao Sentry; sem Resend, desligado. PREMISSAS: 503 em vez de bloquear com o cancelamento pendente (padrão do PLANO-12); caminho `/desistir-exclusao` (design, `publico/`); textos do e-mail escritos pelo implementador.
 
 **Tests**: integration
 **Gate**: full
