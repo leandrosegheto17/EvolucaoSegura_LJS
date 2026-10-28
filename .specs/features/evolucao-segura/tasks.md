@@ -3704,7 +3704,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Sessão criada, evolução registrada (sessão vira realizada)
+- [x] Sessão criada, evolução registrada (sessão vira realizada)
 
 **Tests**: e2e
 **Gate**: full

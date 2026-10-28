@@ -17,6 +17,7 @@ export default defineConfig({
   // resposta redirecionada não pode servir uma navegação). Defeito da T184, relatado à parte.
   use: {
     serviceWorkers: 'block',
+    timezoneId: 'America/Sao_Paulo',
     baseURL: URL_APP,
     trace: 'retain-on-failure',
     locale: 'pt-BR',
