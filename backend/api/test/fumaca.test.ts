@@ -19,7 +19,11 @@ describe('harness do Worker', () => {
       const resultado = await client.query<{ banco: string; um: number }>(
         'select current_database() as banco, 1 as um',
       );
-      expect(resultado.rows[0]).toEqual({ banco: 'evolucao_segura', um: 1 });
+      // O banco é o temporário da execução (es_api_*), criado pelo globalSetup (padrão Neon, item 6).
+      expect(resultado.rows[0]).toEqual({
+        banco: expect.stringMatching(/^es_api_\d+_\d+$/),
+        um: 1,
+      });
     } finally {
       await client.end();
     }
