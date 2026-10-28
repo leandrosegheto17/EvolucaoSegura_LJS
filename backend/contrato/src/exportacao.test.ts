@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  JANELA_LIMITE_EXPORTACAO_SEGUNDOS,
+  LIMITE_EXPORTACOES,
   PROBLEMA_CURSOR_INVALIDO,
+  PROBLEMA_LIMITE_EXPORTACAO,
   PROBLEMA_PAGINA_INVALIDA,
   PROBLEMA_PERIODO_INVALIDO,
   PROBLEMA_PRONTUARIO_NAO_ENCONTRADO,
@@ -169,6 +172,23 @@ describe('problemas da exportação completa (EXP-04)', () => {
       titulo: 'Cursor inválido',
       status: 400,
       codigo: 'cursor_invalido',
+    });
+  });
+});
+
+// T172 / EXP-05: mais de 5 exportações iniciadas em 60 segundos responde 429.
+describe('limite de exportações (EXP-05)', () => {
+  it('5 exportações por janela de 60 s', () => {
+    expect(LIMITE_EXPORTACOES).toBe(5);
+    expect(JANELA_LIMITE_EXPORTACAO_SEGUNDOS).toBe(60);
+  });
+
+  it('acima do limite responde 429', () => {
+    expect(PROBLEMA_LIMITE_EXPORTACAO).toEqual({
+      tipo: 'about:blank',
+      titulo: 'Muitas exportações',
+      status: 429,
+      codigo: 'limite_exportacao',
     });
   });
 });

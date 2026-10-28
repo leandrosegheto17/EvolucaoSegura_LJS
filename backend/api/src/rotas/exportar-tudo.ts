@@ -10,6 +10,7 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import type { Trx } from '../db.ts';
 import { type AmbienteAutenticado, autenticada } from '../middleware/autenticada.ts';
+import { limiteExportacao } from '../middleware/limite-exportacao.ts';
 import { idValido } from '../repositorios/pacientes.ts';
 import { responderProblemaAgenda as responderProblema } from '../repositorios/sessoes.ts';
 
@@ -27,6 +28,7 @@ import { responderProblemaAgenda as responderProblema } from '../repositorios/se
 // - Limite acima do máximo, fora do formato ou parâmetro desconhecido: 400 pagina_invalida;
 //   cursor que não decodifica, com tabela fora da lista ou chave fora do tipo da tabela: 400
 //   cursor_invalido. Nenhum dos dois audita.
+// - Início da exportação (sem cursor) conta no limite de 5 em 60 s (EXP-05, limite-exportacao.ts).
 // Além do RLS, a consulta filtra por usuario_id; o cursor não leva usuário, então o de outro
 // profissional só anda pelo que é do próprio.
 
@@ -112,6 +114,7 @@ function proximoCursor(atual: TabelaExportacao, lida: Lida): string | null {
 export const rotasExportarTudo = new Hono<AmbienteAutenticado>().get(
   '/exportacao',
   ...autenticada,
+  limiteExportacao,
   async (c) => {
     const { trx, usuarioId } = c.var;
     const consulta = esquemaConsultaExportacao.safeParse(c.req.query());

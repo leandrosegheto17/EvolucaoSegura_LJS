@@ -3235,8 +3235,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Mais de 5 exportações iniciadas em 60 s responde 429
-- [ ] A rota do prontuário não conta no limite
+- [x] Mais de 5 exportações iniciadas em 60 s responde 429
+- [x] A rota do prontuário não conta no limite
+
+- 2026-10-27, feito: `limiteExportacao` depois da lista `autenticada` em `GET /api/exportacao`; pedido sem cursor chama `contar_uso('exportacao', 60)` e acima de 5 responde 429 `limite_exportacao` (contrato: `LIMITE_EXPORTACOES`, `JANELA_LIMITE_EXPORTACAO_SEGUNDOS`, `PROBLEMA_LIMITE_EXPORTACAO`); `limite_uso` no `Banco`. PREMISSAS: o pedido sem cursor conta antes da validação da página (início com limite inválido conta); a contagem fica gravada também na resposta 429; código e título do problema escritos pelo implementador. Teste da T171 mudado com aprovação do usuário (2026-10-27): `beforeEach` que zera `limite_uso` de A e B em `exportar-tudo.test.ts`, sem mudar asserção.
 
 **Tests**: integration
 **Gate**: full

@@ -6,7 +6,7 @@ import {
   TAMANHO_MAXIMO_PAGINA,
 } from '@es/contrato/exportacao';
 import { RESPOSTA_LOGIN_RECUSADO, esquemaProblema } from '@es/contrato/identidade';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { comoAdmin, sessaoDeTeste } from '../apoio.ts';
 import { type Sessao, pedir } from './pacientes-apoio.ts';
 
@@ -198,6 +198,15 @@ beforeAll(async () => {
   await semear(b.usuarioId);
   bancoA = await noBanco(a.usuarioId);
 }, 120_000);
+
+// T172 (EXP-05): o limite de 5 inícios em 60 s vale também aqui, e estes casos iniciam a
+// exportação de A e de B mais vezes que isso. Zera o contador antes de cada caso, sem mudar
+// nenhuma asserção (aprovado pelo usuário em 2026-10-27).
+beforeEach(async () => {
+  await comoAdmin(`delete from limite_uso where usuario_id = any($1)`, [
+    [a.usuarioId, b.usuarioId],
+  ]);
+});
 
 describe('exige sessão', LENTO, () => {
   it('sem sessão responde 401', async () => {

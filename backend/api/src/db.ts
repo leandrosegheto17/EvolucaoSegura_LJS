@@ -295,6 +295,14 @@ export interface Banco {
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;
   };
+  // Contador de uso por chave e janela (migration 0011): a app só lê; conta pelo
+  // public.contar_uso (EXP-05).
+  limite_uso: {
+    usuario_id: string;
+    chave: string;
+    janela_inicio: Generated<Date>;
+    contagem: Generated<number>;
+  };
   // Push (migration 0017): a app lê, grava e apaga a assinatura e só atualiza as chaves.
   push_subscription: {
     id: Generated<string>;

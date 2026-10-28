@@ -174,3 +174,10 @@ export interface PaginaExportacao {
 export const PROBLEMA_PAGINA_INVALIDA = problema('pagina_invalida', 400, 'Página inválida');
 // EXP-04: cursor que a API não emitiu (fora do formato, tabela fora da lista ou chave inválida).
 export const PROBLEMA_CURSOR_INVALIDO = problema('cursor_invalido', 400, 'Cursor inválido');
+
+// T172 / EXP-05: no máximo 5 exportações completas iniciadas (primeira página, sem cursor) por
+// janela de 60 s, com o contador em limite_uso; a sexta responde 429. PREMISSA: código
+// limite_exportacao e título do problema escritos pelo implementador.
+export const LIMITE_EXPORTACOES = 5;
+export const JANELA_LIMITE_EXPORTACAO_SEGUNDOS = 60;
+export const PROBLEMA_LIMITE_EXPORTACAO = problema('limite_exportacao', 429, 'Muitas exportações');
