@@ -1,7 +1,7 @@
 # Comparação visual com o legado (rascunho)
 
 Requisito: PUB-02 (mesmo layout do código atual do legado). Tarefas: T161, T188, T189, T190.
-Estado: **RASCUNHO**. A coluna Decisão está `[A DECIDIR pelo usuário]` em todas as linhas; a sugestão é minha. Nenhuma caixa `Done when` foi marcada.
+Estado: **CONFERIDO com o usuário em 2026-10-28** (grupos T161, T188, T189 e T190). Nenhuma diferença ficou sem decisão; nenhuma tarefa nova saiu da conferência.
 
 ## Como foi feito
 
@@ -71,21 +71,21 @@ Diferença geral: as páginas públicas do novo não usam o cartão, o logo e os
 
 | Tela (novo / legado) | Base | Diferença | Decisão |
 |---|---|---|---|
-| Financeiro (`/app/financeiro` / `/financeiro`) | print | Mesmo layout (filtro, tabela). Novo: linha "Total pendente", ordem alfabética e link "Registrar pagamento" (SPEC_DEVIATION em `app/financeiro/financeiro.tsx`). Legado tinha modo privacidade (iniciais). | [A DECIDIR pelo usuário] Sugestão: aceitar. |
-| Pagamento (`.../pagamento/:sessaoId` / `/sessoes/:id/pagamento`) | print + leitura | Novo não lista o histórico de correções e o ajuste de preço tem rota própria; não afirma se já foi pago (SPEC_DEVIATION em `app/financeiro/pagamento.tsx`). | [A DECIDIR pelo usuário] Sugestão: aceitar, ou igualar o histórico se o usuário quiser. |
-| Valor da sessão (preço do paciente e da sessão) | print | Novo tem duas rotas (paciente e sessão); legado `/pacientes/:id/valor` e dentro do pagamento. Não inspecionada em detalhe. | [A DECIDIR pelo usuário] Sugestão: conferir. |
-| Auditoria (`/app/auditoria` / `/auditoria`) | print | Mesmo layout (título, texto, abas, tabela). Legado: caixa "Tipo" e filtro IA sobre os eventos já carregados; novo: no print a caixa "Tipo" aparece com "Todos os eventos", e o filtro vai ao servidor (SPEC_DEVIATION em `app/auditoria/auditoria.tsx`). Os rótulos do print do legado vêm do mock. | [A DECIDIR pelo usuário] Sugestão: aceitar. |
-| Histórico do paciente (`/app/auditoria` com paciente / `/pacientes/:id/historico`) | leitura | Unificado na mesma tela no novo. Print do novo dessa rota não gerado. | [A DECIDIR pelo usuário] Sugestão: aceitar. |
-| Meu plano (`/app/plano` / sem equivalente) | print (novo) | Tela nova, sem mockup: composição de componentes do guia (SPEC_DEVIATION em `app/plano/meu-plano.tsx`). Selo de período de teste, formulário de nome e CPF/CNPJ, botão Assinar. O estado com Pix não foi gerado (exige o sandbox do Asaas). | [A DECIDIR pelo usuário] Sugestão: manter; usuário aprovar o visual, já que não há referência. |
-| Perfil (`/app/perfil` / `/perfil`) | print | Gerados, não inspecionados (o legado tem especialidades, fim de semana e histórico). | [A DECIDIR pelo usuário] Sugestão: conferir. |
-| Configurações (`/app/configuracoes` / `/configuracoes`) | print | Gerados, não inspecionados. Novo inclui notificações push; legado tinha IA e privacidade da agenda. | [A DECIDIR pelo usuário] Sugestão: conferir. |
-| Exportar (`/app/exportar` / `/exportar`) | print | Gerados. O PDF do novo usa Roboto no lugar de Inter e Source Serif 4 (SPEC_DEVIATION em `export/pdf-prontuario.ts`); o PDF em si não foi gerado nem comparado. | [A DECIDIR pelo usuário] Sugestão: aceitar a fonte, salvo pedido de igualar. |
-| Excluir conta (`/app/conta/excluir` / sem equivalente) | print (novo) | Nova. | [A DECIDIR pelo usuário] Sugestão: manter. |
+| Financeiro (`/app/financeiro` / `/financeiro`) | print | Mesmo layout (filtro, tabela). Novo: linha "Total pendente", ordem alfabética e link "Registrar pagamento" (SPEC_DEVIATION em `app/financeiro/financeiro.tsx`). Legado tinha modo privacidade (iniciais). | Decidido pelo usuário (2026-10-28): aceitar (sem modo privacidade); diferença justificada. |
+| Pagamento (`.../pagamento/:sessaoId` / `/sessoes/:id/pagamento`) | print + leitura | Novo não lista o histórico de correções e o ajuste de preço tem rota própria; não afirma se já foi pago (SPEC_DEVIATION em `app/financeiro/pagamento.tsx`). | Decidido pelo usuário (2026-10-28): aceitar (sem histórico de correções); diferença justificada. |
+| Valor da sessão (preço do paciente e da sessão) | print | Novo tem duas rotas (paciente e sessão); legado `/pacientes/:id/valor` e dentro do pagamento. Não inspecionada em detalhe. | Decidido pelo usuário (2026-10-28): aceitar; conferido. |
+| Auditoria (`/app/auditoria` / `/auditoria`) | print | Mesmo layout (título, texto, abas, tabela). Legado: caixa "Tipo" e filtro IA sobre os eventos já carregados; novo: no print a caixa "Tipo" aparece com "Todos os eventos", e o filtro vai ao servidor (SPEC_DEVIATION em `app/auditoria/auditoria.tsx`). Os rótulos do print do legado vêm do mock. | Decidido pelo usuário (2026-10-28): aceitar (filtro no servidor); diferença justificada. |
+| Histórico do paciente (`/app/auditoria` com paciente / `/pacientes/:id/historico`) | leitura | Unificado na mesma tela no novo. Print do novo dessa rota não gerado. | Decidido pelo usuário (2026-10-28): aceitar (unificado na auditoria). |
+| Meu plano (`/app/plano` / sem equivalente) | print (novo) | Tela nova, sem mockup: composição de componentes do guia (SPEC_DEVIATION em `app/plano/meu-plano.tsx`). Selo de período de teste, formulário de nome e CPF/CNPJ, botão Assinar. O estado com Pix não foi gerado (exige o sandbox do Asaas). | Decidido pelo usuário (2026-10-28): visual aprovado pelo usuário (sem referência de mockup). |
+| Perfil (`/app/perfil` / `/perfil`) | print | Gerados, não inspecionados (o legado tem especialidades, fim de semana e histórico). | Decidido pelo usuário (2026-10-28): conferido; aceitar. |
+| Configurações (`/app/configuracoes` / `/configuracoes`) | print | Gerados, não inspecionados. Novo inclui notificações push; legado tinha IA e privacidade da agenda. | Decidido pelo usuário (2026-10-28): conferido; aceitar (push no lugar de IA e privacidade da agenda). |
+| Exportar (`/app/exportar` / `/exportar`) | print | Gerados. O PDF do novo usa Roboto no lugar de Inter e Source Serif 4 (SPEC_DEVIATION em `export/pdf-prontuario.ts`); o PDF em si não foi gerado nem comparado. | Decidido pelo usuário (2026-10-28): conferido; aceitar a fonte Roboto no PDF (PDF não gerado nem comparado); diferença justificada. |
+| Excluir conta (`/app/conta/excluir` / sem equivalente) | print (novo) | Nova. | Decidido pelo usuário (2026-10-28): visual aprovado pelo usuário. |
 
 ---
 
-## Perguntas para o usuário
+## Respostas do usuário (2026-10-28)
 
-1. As telas públicas devem ganhar o cartão, o logo e os painéis do login legado? (Recomendado: sim, é a maior distância visual.)
-2. A agenda volta à grade por hora do legado antes do lançamento, ou a lista por dia basta por enquanto?
-3. O login com Google, o primeiro acesso e os documentos com IA do legado ficam fora do produto novo?
+1. Telas públicas: manter o visual simples (sem cartão, logo ou painéis).
+2. Agenda: aceitar a lista por dia; a grade por hora fica fora.
+3. Login com Google, primeiro acesso e documentos com IA: fora do escopo.
