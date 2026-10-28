@@ -21,17 +21,17 @@ O legado tem só o app (login em duas colunas); a landing, termos, privacidade, 
 
 | Tela (novo / legado) | Base | Diferença | Decisão |
 |---|---|---|---|
-| Entrar (`/entrar` / `/entrar`) | print | Legado: cartão branco com logo, subtítulo, botão "Entrar com Google", divisor "ou com e-mail", campos com asterisco, botão primário "Continuar", painel esquerdo "Antes · caderno" e direito "Agora · Evolução Segura". Novo: formulário solto sobre fundo bege, sem cartão, sem logo, sem Google, botão "Entrar" só com contorno, link "Criar conta". O 2FA em duas etapas existe nos dois. | [A DECIDIR pelo usuário] Sugestão: igualar ao legado (cartão, logo, botão primário e painéis); Google só se entrar no escopo, senão aceitar a ausência. |
-| Recuperar acesso (`/recuperar`) | print | Legado: título, indicador de 3 passos (Pedir link, Nova senha, Concluído) e formulário. Novo: título, texto explicativo, campo e botão com contorno; sem indicador de passos, sem cartão. | [A DECIDIR pelo usuário] Sugestão: igualar ao legado (cartão e passos). |
-| Redefinir senha (`/redefinir` / passo 2 de `/recuperar`) | leitura | No legado é o passo 2 da mesma página; no novo é rota própria. Print do novo guardado, sem token válido (mostra só o link inválido). | [A DECIDIR pelo usuário] Sugestão: aceitar (rota própria é exigência do link do e-mail). |
-| Primeiro acesso (sem equivalente / `/primeiro-acesso`) | print (legado) | Só no legado (código por e-mail). No novo o cadastro público cumpre a função. | [A DECIDIR pelo usuário] Sugestão: aceitar. |
-| Sessão expirada (`/sessao-expirada`) | print | Mesma rota. Novo sem cartão; legado com cartão. | [A DECIDIR pelo usuário] Sugestão: igualar junto com Entrar. |
-| Acesso negado (sem equivalente / `/acesso-negado`) | print (legado) | Só no legado. | [A DECIDIR pelo usuário] Sugestão: aceitar, se não houver caso de uso no novo. |
-| Landing (`/` / sem equivalente) | print (novo) | Nova (PUB-01): título, texto, "Começar grátis", planos Free e Pro, rodapé de links. Visual simples, sem imagem. | [A DECIDIR pelo usuário] Sugestão: manter; revisar o acabamento. |
-| Termos e Privacidade | print (novo) | Novas, sem equivalente. | [A DECIDIR pelo usuário] Sugestão: manter. |
-| Cadastro e Confirmar e-mail | print (novo) | Novas; mesmo visual simples de Entrar. | [A DECIDIR pelo usuário] Sugestão: seguir a decisão de Entrar. |
-| Confirmar e desistir da exclusão | leitura | Novas (conta). Sem print útil: exigem token real de e-mail. | [A DECIDIR pelo usuário] Sugestão: manter. |
-| Entrar com Google (sem equivalente / `/entrar/google`) | leitura | Só no legado. | [A DECIDIR pelo usuário] Sugestão: aceitar se o produto não oferece Google. |
+| Entrar (`/entrar` / `/entrar`) | print | Legado: cartão branco com logo, subtítulo, botão "Entrar com Google", divisor "ou com e-mail", campos com asterisco, botão primário "Continuar", painel esquerdo "Antes · caderno" e direito "Agora · Evolução Segura". Novo: formulário solto sobre fundo bege, sem cartão, sem logo, sem Google, botão "Entrar" só com contorno, link "Criar conta". O 2FA em duas etapas existe nos dois. | Decidido pelo usuário (2026-10-28): manter o visual simples; diferença justificada. Google fora do escopo. |
+| Recuperar acesso (`/recuperar`) | print | Legado: título, indicador de 3 passos (Pedir link, Nova senha, Concluído) e formulário. Novo: título, texto explicativo, campo e botão com contorno; sem indicador de passos, sem cartão. | Decidido pelo usuário (2026-10-28): manter o visual simples (sem cartão nem indicador de passos); diferença justificada. |
+| Redefinir senha (`/redefinir` / passo 2 de `/recuperar`) | leitura | No legado é o passo 2 da mesma página; no novo é rota própria. Print do novo guardado, sem token válido (mostra só o link inválido). | Decidido pelo usuário (2026-10-28): aceitar (rota própria é exigência do link do e-mail). |
+| Primeiro acesso (sem equivalente / `/primeiro-acesso`) | print (legado) | Só no legado (código por e-mail). No novo o cadastro público cumpre a função. | Decidido pelo usuário (2026-10-28): aceitar; fora do escopo (o cadastro público cumpre a função). |
+| Sessão expirada (`/sessao-expirada`) | print | Mesma rota. Novo sem cartão; legado com cartão. | Decidido pelo usuário (2026-10-28): manter o visual simples; diferença justificada. |
+| Acesso negado (sem equivalente / `/acesso-negado`) | print (legado) | Só no legado. | Decidido pelo usuário (2026-10-28): aceitar; fora do escopo. |
+| Landing (`/` / sem equivalente) | print (novo) | Nova (PUB-01): título, texto, "Começar grátis", planos Free e Pro, rodapé de links. Visual simples, sem imagem. | Decidido pelo usuário (2026-10-28): manter. |
+| Termos e Privacidade | print (novo) | Novas, sem equivalente. | Decidido pelo usuário (2026-10-28): manter (termos seguem sem revisão jurídica, pendência anotada). |
+| Cadastro e Confirmar e-mail | print (novo) | Novas; mesmo visual simples de Entrar. | Decidido pelo usuário (2026-10-28): manter o visual simples, como Entrar. |
+| Confirmar e desistir da exclusão | leitura | Novas (conta). Sem print útil: exigem token real de e-mail. | Decidido pelo usuário (2026-10-28): manter. |
+| Entrar com Google (sem equivalente / `/entrar/google`) | leitura | Só no legado. | Decidido pelo usuário (2026-10-28): fora do escopo; diferença justificada. |
 
 Diferença geral: as páginas públicas do novo não usam o cartão, o logo e os painéis do legado. É a maior distância visual do app.
 
