@@ -3827,8 +3827,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Contagem por tabela bate com a origem
-- [ ] Falha em qualquer divergência
+- [x] Contagem por tabela bate com a origem
+- [x] Falha em qualquer divergência
 
 **Tests**: none
 **Gate**: build
