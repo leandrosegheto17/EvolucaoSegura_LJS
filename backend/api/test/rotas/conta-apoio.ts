@@ -9,6 +9,18 @@ import { comoAdmin, criarConta, ipUnico } from '../apoio.ts';
 
 export type App = ReturnType<typeof criarApp>;
 
+// Token de e-mail semeado direto (só o SHA-256 no banco), válido por `minutos` a partir de agora
+// (negativo = já vencido). Devolve o texto do token, como viria no link.
+export async function semearToken(usuarioId: string, tipo: string, minutos: number) {
+  const { token, hash } = await gerarToken();
+  await comoAdmin(
+    `insert into token_email (usuario_id, tipo, token_hash, expira_em)
+     values ($1, $2, $3, now() + make_interval(mins => $4))`,
+    [usuarioId, tipo, hash, minutos],
+  );
+  return token;
+}
+
 export interface ContaComSessao {
   usuarioId: string;
   email: string;

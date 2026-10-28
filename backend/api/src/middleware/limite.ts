@@ -24,7 +24,7 @@ const ACESSO = new Set([
 // Motivo: é a rota do monitoramento (OPS-06), não toca o banco nem chama serviço externo, e o
 // teste existente do health monta o app sem os bindings de limite; mudar esse teste exige
 // aprovação do usuário. Pergunta registrada no relatório do lote 4.
-const PUBLICAS = new Set(['/api/cadastro/confirmar']);
+const PUBLICAS = new Set(['/api/cadastro/confirmar', '/api/conta/excluir/confirmar']);
 
 export function grupoDaRota(caminho: string): GrupoLimite | null {
   if (ACESSO.has(caminho)) return 'acesso';

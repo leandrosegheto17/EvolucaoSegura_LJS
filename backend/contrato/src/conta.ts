@@ -38,3 +38,13 @@ export const problemaRequisitosExclusao = (requisitos: RequisitoExclusao[]): Pro
 export const RESPOSTA_PEDIR_EXCLUSAO = { status: 'confirmacao_enviada' } as const;
 
 export const esquemaTokenExclusao = z.strictObject({ token });
+
+// CONTA-03, CONTA-05: a purga vem 30 dias depois da confirmação (o bloqueio); o link de
+// desistência vale até lá.
+export const DIAS_ATE_PURGA = 30;
+
+// 200 da confirmação (CONTA-03): conta bloqueada e a data da purga (ISO 8601).
+export interface RespostaConfirmarExclusao {
+  status: 'bloqueada';
+  purga_em: string;
+}

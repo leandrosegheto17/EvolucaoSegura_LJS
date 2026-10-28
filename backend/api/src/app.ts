@@ -17,6 +17,7 @@ import { rotasCadastro } from './rotas/cadastro.ts';
 import { rotasConfiguracoes } from './rotas/configuracoes.ts';
 import { rotasConfirmar } from './rotas/confirmar.ts';
 import { rotasContaExcluir } from './rotas/conta-excluir.ts';
+import { rotasContaExcluirConfirmar } from './rotas/conta-excluir-confirmar.ts';
 import { rotasDebitos } from './rotas/debitos.ts';
 import { rotasEu } from './rotas/eu.ts';
 import { rotasInicio } from './rotas/inicio.ts';
@@ -106,6 +107,7 @@ export function criarApp(opcoes: OpcoesApp = {}): Hono<{ Bindings: Cloudflare.En
     }),
   );
   app.route('/api', rotasRedefinir);
+  app.route('/api', rotasContaExcluirConfirmar());
   app.route(
     '/api',
     rotasWebhookAsaas({

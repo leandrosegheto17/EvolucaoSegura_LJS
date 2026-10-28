@@ -3395,8 +3395,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Login recusado depois de confirmar
-- [ ] Sessões abertas encerradas
+- [x] Login recusado depois de confirmar
+- [x] Sessões abertas encerradas
+
+- 2026-10-28, feito: `POST /api/conta/excluir/confirmar` (pública, só com o token, no limite `publico` por IP). Numa transação: consome o token `exclusao`, grava `bloqueado_exclusao_em = now()`, encerra todas as sessões abertas (UPDATE de data) e audita `conta.exclusao_confirmada` com o campo `bloqueado_exclusao_em`; 200 `{status: 'bloqueada', purga_em}` (bloqueio + `DIAS_ATE_PURGA` = 30 dias). Link vencido, usado, invalidado, de outro tipo ou de conta já bloqueada: 400 `link_invalido` sem gastar o token. O login e o 2FA já recusavam a conta bloqueada (`contaPodeEntrar`). PREMISSAS: rota pública (o link pode ser aberto noutro aparelho); corpo `{token}` como na confirmação de cadastro.
 
 **Tests**: integration
 **Gate**: full
