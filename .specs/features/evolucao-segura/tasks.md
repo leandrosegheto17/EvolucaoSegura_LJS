@@ -3435,9 +3435,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Volta a entrar com senha e 2FA
-- [ ] Plano `free` ou trial restante
-- [ ] Link depois da purga responde `link_invalido`
+- [x] Volta a entrar com senha e 2FA
+- [x] Plano `free` ou trial restante
+- [x] Link depois da purga responde `link_invalido`
+
+- 2026-10-28, feito: `POST /api/conta/desistir` (pública, `{token}`, limite `publico`). Numa transação: consome o token `desistencia`, limpa `bloqueado_exclusao_em` só se o bloqueio tem menos de 30 dias, devolve o plano e audita `conta.exclusao_desistida`; 200 `{status: 'desbloqueada'}`, sem abrir sessão. Plano: trial com `periodo_fim` futuro fica trial; os demais vão a free (ativa passa por cancelada, a única saída de ativa no PLANO-01), com o id da assinatura do Asaas limpo (`desvincular_assinatura_asaas`) e auditoria `assinatura.cancelada`/`assinatura.free` com ator = o profissional. Link vencido, usado, de outro tipo, de conta não bloqueada, com bloqueio de 30 dias ou mais, ou depois da purga (tokens apagados; simulado no teste apagando `token_email`, porque a purga é a T152): 400 `link_invalido`. Teste de ponta a ponta pedir, confirmar e desistir pelos links dos e-mails. PREMISSA: o Pro pago e cancelado na confirmação não volta (CONTA-04 diz free ou trial restante).
 
 **Tests**: integration
 **Gate**: full
