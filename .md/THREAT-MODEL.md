@@ -106,7 +106,7 @@ Nas tabelas, "Planejado" significa que a tarefa que entrega o controle ainda est
 | I      | Segredo commitado                      | gitleaks no CI; `.env.example` sem valores reais; segredos só em GitHub Secrets e `wrangler secret`      | OPS-05, OPS-11 |
 | I      | Backup lido por terceiros              | Cifra com `age` (chave pública no secret, privada fora do GitHub); artefato por 30 dias                  | OPS-01         |
 | I      | Dado pessoal no Sentry                 | Scrubbing de corpo, cookie e e-mail; release igual ao SHA                                                | OPS-08         |
-| T      | Migração destrutiva em produção        | Branch de restauração no Neon antes de migrar (mantendo as 2 mais recentes) e dump cifrado               | OPS-03         |
+| T      | Migração destrutiva em produção        | Dump cifrado com `age` antes de migrar, guardado como artefato por 30 dias                               | OPS-03         |
 | D      | Perda do banco                         | Backup diário e restauração testada antes da publicação                                                  | OPS-01, OPS-02 |
 | I      | Script de terceiros no navegador (XSS) | CSP sem origens externas além das necessárias; `nosniff`; `frame-ancestors 'none'`                       | OPS-09         |
 

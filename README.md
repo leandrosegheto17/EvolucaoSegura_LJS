@@ -93,8 +93,12 @@ Testes e scripts: `DATABASE_URL` (padrão: Postgres do docker-compose; é a URL 
 produção ao rodar `pnpm migrar`).
 
 Pipeline (GitHub Secrets do environment `producao`): `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`,
-`NEON_URL_APP`, `NEON_API_KEY`, `NEON_PROJECT_ID`, `NEON_ROLE_OWNER`, `NEON_DATABASE`,
-`AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+`NEON_URL_APP`, `AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+
+Branches do Neon: só duas, permanentes. `main` é produção, e é para ela que apontam os
+`NEON_URL_*` do environment `producao` (e o Hyperdrive de produção); `dev` é para ensaio à mão
+contra o Neon real e não tem variável no GitHub. O deploy não cria branch: o ponto de volta antes
+de migrar é o dump cifrado com `age` (`docs/runbook.md`, seções "Conexões" e 5).
 
 ## Testar
 

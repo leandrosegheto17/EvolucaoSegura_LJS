@@ -398,7 +398,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 **Acceptance Criteria**:
 1. [OPS-01] WHEN são 04:00 em America/Sao_Paulo THEN o `backup.yml` SHALL rodar `pg_dump -Fc` com a role `backup_ro`, cifrar com `age` (chave pública em secret) e guardar como artefato com retenção de 30 dias.
 2. The runbook SHALL documentar a restauração, e uma restauração a partir de cópia limpa SHALL ser executada e registrada antes da publicação, conferindo contagem de linhas por tabela. [OPS-02]
-3. [OPS-03] WHEN o `deploy.yml` roda (só manual, só pela `main`, environment `producao`, concurrency sem cancelamento) THEN ele SHALL executar na ordem: build do web, branch de restauração no Neon (mantendo as 2 mais recentes), dump cifrado, migração com a role `owner`, `wrangler deploy` com `URL_PUBLICA`.
+3. [OPS-03] WHEN o `deploy.yml` roda (só manual, só pela `main`, environment `producao`, concurrency sem cancelamento) THEN ele SHALL executar na ordem: build do web, dump cifrado (sem criar branch no Neon: só `main` e `dev` são permanentes; revisado em 2026-10-28), migração com a role `owner`, `wrangler deploy` com `URL_PUBLICA`.
 4. [OPS-04] IF `wrangler deploy` aparece em outro arquivo do repositório THEN um teste da suíte SHALL falhar.
 5. [OPS-05] WHEN há push ou PR THEN o `ci.yml` SHALL rodar lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e o teste de isolamento.
 6. [OPS-06] WHEN `GET /api/health` é chamado THEN a API SHALL responder 200 sem tocar no banco.

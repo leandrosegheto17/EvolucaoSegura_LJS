@@ -22,6 +22,19 @@ Como ler este documento:
 | Diagnóstico e ajustes como dono das tabelas | role de migração (`neondb_owner`) → `owner` | `NEON_URL_MIGRACAO`                               |
 | Leitura para backup                         | `backup_ro`                                 | `NEON_URL_BACKUP`                                 |
 
+### Branches do Neon
+
+O projeto do Neon tem só **duas branches permanentes**; nenhum workflow cria ou apaga branch.
+
+| Branch | Para quê                                           | Variáveis que apontam para ela                                                                                                |
+| ------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `main` | Produção                                           | `NEON_URL_MIGRACAO`, `NEON_URL_APP` e `NEON_URL_BACKUP` (GitHub Secrets do environment `producao`) e o Hyperdrive de produção |
+| `dev`  | Desenvolvimento e ensaio contra o Neon real, à mão | Nenhuma no GitHub; só na sua sessão do terminal, quando precisar                                                              |
+
+O ponto de volta antes de cada migração é o dump cifrado com `age` que o `deploy.yml` guarda como
+artefato (seção 5), não uma branch. `DATABASE_URL` é só do Postgres local e dos testes: nunca
+aponte para o Neon.
+
 As URLs ficam no environment `producao` do GitHub e no console do Neon; nunca as cole em arquivo
 versionado nem em chamado. Exporte numa variável só na sua sessão do terminal, por exemplo
 `export URL_APP='<url da role app>'`, e feche o terminal ao terminar.
@@ -282,7 +295,7 @@ do `wrangler secret put` e do `gh secret set --env` foi conferida com `--help`; 
 | `VAPID_PRIVATE_KEY` e `VAPID_PUBLIC_KEY`       | Worker                                              | Gerar o par (abaixo), `wrangler secret put VAPID_PRIVATE_KEY` e a pública como var do Worker                    | PREMISSA: as inscrições de push existentes usam a chave pública antiga e deixam de receber; cada profissional ativa o push de novo. Troque só em vazamento. |
 | `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`         | GitHub (`producao`)                                 | Senha nova da role no console do Neon (Roles > Reset password), `gh secret set`                                 | Deploy e backup usam a URL nova na próxima execução.                                                                                                        |
 | `NEON_URL_APP`                                 | GitHub e Hyperdrive                                 | Senha nova da role `app` no Neon, `gh secret set NEON_URL_APP --env producao` e atualizar o Hyperdrive (abaixo) | O Worker perde o banco entre a troca da senha e a atualização do Hyperdrive: faça as duas em seguida, fora do horário de uso.                               |
-| `NEON_API_KEY`, `CLOUDFLARE_API_TOKEN`         | GitHub (`producao`)                                 | Token novo no console (Neon ou Cloudflare), `gh secret set`, depois revogar o antigo                            | Nenhum, nessa ordem.                                                                                                                                        |
+| `CLOUDFLARE_API_TOKEN`                         | GitHub (`producao`)                                 | Token novo no console da Cloudflare, `gh secret set`, depois revogar o antigo                                   | Nenhum, nessa ordem.                                                                                                                                        |
 | Par `age` (`AGE_PUBLIC_KEY` e a chave privada) | Pública no GitHub; privada fora de qualquer serviço | `age-keygen`, `gh secret set AGE_PUBLIC_KEY --env producao`                                                     | Backups novos só abrem com a privada nova. **Guarde a antiga por 30 dias** (retenção dos artefatos), senão os backups anteriores ficam ilegíveis.           |
 
 Par VAPID no formato do produto (pública P-256 crua de 65 bytes e privada como o `d` do JWK, em
@@ -315,11 +328,10 @@ Depois de qualquer troca no Worker, confira `https://<domínio>/api/health` e um
 
 ### Onde estão as cópias
 
-| Cópia                                 | Origem                                                                                                     | Retenção           |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------ |
-| Artefato `backup-<run_id>`            | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias            |
-| Artefato `dump-pre-deploy-<run_id>`   | `deploy.yml`, antes de cada migração                                                                       | 30 dias            |
-| Branch `restauracao-<run_id>` no Neon | `deploy.yml`, antes de cada deploy                                                                         | as 2 mais recentes |
+| Cópia                               | Origem                                                                                                     | Retenção |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- |
+| Artefato `backup-<run_id>`          | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias  |
+| Artefato `dump-pre-deploy-<run_id>` | `deploy.yml`, antes de cada migração                                                                       | 30 dias  |
 
 Situação observada em 2026-10-28 (`gh run list --workflow backup.yml`): as execuções agendadas do
 `backup.yml` **falham** porque os secrets do environment `producao` ainda não existem (o `age`
@@ -356,12 +368,10 @@ Sem `RESTORE_SOURCE_URL` ele só conta. Só aceita `localhost` e `127.0.0.1`: nu
 Antes: pare o que escreve no banco (o que vier depois do backup será perdido) e anote o horário
 do backup escolhido.
 
-**Opção A (preferida): pelo Neon.** No console do Neon, restaure a branch principal para um
-instante anterior ao problema, ou a partir de uma branch `restauracao-<run_id>` criada antes do
-deploy que causou o problema. **Não executado** (exige a conta do Neon). PREMISSA: a janela de
-restauração por instante depende do plano contratado no Neon.
+O deploy não cria branch no Neon: o ponto de volta de um deploy que deu errado é o artefato
+`dump-pre-deploy-<run_id>` daquele deploy (Opção A).
 
-**Opção B: a partir do dump cifrado**, num banco novo e vazio, com a role de migração. Executado
+**Opção A: a partir do dump cifrado**, num banco novo e vazio, com a role de migração. Executado
 localmente no Postgres do docker-compose (banco `rb_restaurado`, a partir do backup do
 `rb_demo`):
 
@@ -388,6 +398,11 @@ infra/comparar-contagens.sh "$ORIGEM_URL" "$DESTINO"
 Observado localmente: as 34 tabelas do app ficaram com dono `owner`, a RLS forçada se manteve, a
 role `app` conectou e leu a assinatura do usuário definido em `app.usuario_id`, e o
 `comparar-contagens.sh` deu `resultado=ok`.
+
+**Opção B: pelo histórico do Neon**, só para um problema dentro da janela de restauração do plano
+(PREMISSA: 6 h no Free). No console do Neon, restaure a branch `main` para um instante anterior ao
+problema. Se o Neon guardar o estado anterior numa branch extra, apague-a depois de conferir a
+restauração: o projeto fica só com `main` e `dev`. **Não executado** (exige a conta do Neon).
 
 Depois, aponte o Worker para o banco restaurado atualizando o Hyperdrive com a URL da role `app`
 desse banco (comando da seção 4) e confira `/api/health` e um login. **Não executado** em
@@ -536,12 +551,10 @@ Hyperdrive só é criado com uma URL que conecta, a da role `app`; e a role `app
 da migration 0001. Por isso o login das roles fica **entre a migração e o deploy do Worker**:
 
 1. **Antes de tudo**: os secrets que não dependem das roles no environment `producao`
-   (`NEON_URL_MIGRACAO`, `NEON_API_KEY`, `AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`) e as variáveis
-   (`NEON_PROJECT_ID`, `NEON_ROLE_OWNER`, `NEON_DATABASE`, `CLOUDFLARE_ACCOUNT_ID`, `URL_PUBLICA`),
-   mais os itens da seção 6. `NEON_URL_MIGRACAO` é a URL da role de migração (`neondb_owner`), na
-   **conexão direta** (host sem `-pooler`). PREMISSA: `NEON_ROLE_OWNER` é o `neondb_owner`, que
-   já existe quando o `deploy.yml` cria a branch de restauração; a `owner` criada por SQL não
-   serve ali.
+   (`NEON_URL_MIGRACAO`, `AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`) e as variáveis
+   (`CLOUDFLARE_ACCOUNT_ID`, `URL_PUBLICA`), mais os itens da seção 6. `NEON_URL_MIGRACAO` é a URL
+   da role de migração (`neondb_owner`) na branch `main`, na **conexão direta** (host sem
+   `-pooler`).
 2. **Aplicar as migrations** no Neon, da sua máquina, com o mesmo comando que o `deploy.yml` roda
    (cria as três roles `NOLOGIN` e todo o schema):
 

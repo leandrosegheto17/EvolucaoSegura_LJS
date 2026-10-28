@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 // OPS-03: o deploy.yml é manual, só pela main, no environment producao, com concurrency sem
-// cancelamento, e executa na ordem: build do web, branch de restauração no Neon (mantendo as 2
-// mais recentes), dump cifrado, migração com a role owner e o deploy do Worker com URL_PUBLICA.
+// cancelamento, e executa na ordem: build do web, dump cifrado, migração com a role owner e o
+// deploy do Worker com URL_PUBLICA. O Neon tem só as branches `main` e `dev`: o deploy não cria
+// nem apaga branch; o ponto de volta antes de migrar é o dump cifrado com age.
 // Nada disto é executado no GitHub por este teste: só lê o YAML.
 
 interface Passo {
@@ -67,10 +68,9 @@ describe('deploy.yml (OPS-03)', () => {
     expect(workflow.concurrency?.['cancel-in-progress']).toBe(false);
   });
 
-  it('executa na ordem: build, branch de restauração, dump, migração, deploy do Worker', () => {
+  it('executa na ordem: build, dump, migração, deploy do Worker', () => {
     const ordem = [
       indice(executa('pnpm build:web')),
-      indice(usa('neondatabase/create-branch-action@v5')),
       indice(executa('pg_dump')),
       indice(executa('pnpm migrar')),
       indice(executa(WRANGLER_DEPLOY)),
@@ -81,16 +81,19 @@ describe('deploy.yml (OPS-03)', () => {
     expect(new Set(ordem).size).toBe(ordem.length);
   });
 
-  it('mantém as 2 branches de restauração mais recentes (apaga a excedente)', () => {
-    const achar = passos[indice((p) => p.id === 'excedente')];
-    const apagar = passos[indice(usa('neondatabase/delete-branch-action@v3'))];
+  it('não cria nem apaga branch no Neon (só main e dev são permanentes)', () => {
+    const texto = readFileSync(caminho, 'utf8');
 
-    expect(achar?.env?.['MANTER_RESTAURACOES']).toBe('2');
-    expect(achar?.run).toContain('restauracao-');
-    expect(apagar).toBeDefined();
-    expect(indice(usa('neondatabase/delete-branch-action@v3'))).toBeGreaterThan(
-      indice(usa('neondatabase/create-branch-action@v5')),
-    );
+    expect(passos.some((p) => (p.uses ?? '').startsWith('neondatabase/'))).toBe(false);
+    expect(texto).not.toMatch(/restauracao-|console\.neon\.tech\/api|NEON_API_KEY|NEON_PROJECT_ID/);
+  });
+
+  it('guarda o dump cifrado como artefato antes da migração (ponto de volta)', () => {
+    const guardar = indice(usa('actions/upload-artifact'));
+
+    expect(guardar).toBeGreaterThan(indice(executa('pg_dump')));
+    expect(guardar).toBeLessThan(indice(executa('pnpm migrar')));
+    expect(String(passos[guardar]?.with?.['path'])).toMatch(/\.age$/);
   });
 
   it('cifra o dump com age, sem gravar o dump em claro', () => {

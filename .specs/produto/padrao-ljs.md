@@ -61,10 +61,10 @@ Antes de escrever código, apresente um plano com etapas, arquivos e riscos para
 - `deploy.yml` com `workflow_dispatch`, SÓ pela `main`, environment `producao`, `concurrency`
   sem cancelamento. Ordem fixa:
   1. build do web (falha antes de tocar produção);
-  2. branch de restauração no Neon (manter só as 2 mais recentes);
-  3. dump cifrado;
-  4. migração com `NEON_URL_MIGRACAO` (role `owner`);
-  5. `wrangler deploy` com `--var URL_PUBLICA`.
+  2. dump cifrado com `age` (o ponto de volta; o Neon tem só as branches `main` e `dev`, e o
+     deploy não cria nenhuma);
+  3. migração com `NEON_URL_MIGRACAO` (role `owner`);
+  4. `wrangler deploy` com `--var URL_PUBLICA`.
   Único lugar do repositório com `wrangler deploy`; um teste falha se aparecer outro.
 - `backup.yml` agendado + manual.
 - Sem ambiente de homologação. Preview = `wrangler dev` local.

@@ -209,7 +209,7 @@ interface Assinatura {
 | Testes do Worker | `@cloudflare/vitest-plugin` com Hyperdrive local por `miniflare.hyperdrives` | Sucessor oficial do pacote do padrão [P-3]; troca aprovada pelo usuário em 2026-10-24 (AD-001) |
 | Commits | Um commit atômico por tarefa; relatório LJS (feito, como validar, próxima) ao fechar cada etapa | Escolha do usuário em 2026-10-24 (AD-002) |
 | Postgres | 16 no Docker, no CI e no Neon; `pg_dump` 16 | Padrão LJS (Postgres 16); Neon suporta [P-8] |
-| Backup e branches | `pg_dump` em conexão direta (sem `-pooler`); `neondatabase/create-branch-action@v5` e `delete-branch-action@v3` | Doc do Neon [P-8] |
+| Backup e branches | `pg_dump` em conexão direta (sem `-pooler`); só as branches `main` e `dev` no Neon, nenhuma criada pelo deploy (revisado em 2026-10-28) | Doc do Neon [P-8] |
 | Migrations | node-pg-migrate 9 (ESM) | Padrão LJS [P-9] |
 
 ---

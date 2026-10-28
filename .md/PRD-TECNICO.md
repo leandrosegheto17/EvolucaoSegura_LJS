@@ -49,7 +49,7 @@
 ## 5. Operação
 
 - **CI** (`ci.yml`): lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e teste de isolamento (OPS-05).
-- **Deploy** (`deploy.yml`): manual, só pela `main`, environment `producao`, concurrency sem cancelamento; ordem fixa: build do web, branch de restauração no Neon (mantendo as 2 mais recentes), dump cifrado, migração com `owner`, `wrangler deploy --var URL_PUBLICA`. Único lugar com `wrangler deploy` (OPS-03, OPS-04).
+- **Deploy** (`deploy.yml`): manual, só pela `main`, environment `producao`, concurrency sem cancelamento; ordem fixa: build do web, dump cifrado (ponto de volta; o deploy não cria branch no Neon, que tem só `main` e `dev`), migração com `owner`, `wrangler deploy --var URL_PUBLICA`. Único lugar com `wrangler deploy` (OPS-03, OPS-04).
 - **Backup** (`backup.yml`): diário às 04:00 de Brasília (`0 7 * * *` em UTC), `pg_dump -Fc` pela role `backup_ro`, cifrado com `age`, artefato por 30 dias, também manual (OPS-01).
 - **Restauração**: documentada no runbook e executada a partir de cópia limpa antes da publicação, conferindo contagem de linhas por tabela (OPS-02).
 - **Disponibilidade**: `GET /api/health` responde 200 sem tocar no banco (OPS-06).

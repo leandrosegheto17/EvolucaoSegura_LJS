@@ -3,6 +3,9 @@ name: Deploy
 # OPS-03: deploy manual, só pela main, no environment producao, um por vez e sem cancelar o que
 # está em andamento. Este é o único arquivo do repositório que roda `wrangler deploy` (OPS-04).
 # Nada aqui roda sozinho: o primeiro deploy é decisão do dono do produto.
+# O Neon tem só duas branches permanentes, `main` (produção, a que os secrets NEON_URL_* deste
+# environment apontam) e `dev`. O deploy não cria branch: o ponto de volta antes de migrar é o
+# dump cifrado com age, guardado como artefato.
 
 on:
   workflow_dispatch:
@@ -19,8 +22,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: producao
-    env:
-      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -42,37 +43,6 @@ jobs:
           VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
         run: pnpm build:web
-
-      - name: Branch de restauração no Neon
-        id: restauracao
-        uses: neondatabase/create-branch-action@v5
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          branch_name: restauracao-${{ github.run_id }}
-          username: ${{ vars.NEON_ROLE_OWNER }}
-          database: ${{ vars.NEON_DATABASE }}
-      - name: Achar a branch de restauração excedente
-        id: excedente
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          MANTER_RESTAURACOES: '2'
-        run: |
-          # Lista as branches restauracao-*, da mais nova para a mais antiga, e separa a mais
-          # antiga que passar do limite. Como cada deploy cria uma, sobra no máximo uma por vez.
-          curl -sS --fail -H "Authorization: Bearer $NEON_API_KEY" \
-            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" > branches.json
-          ids=$(jq -r --argjson manter "$MANTER_RESTAURACOES" \
-            '[.branches[] | select(.name | startswith("restauracao-"))]
-             | sort_by(.created_at) | reverse | .[$manter:] | reverse | .[].id' branches.json)
-          echo "id=$(echo "$ids" | head -n 1)" >> "$GITHUB_OUTPUT"
-      - name: Apagar a branch de restauração excedente
-        if: steps.excedente.outputs.id != ''
-        uses: neondatabase/delete-branch-action@v3
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          branch: ${{ steps.excedente.outputs.id }}
 
       - name: Dump cifrado antes da migração
         env:
