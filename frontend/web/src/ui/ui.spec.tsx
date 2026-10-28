@@ -4,22 +4,65 @@ import { axe } from 'vitest-axe';
 import { describe, expect, it } from 'vitest';
 import type { ReactElement } from 'react';
 import {
-  Alert, Badge, Button, Card, Empty, Field, Input, Seal, Select, Skeleton, Spinner, Steps, Table, Tabs, Textarea,
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Empty,
+  Field,
+  Input,
+  Seal,
+  Select,
+  Skeleton,
+  Spinner,
+  Steps,
+  Table,
+  Tabs,
+  Textarea,
 } from './index';
 
 const cases: Record<string, () => ReactElement> = {
   Button: () => <Button>Salvar</Button>,
-  'Button outline disabled': () => <Button variant="outline" disabled full>Cancelar</Button>,
-  'Field+Input': () => <Field label="Nome" hint="Como no documento" error="Obrigatório" required>{(p) => <Input {...p} />}</Field>,
-  Select: () => <Field label="Tempo">{(p) => <Select {...p}><option>5 min</option><option>10 min</option></Select>}</Field>,
+  'Button outline disabled': () => (
+    <Button variant="outline" disabled full>
+      Cancelar
+    </Button>
+  ),
+  'Field+Input': () => (
+    <Field label="Nome" hint="Como no documento" error="Obrigatório" required>
+      {(p) => <Input {...p} />}
+    </Field>
+  ),
+  Select: () => (
+    <Field label="Tempo">
+      {(p) => (
+        <Select {...p}>
+          <option>5 min</option>
+          <option>10 min</option>
+        </Select>
+      )}
+    </Field>
+  ),
   Textarea: () => <Field label="Evolução">{(p) => <Textarea reading {...p} />}</Field>,
-  Card: () => <Card><p>Conteúdo</p></Card>,
+  Card: () => (
+    <Card>
+      <p>Conteúdo</p>
+    </Card>
+  ),
   'Alert err': () => <Alert tone="err">Falhou</Alert>,
   'Alert ok': () => <Alert tone="ok">Salvo</Alert>,
   Badge: () => <Badge tone="warn">Editável hoje</Badge>,
   Seal: () => <Seal>Entregue</Seal>,
   Steps: () => <Steps steps={['Senha', 'Código']} current={1} />,
-  Tabs: () => <Tabs label="Seções" tabs={[{ id: 'a', label: 'A', panel: 'pa' }, { id: 'b', label: 'B', panel: 'pb' }]} />,
+  Tabs: () => (
+    <Tabs
+      label="Seções"
+      tabs={[
+        { id: 'a', label: 'A', panel: 'pa' },
+        { id: 'b', label: 'B', panel: 'pb' },
+      ]}
+    />
+  ),
   Table: () => <Table caption="Pacientes" columns={['Nome', 'Status']} rows={[['Ana', 'Ativo']]} />,
   Empty: () => <Empty title="Sem pacientes">Cadastre o primeiro.</Empty>,
   Skeleton: () => <Skeleton />,
@@ -48,14 +91,24 @@ describe('a11y estrutural', () => {
     expect(cls).toContain('min-h-12');
   });
   it('Field liga hint e erro ao controle e marca invalido', () => {
-    render(<Field label="Nome" hint="dica" error="erro">{(p) => <Input {...p} />}</Field>);
+    render(
+      <Field label="Nome" hint="dica" error="erro">
+        {(p) => <Input {...p} />}
+      </Field>,
+    );
     const input = screen.getByLabelText('Nome');
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveAccessibleDescription('dica erro');
     expect(screen.getByRole('alert')).toHaveTextContent('erro');
   });
   it('nenhum componente usa estilo inline', () => {
-    const { container } = render(<>{Object.values(cases).map((c, i) => <div key={i}>{c()}</div>)}</>);
+    const { container } = render(
+      <>
+        {Object.values(cases).map((c, i) => (
+          <div key={i}>{c()}</div>
+        ))}
+      </>,
+    );
     expect(container.querySelectorAll('[style]')).toHaveLength(0);
   });
   it('Tabs navega por setas e mantem roving tabindex', async () => {
@@ -69,7 +122,13 @@ describe('a11y estrutural', () => {
     expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('tabindex', '-1');
   });
   it('Alert erro usa role=alert e demais status; Steps marca etapa atual', () => {
-    render(<><Alert tone="err">e</Alert><Alert tone="ok">o</Alert><Steps steps={['A', 'B']} current={1} /></>);
+    render(
+      <>
+        <Alert tone="err">e</Alert>
+        <Alert tone="ok">o</Alert>
+        <Steps steps={['A', 'B']} current={1} />
+      </>,
+    );
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.getByText('B').closest('li')).toHaveAttribute('aria-current', 'step');

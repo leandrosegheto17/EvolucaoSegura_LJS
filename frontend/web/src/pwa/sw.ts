@@ -1,5 +1,5 @@
 // PUSH-01, PUSH-08 (ADR-011): service worker do app, servido em /sw.js (escopo /). Por ora só o
-// push; o precache do shell e a página offline entram na T184.
+// push (aqui) e o precache do shell com a página offline (offline.ts, T184).
 // - push: a API manda a mensagem cifrada como JSON {titulo, corpo, url} (T176); o handler mostra
 //   a notificação e guarda a url no `data`. Push sem dados ou com JSON inválido mostra um aviso
 //   genérico que abre o Início (o navegador exige mostrar algo a cada push, userVisibleOnly).
@@ -8,8 +8,10 @@
 //   trial ao Meu plano (/app/plano). Só caminhos do app na mesma origem; qualquer outro destino
 //   (outra origem, javascript:, fora de /app) abre o Início. Com o app já aberto numa janela,
 //   leva essa janela à tela e a põe em foco; se ela não puder navegar, abre outra.
-// Arquivo sem imports (vira um único sw.js no build) e com os tipos do escopo do service worker
+// O vite-plugin-pwa empacota este arquivo num único sw.js e injeta o manifest do build. Tipos do escopo do service worker
 // declarados aqui: o tsconfig do web usa a lib DOM, que não traz a WebWorker.
+
+import { type EntradaPrecache, type EscopoOffline, registrarOffline } from './offline.ts';
 
 export interface MensagemPush {
   titulo: string;
@@ -126,5 +128,11 @@ declare const ServiceWorkerGlobalScope: { new (): unknown } | undefined;
 if (
   typeof ServiceWorkerGlobalScope !== 'undefined' &&
   globalThis instanceof ServiceWorkerGlobalScope
-)
+) {
   registrarHandlers(globalThis as unknown as EscopoSw);
+  // O vite-plugin-pwa troca `self.__WB_MANIFEST` pela lista de arquivos do build.
+  registrarOffline(
+    globalThis as unknown as EscopoOffline,
+    (self as unknown as { __WB_MANIFEST: EntradaPrecache[] }).__WB_MANIFEST,
+  );
+}

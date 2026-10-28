@@ -3,7 +3,12 @@ import type { HTMLAttributes, KeyboardEvent, ReactNode } from 'react';
 import { FOCUS, TARGET, cx } from './classes';
 
 export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cx('rounded-card border border-line bg-surf p-4 shadow-(--sh)', className)} {...rest} />;
+  return (
+    <div
+      className={cx('rounded-card border border-line bg-surf p-4 shadow-(--sh)', className)}
+      {...rest}
+    />
+  );
 }
 
 export function Steps({ steps, current }: { steps: string[]; current: number }) {
@@ -13,9 +18,15 @@ export function Steps({ steps, current }: { steps: string[]; current: number }) 
         <li
           key={s}
           aria-current={i === current ? 'step' : undefined}
-          className={cx('flex items-center gap-2', i === current ? 'font-bold text-pri' : 'text-mut')}
+          className={cx(
+            'flex items-center gap-2',
+            i === current ? 'font-bold text-pri' : 'text-mut',
+          )}
         >
-          <span aria-hidden="true" className="grid size-6 place-items-center rounded-full border-2 border-current text-sm">
+          <span
+            aria-hidden="true"
+            className="grid size-6 place-items-center rounded-full border-2 border-current text-sm"
+          >
             {i + 1}
           </span>
           {s}
@@ -36,7 +47,15 @@ export function Tabs({ tabs, label }: { tabs: TabItem[]; label: string }) {
   const move = (e: KeyboardEvent, i: number) => {
     const n = tabs.length;
     const next =
-      e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1;
+      e.key === 'ArrowRight'
+        ? (i + 1) % n
+        : e.key === 'ArrowLeft'
+          ? (i - 1 + n) % n
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? n - 1
+              : -1;
     if (next < 0) return;
     e.preventDefault();
     setActive(next);
@@ -57,7 +76,12 @@ export function Tabs({ tabs, label }: { tabs: TabItem[]; label: string }) {
             aria-selected={i === active}
             aria-controls={`${base}-p-${t.id}`}
             tabIndex={i === active ? 0 : -1}
-            className={cx(TARGET, FOCUS, 'border-b-4 px-4 font-semibold', i === active ? 'border-pri text-pri' : 'border-transparent text-mut')}
+            className={cx(
+              TARGET,
+              FOCUS,
+              'border-b-4 px-4 font-semibold',
+              i === active ? 'border-pri text-pri' : 'border-transparent text-mut',
+            )}
             onClick={() => setActive(i)}
             onKeyDown={(e) => move(e, i)}
           >

@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     // PUB-03 (T156): manifest e service worker próprio (src/pwa/sw.ts, com os handlers de push),
-    // servido em /sw.js. injectionPoint desligado até a T184 trazer o precache do shell.
+    // servido em /sw.js. o precache do shell e a página offline estão em src/pwa/offline.ts (T184).
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src/pwa',
@@ -21,7 +21,6 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       manifest: manifesto,
-      injectManifest: { injectionPoint: '' },
     }),
   ],
   build: { outDir: 'dist' },

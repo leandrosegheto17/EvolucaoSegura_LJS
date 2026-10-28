@@ -20,8 +20,16 @@ export interface MenuButtonProps {
 
 /** Menu button (WAI-ARIA APG) com itens que sao links (RF-55b, A-1). Itens por props. */
 export function MenuButton({ label, items, ariaLabel, icon }: MenuButtonProps) {
-  const { open, setOpen, setStart, rootRef, btnRef, panelRef: menuRef, closeToButton, onNavKey } =
-    useDisclosureMenu<HTMLUListElement>('[role="menuitem"]');
+  const {
+    open,
+    setOpen,
+    setStart,
+    rootRef,
+    btnRef,
+    panelRef: menuRef,
+    closeToButton,
+    onNavKey,
+  } = useDisclosureMenu<HTMLUListElement>('[role="menuitem"]');
   const menuId = useId();
 
   function onButtonKeyDown(e: KeyboardEvent<HTMLButtonElement>) {

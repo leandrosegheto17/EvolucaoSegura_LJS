@@ -26,16 +26,25 @@ export function StatCard({ label, value, hint, complemento, progresso, atencao }
       {progresso && (
         <div className="mt-2">
           <div aria-hidden="true" className="h-2 w-full overflow-hidden rounded-full bg-(--soft)">
-            <div data-testid="stat-progresso-barra" className="h-full bg-(--pri)" style={{ width: `${pct(progresso)}%` }} />
+            <div
+              data-testid="stat-progresso-barra"
+              className="h-full bg-(--pri)"
+              style={{ width: `${pct(progresso)}%` }}
+            />
           </div>
-          <p className="mt-1 text-sm text-mut">{progresso.feito} de {progresso.total}</p>
+          <p className="mt-1 text-sm text-mut">
+            {progresso.feito} de {progresso.total}
+          </p>
         </div>
       )}
       {atencao && (
         <div className="mt-2 flex flex-wrap items-center gap-x-2 rounded-md border-l-4 border-(--warn) bg-(--warnbg) px-2 py-1 text-sm text-(--warn)">
           <AlertIcon />
           <span aria-hidden="true">{atencao.texto}</span>
-          <Link to={atencao.destino} className="inline-flex min-h-11 items-center font-semibold underline">
+          <Link
+            to={atencao.destino}
+            className="inline-flex min-h-11 items-center font-semibold underline"
+          >
             {atencao.acao ?? 'Ver'}{' '}
             <span className="sr-only">{atencao.descricao ?? atencao.texto}</span>
           </Link>

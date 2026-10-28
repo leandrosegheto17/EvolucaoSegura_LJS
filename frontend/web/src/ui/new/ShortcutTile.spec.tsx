@@ -8,7 +8,9 @@ import { ClockIcon } from './icons';
 afterEach(() => document.documentElement.removeAttribute('data-theme'));
 
 const ui = (sub?: string) => (
-  <MemoryRouter><ShortcutTile to="/x" label="Histórico" icon={<ClockIcon />} subtitle={sub} /></MemoryRouter>
+  <MemoryRouter>
+    <ShortcutTile to="/x" label="Histórico" icon={<ClockIcon />} subtitle={sub} />
+  </MemoryRouter>
 );
 
 describe('ShortcutTile (RF-55c/d)', () => {

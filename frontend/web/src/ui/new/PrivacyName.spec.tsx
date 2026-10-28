@@ -17,7 +17,9 @@ describe('PrivacyName modo estrito (RF-54d, SEC-25)', () => {
   });
 
   it('estrito + privacidade desligada: nome completo', () => {
-    const { container } = render(<PrivacyName nome={NOME} privado={false} nomeAcessivel="exibido" />);
+    const { container } = render(
+      <PrivacyName nome={NOME} privado={false} nomeAcessivel="exibido" />,
+    );
     expect(container).toHaveTextContent(NOME);
   });
 

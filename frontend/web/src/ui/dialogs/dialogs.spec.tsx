@@ -10,11 +10,14 @@ afterEach(() => vi.useRealTimers());
 describe('ConfirmDeliverDialog', () => {
   it('sem violações axe e com texto do UX-SPEC', async () => {
     render(<ConfirmDeliverDialog open onConfirm={() => {}} onCancel={() => {}} />);
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('não poderá ser modificado nem retificado');
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'não poderá ser modificado nem retificado',
+    );
     expect(await axe(document.body)).toHaveNoViolations();
   });
   it('Esc cancela e nunca confirma', async () => {
-    const onConfirm = vi.fn(); const onCancel = vi.fn();
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
     render(<ConfirmDeliverDialog open onConfirm={onConfirm} onCancel={onCancel} />);
     await userEvent.keyboard('{Escape}');
     expect(onCancel).toHaveBeenCalled();
@@ -23,13 +26,24 @@ describe('ConfirmDeliverDialog', () => {
   it('foco inicial no Cancelar, trap e retorno ao gatilho', async () => {
     function Host() {
       const [o, setO] = useState(false);
-      return (<><button onClick={() => setO(true)}>abrir</button><ConfirmDeliverDialog open={o} onConfirm={() => setO(false)} onCancel={() => setO(false)} /></>);
+      return (
+        <>
+          <button onClick={() => setO(true)}>abrir</button>
+          <ConfirmDeliverDialog
+            open={o}
+            onConfirm={() => setO(false)}
+            onCancel={() => setO(false)}
+          />
+        </>
+      );
     }
     render(<Host />);
     const trigger = screen.getByText('abrir');
     await userEvent.click(trigger);
     expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus();
-    await userEvent.tab(); await userEvent.tab(); await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
     expect(screen.getByRole('alertdialog').contains(document.activeElement)).toBe(true);
     await userEvent.keyboard('{Escape}');
     expect(trigger).toHaveFocus();
@@ -38,7 +52,8 @@ describe('ConfirmDeliverDialog', () => {
 
 describe('ConflictDialog', () => {
   it('axe, ações e Esc só fecha', async () => {
-    const onReload = vi.fn(); const onClose = vi.fn();
+    const onReload = vi.fn();
+    const onClose = vi.fn();
     render(<ConflictDialog open onReload={onReload} onClose={onClose} />);
     expect(await axe(document.body)).toHaveNoViolations();
     await userEvent.keyboard('{Escape}');
@@ -63,7 +78,8 @@ describe('SessionTimeoutDialog', () => {
     expect(onExtend).toHaveBeenCalled();
   });
   it('Esc prorroga, não encerra', async () => {
-    const onExtend = vi.fn(); const onExpire = vi.fn();
+    const onExtend = vi.fn();
+    const onExpire = vi.fn();
     render(<SessionTimeoutDialog open onExtend={onExtend} onExpire={onExpire} />);
     await userEvent.keyboard('{Escape}');
     expect(onExtend).toHaveBeenCalled();
@@ -73,9 +89,13 @@ describe('SessionTimeoutDialog', () => {
     vi.useFakeTimers();
     const onExpire = vi.fn();
     render(<SessionTimeoutDialog open secondsLeft={3} onExtend={() => {}} onExpire={onExpire} />);
-    act(() => { vi.advanceTimersByTime(1000); });
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
     expect(screen.getByRole('alertdialog')).toHaveTextContent('0:02');
-    act(() => { vi.advanceTimersByTime(2000); });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
     expect(onExpire).toHaveBeenCalledTimes(1);
   });
 });

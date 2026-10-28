@@ -3595,8 +3595,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Shell servido do precache
-- [ ] Página offline servida sem rede
+- [x] Shell servido do precache
+- [x] Página offline servida sem rede
+
+- 2026-10-28, feito: `src/pwa/offline.ts` (install guarda no cache o manifest do build; activate limpa o que saiu; fetch: arquivos do precache e navegação para /app/... saem do cache, navegação fora de /app vai à rede e cai em `/offline.html` sem rede; /api e não-GET nunca passam pelo cache), `public/offline.html`, ligado em `sw.ts` (push preservado) e registrado no `main.tsx` só em produção. PREMISSAS: não há cache de dados clínicos; o precache inclui o `vfs_fonts` do pdfmake (cerca de 850 kB, 2,3 MB no total); o manifest injetado traz URLs relativas (tratado e testado). Não testado em navegador real.
 
 **Tests**: unit
 **Gate**: build

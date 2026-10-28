@@ -14,9 +14,16 @@ export function ConfirmDeliverDialog({ open, onConfirm, onCancel }: ConfirmDeliv
       open={open}
       onEscape={onCancel}
       title="Marcar como Entregue?"
-      description={<p>Após entregar, o documento não poderá ser modificado nem retificado. Para outra versão, crie um novo documento.</p>}
+      description={
+        <p>
+          Após entregar, o documento não poderá ser modificado nem retificado. Para outra versão,
+          crie um novo documento.
+        </p>
+      }
     >
-      <AlertDialog.Cancel asChild><Button variant="outline">Cancelar</Button></AlertDialog.Cancel>
+      <AlertDialog.Cancel asChild>
+        <Button variant="outline">Cancelar</Button>
+      </AlertDialog.Cancel>
       <Button onClick={onConfirm}>Marcar como Entregue</Button>
     </DialogShell>
   );

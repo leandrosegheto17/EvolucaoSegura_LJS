@@ -14,7 +14,8 @@ export function useDisclosureMenu<P extends HTMLElement>(itemSelector: string) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<P>(null);
 
-  const items = () => Array.from(panelRef.current?.querySelectorAll<HTMLElement>(itemSelector) ?? []);
+  const items = () =>
+    Array.from(panelRef.current?.querySelectorAll<HTMLElement>(itemSelector) ?? []);
 
   useEffect(() => {
     if (!open) return;
@@ -59,5 +60,16 @@ export function useDisclosureMenu<P extends HTMLElement>(itemSelector: string) {
     return true;
   }
 
-  return { open, setOpen, start, setStart, rootRef, btnRef, panelRef, items, closeToButton, onNavKey };
+  return {
+    open,
+    setOpen,
+    start,
+    setStart,
+    rootRef,
+    btnRef,
+    panelRef,
+    items,
+    closeToButton,
+    onNavKey,
+  };
 }

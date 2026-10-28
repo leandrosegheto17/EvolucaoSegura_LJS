@@ -17,15 +17,21 @@ export function ClinicalAlertBadge({ alertas }: { alertas: string[] }) {
         onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
         className={cx(
           'inline-flex items-center gap-1 rounded-full border border-err bg-(--errbg) px-3 text-sm font-semibold text-err',
-          TARGET, FOCUS,
+          TARGET,
+          FOCUS,
         )}
       >
         <AlertIcon />
         Alerta clínico
       </button>
       {open && (
-        <ul id={id} className="absolute z-10 mt-1 min-w-48 rounded-card border border-line bg-surf p-3 text-ink shadow-(--sh)">
-          {alertas.map((a) => <li key={a}>{a}</li>)}
+        <ul
+          id={id}
+          className="absolute z-10 mt-1 min-w-48 rounded-card border border-line bg-surf p-3 text-ink shadow-(--sh)"
+        >
+          {alertas.map((a) => (
+            <li key={a}>{a}</li>
+          ))}
         </ul>
       )}
     </span>

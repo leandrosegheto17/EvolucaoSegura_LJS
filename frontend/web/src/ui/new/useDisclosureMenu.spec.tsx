@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { useDisclosureMenu } from './useDisclosureMenu';
 
 function Harness() {
-  const { open, setOpen, rootRef, btnRef, panelRef, onNavKey } = useDisclosureMenu<HTMLDivElement>('button');
+  const { open, setOpen, rootRef, btnRef, panelRef, onNavKey } =
+    useDisclosureMenu<HTMLDivElement>('button');
   return (
     <div>
       <div ref={rootRef} onKeyDown={open ? onNavKey : undefined}>

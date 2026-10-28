@@ -14,9 +14,18 @@ export function ConflictDialog({ open, onReload, onClose }: ConflictDialogProps)
       open={open}
       onEscape={onClose}
       title="Este registro foi alterado em outra sessão"
-      description={<p>Seu texto não foi salvo para não sobrescrever a versão mais recente. Recarregue para ver as alterações; seu texto continua na tela até você decidir.</p>}
+      description={
+        <p>
+          Seu texto não foi salvo para não sobrescrever a versão mais recente. Recarregue para ver
+          as alterações; seu texto continua na tela até você decidir.
+        </p>
+      }
     >
-      <AlertDialog.Cancel asChild><Button variant="outline" onClick={onClose}>Continuar editando</Button></AlertDialog.Cancel>
+      <AlertDialog.Cancel asChild>
+        <Button variant="outline" onClick={onClose}>
+          Continuar editando
+        </Button>
+      </AlertDialog.Cancel>
       <Button onClick={onReload}>Recarregar versão atual</Button>
     </DialogShell>
   );

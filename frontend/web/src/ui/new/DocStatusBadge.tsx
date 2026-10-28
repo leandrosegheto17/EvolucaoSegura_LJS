@@ -8,5 +8,9 @@ export function DocStatusBadge({ estado, entregueEm }: { estado: DocEstado; entr
   if (estado === 'entregue') {
     return <Seal>{entregueEm ? `Entregue em ${entregueEm}` : 'Entregue'}</Seal>;
   }
-  return <Badge tone="warn" icon={<PencilIcon />}>Rascunho</Badge>;
+  return (
+    <Badge tone="warn" icon={<PencilIcon />}>
+      Rascunho
+    </Badge>
+  );
 }

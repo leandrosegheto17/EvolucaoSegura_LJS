@@ -6,8 +6,12 @@ export type EditWindowEstado = 'editavel_hoje' | 'registrada';
 
 export function EditWindowBadge({ estado }: { estado: EditWindowEstado }) {
   return estado === 'editavel_hoje' ? (
-    <Badge tone="warn" icon={<ClockIcon />}>Editável hoje</Badge>
+    <Badge tone="warn" icon={<ClockIcon />}>
+      Editável hoje
+    </Badge>
   ) : (
-    <Badge tone="ok" icon={<LockIcon />}>Registrada</Badge>
+    <Badge tone="ok" icon={<LockIcon />}>
+      Registrada
+    </Badge>
   );
 }

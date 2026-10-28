@@ -15,7 +15,12 @@ function fmt(s: number) {
 }
 
 /** WCAG 2.2.1: avisa, permite prorrogar. Esc prorroga (nunca encerra). */
-export function SessionTimeoutDialog({ open, secondsLeft = 120, onExtend, onExpire }: SessionTimeoutDialogProps) {
+export function SessionTimeoutDialog({
+  open,
+  secondsLeft = 120,
+  onExtend,
+  onExpire,
+}: SessionTimeoutDialogProps) {
   const [left, setLeft] = useState(secondsLeft);
   const expired = useRef(onExpire);
   expired.current = onExpire;
@@ -27,7 +32,10 @@ export function SessionTimeoutDialog({ open, secondsLeft = 120, onExtend, onExpi
     const id = setInterval(() => {
       remaining -= 1;
       setLeft(Math.max(0, remaining));
-      if (remaining <= 0) { clearInterval(id); expired.current(); }
+      if (remaining <= 0) {
+        clearInterval(id);
+        expired.current();
+      }
     }, 1000);
     return () => clearInterval(id);
   }, [open, secondsLeft]);
@@ -39,14 +47,23 @@ export function SessionTimeoutDialog({ open, secondsLeft = 120, onExtend, onExpi
       title="Sua sessão vai expirar"
       description={
         <div>
-          <p>Por inatividade, sua sessão termina em <strong>{fmt(left)}</strong>. Seu rascunho está salvo no servidor.</p>
+          <p>
+            Por inatividade, sua sessão termina em <strong>{fmt(left)}</strong>. Seu rascunho está
+            salvo no servidor.
+          </p>
           {/* Anúncio pontual (não a cada segundo) */}
-          <p role="status" className="sr-only">{left > 0 && left % 30 === 0 ? `Sessão expira em ${fmt(left)}` : ''}</p>
+          <p role="status" className="sr-only">
+            {left > 0 && left % 30 === 0 ? `Sessão expira em ${fmt(left)}` : ''}
+          </p>
         </div>
       }
     >
-      <Button variant="outline" onClick={onExpire}>Sair agora</Button>
-      <AlertDialog.Cancel asChild><Button>Continuar conectado</Button></AlertDialog.Cancel>
+      <Button variant="outline" onClick={onExpire}>
+        Sair agora
+      </Button>
+      <AlertDialog.Cancel asChild>
+        <Button>Continuar conectado</Button>
+      </AlertDialog.Cancel>
     </DialogShell>
   );
 }

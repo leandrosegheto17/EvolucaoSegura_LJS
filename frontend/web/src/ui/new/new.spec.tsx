@@ -4,7 +4,12 @@ import { axe } from 'vitest-axe';
 import { describe, expect, it } from 'vitest';
 import type { ReactElement } from 'react';
 import {
-  AutosaveIndicator, ClinicalAlertBadge, DocStatusBadge, EditWindowBadge, PrivacyName, StatCard,
+  AutosaveIndicator,
+  ClinicalAlertBadge,
+  DocStatusBadge,
+  EditWindowBadge,
+  PrivacyName,
+  StatCard,
 } from './index';
 
 const cases: Record<string, () => ReactElement> = {
@@ -28,7 +33,12 @@ describe('novos: axe', () => {
 
 describe('novos: comportamento', () => {
   it('badges tem texto e icone oculto', () => {
-    const { container } = render(<><EditWindowBadge estado="editavel_hoje" /><EditWindowBadge estado="registrada" /></>);
+    const { container } = render(
+      <>
+        <EditWindowBadge estado="editavel_hoje" />
+        <EditWindowBadge estado="registrada" />
+      </>,
+    );
     expect(screen.getByText('Editável hoje')).toBeInTheDocument();
     expect(screen.getByText('Registrada')).toBeInTheDocument();
     expect(container.querySelectorAll('svg[aria-hidden="true"]').length).toBe(2);

@@ -1,5 +1,10 @@
 import { useId } from 'react';
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type {
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from 'react';
 import { FOCUS, TARGET, cx } from './classes';
 
 const CONTROL = cx(
@@ -41,7 +46,12 @@ export function Field({ label, hint, error, required, children }: FieldProps) {
           {hint}
         </p>
       )}
-      {children({ id, 'aria-describedby': describedBy, 'aria-invalid': error ? true : undefined, required })}
+      {children({
+        id,
+        'aria-describedby': describedBy,
+        'aria-invalid': error ? true : undefined,
+        required,
+      })}
       {error && (
         <p id={errId} role="alert" className="text-sm font-semibold text-err">
           {error}
@@ -65,7 +75,12 @@ export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { read
 export function Textarea({ reading, className, ...rest }: TextareaProps) {
   return (
     <textarea
-      className={cx(CONTROL, 'min-h-24', reading && 'max-w-[68ch] font-reading text-lg leading-[1.75]', className)}
+      className={cx(
+        CONTROL,
+        'min-h-24',
+        reading && 'max-w-[68ch] font-reading text-lg leading-[1.75]',
+        className,
+      )}
       {...rest}
     />
   );

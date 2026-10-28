@@ -6,12 +6,15 @@ import { StatCard } from './StatCard';
 
 afterEach(() => document.documentElement.removeAttribute('data-theme'));
 
-const barra = (c: HTMLElement) => c.querySelector('[data-testid="stat-progresso-barra"]') as HTMLElement;
+const barra = (c: HTMLElement) =>
+  c.querySelector('[data-testid="stat-progresso-barra"]') as HTMLElement;
 
 describe('StatCard (RF-53c/d)', () => {
   it('sem props novas: DOM identico ao anterior', () => {
     const { container } = render(<StatCard label="Sessões" value={12} hint="2 a mais" />);
-    expect(container.innerHTML).toContain('<p class="text-mut">Sessões</p><p class="font-heading text-3xl font-extrabold text-ink">12</p><p class="text-sm text-mut">2 a mais</p>');
+    expect(container.innerHTML).toContain(
+      '<p class="text-mut">Sessões</p><p class="font-heading text-3xl font-extrabold text-ink">12</p><p class="text-sm text-mut">2 a mais</p>',
+    );
     expect(container.querySelectorAll('svg, a, [aria-hidden]').length).toBe(0);
   });
 
@@ -21,26 +24,34 @@ describe('StatCard (RF-53c/d)', () => {
   });
 
   it('progresso: texto "X de Y" e barra aria-hidden com largura proporcional', () => {
-    const { container } = render(<StatCard label="A" value={1} progresso={{ feito: 3, total: 4 }} />);
+    const { container } = render(
+      <StatCard label="A" value={1} progresso={{ feito: 3, total: 4 }} />,
+    );
     expect(screen.getByText('3 de 4')).toBeInTheDocument();
     expect(barra(container).closest('[aria-hidden="true"]')).not.toBeNull();
     expect(barra(container).style.width).toBe('75%');
   });
 
   it('progresso 0 de 0: barra vazia sem NaN', () => {
-    const { container } = render(<StatCard label="A" value={0} progresso={{ feito: 0, total: 0 }} />);
+    const { container } = render(
+      <StatCard label="A" value={0} progresso={{ feito: 0, total: 0 }} />,
+    );
     expect(screen.getByText('0 de 0')).toBeInTheDocument();
     expect(barra(container).style.width).toBe('0%');
   });
 
   it('progresso limitado a 100%', () => {
-    const { container } = render(<StatCard label="A" value={0} progresso={{ feito: 9, total: 4 }} />);
+    const { container } = render(
+      <StatCard label="A" value={0} progresso={{ feito: 9, total: 4 }} />,
+    );
     expect(barra(container).style.width).toBe('100%');
   });
 
   it('atencao: icone + texto + link com sr-only', () => {
     const { container } = render(
-      <MemoryRouter><StatCard label="A" value={1} atencao={{ texto: '2 sem registro', destino: '/agenda' }} /></MemoryRouter>,
+      <MemoryRouter>
+        <StatCard label="A" value={1} atencao={{ texto: '2 sem registro', destino: '/agenda' }} />
+      </MemoryRouter>,
     );
     expect(screen.getAllByText('2 sem registro').length).toBeGreaterThan(0);
     const link = screen.getByRole('link');

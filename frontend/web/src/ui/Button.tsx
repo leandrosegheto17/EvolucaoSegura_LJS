@@ -6,7 +6,13 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   full?: boolean;
 };
 
-export function Button({ variant = 'primary', full, className, type = 'button', ...rest }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  full,
+  className,
+  type = 'button',
+  ...rest
+}: ButtonProps) {
   return (
     <button
       type={type}
