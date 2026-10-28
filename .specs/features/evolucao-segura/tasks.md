@@ -3537,8 +3537,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Versão e data exibidas e iguais às gravadas no aceite
-- [ ] Texto-base marcado para revisão jurídica
+- [x] Versão e data exibidas e iguais às gravadas no aceite
+- [x] Texto-base marcado para revisão jurídica
 
 **Tests**: unit
 **Gate**: quick

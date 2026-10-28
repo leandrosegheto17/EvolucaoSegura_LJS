@@ -25,6 +25,7 @@ import { Cadastro, Confirmar } from './publico/cadastro.tsx';
 import { Entrar } from './publico/entrar.tsx';
 import { ConfirmarExclusao, DesistirExclusao } from './publico/exclusao.tsx';
 import { Recuperar, Redefinir } from './publico/recuperar.tsx';
+import { Privacidade, Termos } from './publico/termos.tsx';
 
 // PUB-02: o app fica sob /app. As páginas públicas ficam ao lado, fora deste prefixo.
 // A raiz dá o cache do TanStack Query a todas as telas; a área /app tem o aviso de inatividade
@@ -94,6 +95,8 @@ export const rotas: RouteObject[] = [
           },
         ],
       },
+      { path: '/termos', element: <Termos /> },
+      { path: '/privacidade', element: <Privacidade /> },
       { path: '/cadastro', element: <Cadastro /> },
       { path: '/confirmar', element: <Confirmar /> },
       { path: '/entrar', element: <Entrar /> },
