@@ -12,7 +12,15 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   reporter: [['list']],
-  use: { baseURL: URL_APP, trace: 'retain-on-failure', locale: 'pt-BR' },
+  // O service worker fica bloqueado: o e2e não testa o PWA, e hoje ele quebra a navegação direta
+  // a /app/* (o precache guarda o /index.html que o Worker responde com redirect 307 para /, e uma
+  // resposta redirecionada não pode servir uma navegação). Defeito da T184, relatado à parte.
+  use: {
+    serviceWorkers: 'block',
+    baseURL: URL_APP,
+    trace: 'retain-on-failure',
+    locale: 'pt-BR',
+  },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {

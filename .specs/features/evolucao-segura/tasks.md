@@ -3653,7 +3653,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Conta nova chega ao app com o trial de 14 dias
+- [x] Conta nova chega ao app com o trial de 14 dias
 
 **Tests**: e2e
 **Gate**: full
