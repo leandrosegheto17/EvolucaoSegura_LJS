@@ -14,8 +14,8 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   notificacao_enviada. Devolve só usuario_id, tipo e ref (nada do payload, PUSH-05), até
 //   `limite` linhas, pela ordem do primeiro processamento. Parâmetro nulo, desde > ate ou limite
 //   fora de 1 a 1000: 22023.
-// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (SET na
-//   definição). As policies de push_subscription e notificacao_enviada já vêm da 0018; esta
+// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (no
+//   corpo, sem SET na definição). As policies de push_subscription e notificacao_enviada já vêm da 0018; esta
 //   acrescenta uma, só para o owner e só SELECT, em webhook_evento (a 0014 liga a leitura do owner
 //   por app.tarefa_webhook, que também libera INSERT e UPDATE; aqui basta ler). A app ligar a
 //   variável não muda nada para ela (as policies são do owner).
@@ -43,9 +43,11 @@ CREATE FUNCTION tarefas.listar_eventos_cobranca_para_aviso(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_push = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_push', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_push', 'on', true);
   IF p_desde IS NULL OR p_ate IS NULL OR p_desde > p_ate THEN
     RAISE EXCEPTION 'listar_eventos_cobranca_para_aviso: janela inválida' USING ERRCODE = '22023';
   END IF;
@@ -79,6 +81,7 @@ BEGIN
         WHERE n.usuario_id = x.usuario_id AND n.tipo = x.tipo AND n.ref = x.ref)
     ORDER BY x.primeiro, x.usuario_id, x.tipo, x.ref
     LIMIT p_limite;
+  PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)
   OWNER TO "owner";

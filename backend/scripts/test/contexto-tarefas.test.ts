@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './banco.ts';
 
-// T197 / OPS-03 (ISO-03, ADR-005): as funções SECURITY DEFINER do owner que ligam (ou desligam) um
+// T197 e T198 / OPS-03 (ISO-03, ADR-005): as funções SECURITY DEFINER do owner que ligam (ou desligam) um
 // contexto app.tarefa_* não declaram mais `SET app.* = ...` na definição, que no Neon (PG 18,
 // neondb_owner sem superusuário) falha com "permission denied to set parameter". O contexto é
 // ligado no corpo com set_config(..., true) e o valor que a transação tinha volta antes de cada
@@ -10,7 +10,8 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // - depois de qualquer caminho de saída, o contexto volta ao valor de antes da chamada (o que a
 //   app tinha ligado, ou nada);
 // - erro dentro da função desfaz a mudança junto com a transação (ou o savepoint).
-// O efeito das policies em cada caminho é coberto nos testes de cada migration.
+// O efeito das policies em cada caminho é coberto nos testes de cada migration (0012 a 0015 na
+// T197; 0018 a 0021, as de push, na T198).
 
 const PARAMETRO_INVALIDO = '22023';
 const ATIVA = '11111111-1111-4111-8111-111111111111';
@@ -22,6 +23,8 @@ const INEXISTENTE = '99999999-9999-4999-8999-999999999999';
 const FUTURO = '2099-01-01T00:00:00Z';
 const PASSADO = '2026-01-01T00:00:00Z';
 const AGORA = '2026-10-28T00:00:00Z';
+// Três dias antes de PASSADO: o trial de TRIAL_VENCIDO está terminando.
+const ANTES_DO_FIM_DO_TRIAL = '2025-12-30T00:00:00Z';
 const ANTERIOR = 'valor-da-transacao';
 
 interface Caso {
@@ -205,6 +208,66 @@ const FUNCOES: Funcao[] = [
     ],
     invalida: { sql: 'select tarefas.desvincular_assinatura_asaas(null)' },
   },
+  {
+    assinatura: 'tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer)',
+    variavel: 'app.tarefa_push',
+    casos: [
+      {
+        caminho: 'lista',
+        sql: 'select usuario_id from tarefas.listar_sessoes_para_aviso($1, $2, 10)',
+        parametros: [PASSADO, FUTURO],
+        esperado: [],
+      },
+    ],
+    invalida: {
+      sql: 'select * from tarefas.listar_sessoes_para_aviso($1, $2, 10)',
+      parametros: [FUTURO, PASSADO],
+    },
+  },
+  {
+    assinatura: 'tarefas.listar_pendencias_evolucao(date, integer)',
+    variavel: 'app.tarefa_push',
+    casos: [
+      {
+        caminho: 'lista',
+        sql: "select usuario_id from tarefas.listar_pendencias_evolucao('2026-10-28', 10)",
+        esperado: [],
+      },
+    ],
+    invalida: { sql: 'select * from tarefas.listar_pendencias_evolucao(null, 10)' },
+  },
+  {
+    assinatura: 'tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)',
+    variavel: 'app.tarefa_push',
+    casos: [
+      {
+        caminho: 'lista',
+        sql: 'select usuario_id from tarefas.listar_eventos_cobranca_para_aviso($1, $2, 10)',
+        parametros: [PASSADO, FUTURO],
+        esperado: [],
+      },
+    ],
+    invalida: {
+      sql: 'select * from tarefas.listar_eventos_cobranca_para_aviso($1, $2, 10)',
+      parametros: [FUTURO, PASSADO],
+    },
+  },
+  {
+    assinatura: 'tarefas.listar_trials_terminando(timestamptz, integer)',
+    variavel: 'app.tarefa_push',
+    casos: [
+      {
+        caminho: 'lista',
+        sql: 'select usuario_id from tarefas.listar_trials_terminando($1, 10)',
+        parametros: [ANTES_DO_FIM_DO_TRIAL],
+        esperado: [{ usuario_id: TRIAL_VENCIDO }],
+      },
+    ],
+    invalida: {
+      sql: 'select * from tarefas.listar_trials_terminando($1, 0)',
+      parametros: [ANTES_DO_FIM_DO_TRIAL],
+    },
+  },
 ];
 
 let banco: BancoDeTeste;
@@ -229,6 +292,11 @@ beforeAll(async () => {
   await banco.cliente.query(
     `insert into webhook_evento (event_id, tipo, payload, processado_em)
      values ('evt_pendente', 'X', '{}', null), ('evt_processado', 'X', '{}', now())`,
+  );
+  await banco.cliente.query(
+    `insert into push_subscription (usuario_id, endpoint, p256dh, auth)
+     values ($1, 'https://push.exemplo.com/1', 'chave', 'segredo')`,
+    [TRIAL_VENCIDO],
   );
 }, 60_000);
 

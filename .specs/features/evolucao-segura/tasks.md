@@ -3951,8 +3951,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
-- [ ] Os testes de `tarefas.*`, push e aviso de sessão seguem verdes sem enfraquecer asserção
+- [x] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
+- [x] Os testes de `tarefas.*`, push e aviso de sessão seguem verdes sem enfraquecer asserção
 
 **Tests**: integration
 **Gate**: full

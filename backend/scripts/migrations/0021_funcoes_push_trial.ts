@@ -11,8 +11,8 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   A ref volta pronta para a tarefa gravar exatamente a mesma chave. Devolve só usuario_id,
 //   periodo_fim e ref, até `limite` linhas, do fim mais próximo ao mais distante. Parâmetro nulo
 //   ou limite fora de 1 a 1000: 22023.
-// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (SET na
-//   definição). As policies de push_subscription e notificacao_enviada já vêm da 0018; esta
+// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (no
+//   corpo, sem SET na definição). As policies de push_subscription e notificacao_enviada já vêm da 0018; esta
 //   acrescenta uma, só para o owner e só SELECT, em assinatura (a 0012 liga a leitura do owner
 //   por app.tarefa_assinatura, que também libera UPDATE; aqui basta ler). A app ligar a variável
 //   não muda nada para ela (as policies são do owner).
@@ -39,9 +39,11 @@ CREATE FUNCTION tarefas.listar_trials_terminando(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_push = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_push', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_push', 'on', true);
   IF p_agora IS NULL THEN
     RAISE EXCEPTION 'listar_trials_terminando: agora nulo' USING ERRCODE = '22023';
   END IF;
@@ -63,6 +65,7 @@ BEGIN
         WHERE n.usuario_id = x.usuario_id AND n.tipo = 'trial_terminando' AND n.ref = x.ref)
     ORDER BY x.periodo_fim, x.usuario_id
     LIMIT p_limite;
+  PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) FROM PUBLIC;

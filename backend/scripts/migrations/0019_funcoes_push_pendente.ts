@@ -10,12 +10,12 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   chaveEvolucaoPendente). Devolve só usuario_id e a quantidade (nada do paciente nem da
 //   evolução, PUSH-05), até `limite` profissionais (orçamento do cron, ADR-010). Dia nulo ou
 //   limite fora de 1 a 1000: 22023.
-// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (SET na
-//   definição). As policies de sessao_atendimento, push_subscription e notificacao_enviada já vêm
+// - Mesmo desenho da 0018: a função liga app.tarefa_push só durante a própria execução (no
+//   corpo, sem SET na definição). As policies de sessao_atendimento, push_subscription e notificacao_enviada já vêm
 //   da 0018; esta acrescenta uma, só para o owner e só SELECT, em evolucao. A app ligar a variável
 //   não muda nada para ela (as policies são do owner). O cuidado da 0018 vale também para
-//   evolucao: outra função SECURITY DEFINER do owner que a leia deve fixar
-//   SET app.tarefa_push = 'off'.
+//   evolucao: outra função SECURITY DEFINER do owner que a leia deve desligar app.tarefa_push no
+//   corpo.
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa. Gravar o envio e ler as assinaturas fica
 // com a tarefa, numa transação do próprio profissional (RLS).
@@ -38,13 +38,14 @@ CREATE FUNCTION tarefas.listar_pendencias_evolucao(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_push = 'on'
 AS $$
 DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_push', true), '');
   v_de timestamptz;
   v_ate timestamptz;
   v_ref text;
 BEGIN
+  PERFORM set_config('app.tarefa_push', 'on', true);
   IF p_dia IS NULL THEN
     RAISE EXCEPTION 'listar_pendencias_evolucao: dia nulo' USING ERRCODE = '22023';
   END IF;
@@ -67,6 +68,7 @@ BEGIN
     GROUP BY s.usuario_id
     ORDER BY s.usuario_id
     LIMIT p_limite;
+  PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_pendencias_evolucao(date, integer) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.listar_pendencias_evolucao(date, integer) FROM PUBLIC;

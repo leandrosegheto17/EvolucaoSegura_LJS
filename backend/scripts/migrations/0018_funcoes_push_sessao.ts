@@ -10,11 +10,15 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   paciente, PUSH-05), até `limite` linhas (orçamento do cron, ADR-010), das que começam antes
 //   para as que começam depois. Parâmetro nulo, de > ate ou limite fora de 1 a 1000: 22023.
 // - A RLS forçada vale também para o owner, então a função liga app.tarefa_push só durante a
-//   própria execução (SET na definição) e três policies, só para o owner e só SELECT, liberam a
-//   leitura de sessao_atendimento, push_subscription e notificacao_enviada nesse contexto (mesmo
-//   desenho da 0012). A app ligar a variável não muda nada para ela (as policies são do owner).
-//   Cuidado: outra função SECURITY DEFINER do owner que leia essas tabelas herdaria a variável
-//   que a app ligasse; uma assim deve fixar SET app.tarefa_push = 'off' (hoje não existe nenhuma).
+//   própria execução e três policies, só para o owner e só SELECT, liberam a leitura de
+//   sessao_atendimento, push_subscription e notificacao_enviada nesse contexto (mesmo desenho da
+//   0012). A app ligar a variável não muda nada para ela (as policies são do owner). Cuidado:
+//   outra função SECURITY DEFINER do owner que leia essas tabelas herdaria a variável que a app
+//   ligasse; uma assim deve desligar app.tarefa_push no corpo (hoje não existe nenhuma).
+// - O contexto é ligado no corpo (set_config local) e o valor que a transação tinha volta antes
+//   do fim; erro desfaz a mudança junto com a transação. Sem SET app.* na definição: no Neon
+//   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
+//   falha com "permission denied to set parameter" (T198).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa. Gravar o envio e ler as assinaturas fica
 // com a tarefa, numa transação do próprio profissional (RLS).
@@ -43,9 +47,11 @@ CREATE FUNCTION tarefas.listar_sessoes_para_aviso(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_push = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_push', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_push', 'on', true);
   IF p_de IS NULL OR p_ate IS NULL OR p_de > p_ate THEN
     RAISE EXCEPTION 'listar_sessoes_para_aviso: intervalo inválido' USING ERRCODE = '22023';
   END IF;
@@ -63,6 +69,7 @@ BEGIN
         WHERE n.usuario_id = s.usuario_id AND n.tipo = 'sessao_proxima' AND n.ref = s.id::text)
     ORDER BY s.inicio, s.id
     LIMIT p_limite;
+  PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) FROM PUBLIC;
