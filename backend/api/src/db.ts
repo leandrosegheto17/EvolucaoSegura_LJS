@@ -345,12 +345,20 @@ export async function definirUsuarioDaTransacao(trx: Trx, usuarioId: string): Pr
   await sql`select set_config('app.usuario_id', ${usuarioId}, true)`.execute(trx);
 }
 
+// Tempo máximo para abrir a conexão (padrão Neon, ADR-005): o Neon Free suspende o compute ocioso
+// e a primeira conexão espera ele voltar; 8 s cobrem essa espera sem deixar a requisição presa.
+// Sem retry: a falha volta como erro da requisição, e quem chamou decide repetir.
+export const TEMPO_LIMITE_CONEXAO_MS = 8_000;
+
 export async function comTransacao<T>(
   env: Pick<Cloudflare.Env, 'HYPERDRIVE'>,
   usuarioId: string | null,
   fn: (trx: Trx) => Promise<T>,
 ): Promise<T> {
-  const cliente = new pg.Client({ connectionString: env.HYPERDRIVE.connectionString });
+  const cliente = new pg.Client({
+    connectionString: env.HYPERDRIVE.connectionString,
+    connectionTimeoutMillis: TEMPO_LIMITE_CONEXAO_MS,
+  });
   // O pg-cloudflare emite 'error' ao ler do socket que acabou de fechar; sem ouvinte o runtime
   // trata como exceção não tratada. Falha de consulta continua rejeitando a promessa.
   cliente.on('error', () => {});

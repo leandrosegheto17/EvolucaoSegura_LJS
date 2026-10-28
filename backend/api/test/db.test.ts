@@ -1,8 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { sql } from 'kysely';
 import pg from 'pg';
-import { describe, expect, it } from 'vitest';
-import { comTransacao } from '../src/db.ts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { comTransacao, TEMPO_LIMITE_CONEXAO_MS } from '../src/db.ts';
 
 // T32 / ISO-01: uma transação por requisição, com o usuário definido por
 // set_config('app.usuario_id', $1, true) (spike set-local-hyperdrive). O contexto não vaza para a
@@ -130,5 +130,33 @@ describe('comTransacao', () => {
       return rows.map((linha) => linha.usuario_id);
     });
     expect(donos).toEqual([a]);
+  });
+});
+
+// Padrão Neon, item 5: a conexão tem tempo limite de 8 s e não há nova tentativa.
+describe('comTransacao: tempo limite da conexão', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('abre o pg.Client com connectionTimeoutMillis de 8 s', async () => {
+    const criar = vi.spyOn(pg, 'Client');
+
+    await comTransacao(env, null, async () => null);
+
+    expect(TEMPO_LIMITE_CONEXAO_MS).toBe(8_000);
+    expect(criar).toHaveBeenCalledTimes(1);
+    expect(criar.mock.calls[0]?.[0]).toMatchObject({ connectionTimeoutMillis: 8_000 });
+  });
+
+  it('sem retry: conexão recusada falha na primeira tentativa, sem chamar fn', async () => {
+    const criar = vi.spyOn(pg, 'Client');
+    const fn = vi.fn(async () => null);
+    const semBanco = { HYPERDRIVE: { connectionString: 'postgres://x:x@127.0.0.1:1/x' } };
+
+    await expect(comTransacao(semBanco as never, null, fn)).rejects.toThrow();
+
+    expect(criar).toHaveBeenCalledTimes(1);
+    expect(fn).not.toHaveBeenCalled();
   });
 });
