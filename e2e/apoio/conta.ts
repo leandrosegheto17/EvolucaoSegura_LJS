@@ -68,3 +68,19 @@ export async function completarPerfil(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(page.getByText('Perfil atualizado.')).toBeVisible();
 }
+
+// Conta nova pronta para usar: cadastrada, confirmada, logada e com o perfil completo.
+export async function criarContaLogada(
+  page: Page,
+  request: APIRequestContext,
+  prefixo: string,
+): Promise<Conta> {
+  const conta = contaNova(prefixo);
+  await cadastrarEConfirmar(page, request, conta);
+  await entrarComCodigo(page, request, conta);
+  await completarPerfil(page);
+  return conta;
+}
+
+// CPF válido (dígitos verificadores corretos) para o sandbox do Asaas; não é de uma pessoa real.
+export const CPF_DE_TESTE = '529.982.247-25';
