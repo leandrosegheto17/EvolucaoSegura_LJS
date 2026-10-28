@@ -3275,9 +3275,11 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Páginas juntas na ordem, sem perder linha
-- [ ] `dados.json` no zip com todas as tabelas
-- [ ] Chunk do fflate carregado só ao exportar
+- [x] Páginas juntas na ordem, sem perder linha
+- [x] `dados.json` no zip com todas as tabelas
+- [x] Chunk do fflate carregado só ao exportar
+
+- 2026-10-27, feito: `juntarPaginas` anda pelos cursores até `proximo_cursor` nulo e devolve todas as tabelas de `TABELAS_EXPORTACAO` (vazias quando sem linha); `montarZipCompleto` monta o zip com `dados.json` mais arquivos extras, com `fflate` 0.8.3 (dependência nova do web) por import dinâmico. O chunk separado só aparece no build quando a T175 importar o módulo.
 
 **Tests**: unit
 **Gate**: build

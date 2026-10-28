@@ -14,6 +14,7 @@
     "@radix-ui/react-alert-dialog": "1.1.23",
     "@sentry/react": "11.9.0",
     "@tanstack/react-query": "5.104.5",
+    "fflate": "0.8.3",
     "pdfmake": "0.3.12",
     "react": "19.3.1",
     "react-dom": "19.3.1",

@@ -127,6 +127,9 @@ importers:
       '@tanstack/react-query':
         specifier: 5.104.5
         version: 5.104.5(@types/react@19.3.0)(react@19.3.1)
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       pdfmake:
         specifier: 0.3.12
         version: 0.3.12
