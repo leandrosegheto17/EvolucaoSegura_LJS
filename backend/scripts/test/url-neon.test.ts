@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { UrlNeonRecusada, validarUrlNeon } from '../src/neon/url-neon.ts';
+import { BANCO_NEON, UrlNeonRecusada, validarUrlNeon } from '../src/neon/url-neon.ts';
 import { validarVariavel } from '../src/neon/validar-url.ts';
 
 // Padrão Neon, item 4: uma função única valida toda URL que toca o Neon. Recusa host -pooler,
@@ -10,13 +10,25 @@ import { validarVariavel } from '../src/neon/validar-url.ts';
 // senha; nada conecta.
 
 const HOST = 'ep-exemplo-123456.sa-east-1.aws.neon.tech';
-const valida = `postgresql://evolucao_app@${HOST}/banco?sslmode=require`;
+const valida = `postgresql://evolucao_app@${HOST}/evolucao?sslmode=require`;
 
 const recusa = (url: string | undefined) => () => validarUrlNeon(url, 'NEON_URL_TESTE');
 
 describe('validarUrlNeon', () => {
-  it('aceita a conexão direta do Neon com sslmode=require e devolve o host', () => {
-    expect(validarUrlNeon(valida)).toEqual({ host: HOST });
+  it('aceita a conexão direta do Neon com sslmode=require e devolve host e banco', () => {
+    expect(validarUrlNeon(valida)).toEqual({ host: HOST, banco: 'evolucao' });
+    expect(BANCO_NEON).toBe('evolucao');
+  });
+
+  it.each([
+    ['outro banco', `postgresql://u@${HOST}/neondb?sslmode=require`],
+    ['o nome antigo do banco local', `postgresql://u@${HOST}/evolucao_segura?sslmode=require`],
+    ['um prefixo do nome', `postgresql://u@${HOST}/evolucao2?sslmode=require`],
+    ['sem banco', `postgresql://u@${HOST}?sslmode=require`],
+    ['banco na barra final', `postgresql://u@${HOST}/evolucao/?sslmode=require`],
+    ['dbname na consulta', `postgresql://u@${HOST}/evolucao?sslmode=require&dbname=neondb`],
+  ])('recusa %s: o database do Neon é o evolucao', (_caso, url) => {
+    expect(recusa(url)).toThrow(/evolucao/);
   });
 
   it.each(['verify-ca', 'verify-full'])('aceita sslmode=%s', (modo) => {
@@ -24,7 +36,7 @@ describe('validarUrlNeon', () => {
   });
 
   it('aceita postgres:// e outros parâmetros junto do sslmode (formato do console do Neon)', () => {
-    const url = `postgres://u@${HOST}/banco?sslmode=require&channel_binding=require`;
+    const url = `postgres://u@${HOST}/evolucao?sslmode=require&channel_binding=require`;
     expect(validarUrlNeon(url).host).toBe(HOST);
   });
 
@@ -32,7 +44,7 @@ describe('validarUrlNeon', () => {
     ['ausente', undefined],
     ['vazia', ''],
     ['inválida', 'isto não é url'],
-    ['de outro protocolo', `https://${HOST}/banco?sslmode=require`],
+    ['de outro protocolo', `https://${HOST}/evolucao?sslmode=require`],
   ])('recusa URL %s', (_caso, url) => {
     expect(recusa(url)).toThrow(UrlNeonRecusada);
   });
@@ -42,11 +54,11 @@ describe('validarUrlNeon', () => {
     ['EP-EXEMPLO-123456-POOLER.sa-east-1.aws.neon.tech'],
     ['ep-exemplo-123456.sa-east-1-pooler.aws.neon.tech'],
   ])('recusa o host do pooler (%s)', (host) => {
-    expect(recusa(`postgresql://u@${host}/banco?sslmode=require`)).toThrow(/pooler/);
+    expect(recusa(`postgresql://u@${host}/evolucao?sslmode=require`)).toThrow(/pooler/);
   });
 
   it.each([['localhost'], ['127.0.0.1'], ['[::1]']])('recusa host local (%s)', (host) => {
-    expect(recusa(`postgresql://u@${host}:5432/banco?sslmode=require`)).toThrow(/local/);
+    expect(recusa(`postgresql://u@${host}:5432/evolucao?sslmode=require`)).toThrow(/local/);
   });
 
   it.each([
@@ -55,28 +67,28 @@ describe('validarUrlNeon', () => {
     ['que é o próprio domínio', 'neon.tech'],
     ['com o domínio no meio', 'neon.tech.exemplo.com'],
   ])('recusa host %s', (_caso, host) => {
-    expect(recusa(`postgresql://u@${host}/banco?sslmode=require`)).toThrow(/não é do Neon/);
+    expect(recusa(`postgresql://u@${host}/evolucao?sslmode=require`)).toThrow(/não é do Neon/);
   });
 
   it.each([
-    ['sem sslmode', `postgresql://u@${HOST}/banco`],
-    ['com sslmode=disable', `postgresql://u@${HOST}/banco?sslmode=disable`],
-    ['com sslmode=prefer', `postgresql://u@${HOST}/banco?sslmode=prefer`],
-    ['com sslmode=allow', `postgresql://u@${HOST}/banco?sslmode=allow`],
-    ['com dois sslmode', `postgresql://u@${HOST}/banco?sslmode=require&sslmode=disable`],
+    ['sem sslmode', `postgresql://u@${HOST}/evolucao`],
+    ['com sslmode=disable', `postgresql://u@${HOST}/evolucao?sslmode=disable`],
+    ['com sslmode=prefer', `postgresql://u@${HOST}/evolucao?sslmode=prefer`],
+    ['com sslmode=allow', `postgresql://u@${HOST}/evolucao?sslmode=allow`],
+    ['com dois sslmode', `postgresql://u@${HOST}/evolucao?sslmode=require&sslmode=disable`],
   ])('recusa conexão sem TLS exigido (%s)', (_caso, url) => {
     expect(recusa(url)).toThrow(/TLS/);
   });
 
   it.each([
-    ['host na consulta', `postgresql://u@${HOST}/banco?sslmode=require&host=localhost`],
-    ['hostaddr na consulta', `postgresql://u@${HOST}/banco?sslmode=require&hostaddr=127.0.0.1`],
+    ['host na consulta', `postgresql://u@${HOST}/evolucao?sslmode=require&host=localhost`],
+    ['hostaddr na consulta', `postgresql://u@${HOST}/evolucao?sslmode=require&hostaddr=127.0.0.1`],
   ])('recusa %s (sobrescreve o host no libpq)', (_caso, url) => {
     expect(recusa(url)).toThrow(UrlNeonRecusada);
   });
 
   it('a mensagem cita a variável e o host, nunca a senha', () => {
-    const comSenha = `postgresql://u:senha-secreta-123@${HOST.replace('ep-', 'ep-x-pooler-')}/banco`;
+    const comSenha = `postgresql://u:senha-secreta-123@${HOST.replace('ep-', 'ep-x-pooler-')}/evolucao`;
     let mensagem = '';
     try {
       validarUrlNeon(comSenha, 'NEON_URL_TESTE');

@@ -32,6 +32,11 @@ O projeto do Neon tem só **duas branches permanentes**; nenhum workflow cria ou
 | `main` | Produção                                           | `NEON_URL_MIGRACAO`, `NEON_URL_APP` e `NEON_URL_BACKUP` (GitHub Secrets do environment `producao`) e o Hyperdrive de produção |
 | `dev`  | Desenvolvimento e ensaio contra o Neon real, à mão | Nenhuma no GitHub; só na sua sessão do terminal, quando precisar                                                              |
 
+O database no Neon se chama **`evolucao`**, nas duas branches: é o caminho de toda URL `NEON_URL_*`
+(`.../evolucao?sslmode=require`), do Hyperdrive, do backup e do dump. O `validarUrlNeon` recusa
+qualquer outro nome. O Postgres local mantém os nomes próprios: `evolucao_segura` (desenvolvimento,
+`docker-compose.yml`), `evolucao_segura_e2e` (e2e) e os bancos temporários dos testes.
+
 O ponto de volta antes de cada migração é o dump cifrado com `age` que o `deploy.yml` guarda como
 artefato (seção 5), não uma branch. `DATABASE_URL` é só do Postgres local e dos testes: nunca
 aponte para o Neon.
@@ -651,7 +656,7 @@ As URLs são montadas na hora, a partir da conexão **direta** do console do Neo
 `gh` pela entrada padrão:
 
 ```bash
-HOST='<host da conexão direta, ep-...neon.tech>'; BANCO='<banco>'
+HOST='<host da conexão direta, ep-...neon.tech>'; BANCO=evolucao
 read -rs SENHA_ROLE   # senha da app
 printf '%s' "postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_APP --env producao
 read -rs SENHA_ROLE   # senha da backup_ro

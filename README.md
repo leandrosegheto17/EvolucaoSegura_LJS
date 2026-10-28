@@ -99,7 +99,8 @@ local e dos testes: o `pnpm migrar` recusa host remoto nela. Para o Neon, use
 `pnpm migrar --alvo producao` (lê `NEON_URL_MIGRACAO`) ou `--alvo dev` (lê
 `NEON_URL_MIGRACAO_DEV`); fora do CI ele pede o host exato antes de conectar. Toda URL do Neon
 passa por `validarUrlNeon` (`backend/scripts/src/neon/url-neon.ts`): host `*.neon.tech`, conexão
-direta (sem `-pooler`) e `sslmode=require` ou mais forte.
+direta (sem `-pooler`), `sslmode=require` ou mais forte e o database `evolucao` (o nome do banco
+no Neon; o Postgres local mantém `evolucao_segura`, e o e2e, `evolucao_segura_e2e`).
 
 Pipeline (GitHub Secrets do environment `producao`): `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`,
 `NEON_URL_APP`, `AGE_PUBLIC_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.

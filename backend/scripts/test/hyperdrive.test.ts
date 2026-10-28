@@ -45,7 +45,7 @@ describe('comando de criação do Hyperdrive', () => {
 
   // A URL de exemplo não tem senha e o host é fictício: o comando não conecta em nada.
   const urlValida =
-    'postgresql://app@ep-exemplo-123456.sa-east-1.aws.neon.tech/banco?sslmode=require';
+    'postgresql://app@ep-exemplo-123456.sa-east-1.aws.neon.tech/evolucao?sslmode=require';
 
   it('a linha de comando só imprime o comando, sem executar nada', async () => {
     const { stdout } = await executar(process.execPath, ['src/hyperdrive.ts'], {
@@ -59,7 +59,7 @@ describe('comando de criação do Hyperdrive', () => {
     ['ausente', undefined],
     ['do pooler', urlValida.replace('ep-exemplo-123456', 'ep-exemplo-123456-pooler')],
     ['sem TLS', urlValida.replace('?sslmode=require', '')],
-    ['local', 'postgresql://app@localhost:5433/banco?sslmode=require'],
+    ['local', 'postgresql://app@localhost:5433/evolucao?sslmode=require'],
   ])('a linha de comando recusa a NEON_URL_APP %s e não imprime o comando', async (_caso, url) => {
     const ambiente: NodeJS.ProcessEnv = { ...process.env };
     delete ambiente[VARIAVEL_CONEXAO];

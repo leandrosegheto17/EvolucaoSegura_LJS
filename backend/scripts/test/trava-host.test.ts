@@ -15,7 +15,7 @@ import {
 // casos recusados lançam antes de qualquer conexão.
 
 const HOST = 'ep-exemplo-123456.sa-east-1.aws.neon.tech';
-const remota = `postgresql://u@${HOST}/banco?sslmode=require`;
+const remota = `postgresql://u@${HOST}/evolucao?sslmode=require`;
 const local = 'postgresql://postgres@localhost:5433/banco';
 
 describe('hostELocal e hostDaUrl', () => {
@@ -35,7 +35,7 @@ describe('hostELocal e hostDaUrl', () => {
     ['inválida', 'nada'],
     ['sem host', 'postgresql:///banco'],
     ['com host na consulta', `${local}?host=${HOST}`],
-    ['com vários hosts', `postgresql://u@a.neon.tech,b.neon.tech/banco`],
+    ['com vários hosts', `postgresql://u@a.neon.tech,b.neon.tech/evolucao`],
   ])('recusa URL %s', (_caso, url) => {
     expect(() => hostDaUrl(url)).toThrow(HostRecusado);
   });
