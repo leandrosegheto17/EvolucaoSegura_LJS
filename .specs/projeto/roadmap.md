@@ -22,7 +22,7 @@ As 23 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan), reor
 | 16 | Etapa 12, parte 1: Planos, Asaas e webhook | Concluída |  |
 | 17 | Etapa 12, parte 2: Meu plano, limite do Free e cron único | Concluída |  |
 | 18 | Etapa 13: Push | Concluída |  |
-| 19 | Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste) | Não começada | Ação do usuário antes da T122: criar Neon e Hyperdrive de teste |
+| 19 | Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste) | Concluída | Lote 20 em 2026-10-27; T122 com página de 25 linhas (SPEC_DEVIATION, risco de CPU aceito no Free) |
 | 20 | Etapa 14, parte 1: Exclusão de conta | Não começada |  |
 | 21 | Etapa 14, parte 2: Termos, landing e PWA | Não começada | Ação do usuário na T156: checagem do Chrome instalável |
 | 22 | Etapa 15, parte 1: Testes de ponta a ponta (e2e) | Não começada |  |
