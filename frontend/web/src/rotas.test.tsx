@@ -16,11 +16,14 @@ describe('rotas do app', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Evolução Segura');
   });
 
-  it('não renderiza a página inicial fora do prefixo /app', () => {
+  // Mudança aprovada pelo usuário em 2026-10-28: com a landing (PUB-01, T155), '/' deixa de ficar
+  // sem página. A guarda continua: o Início do app não aparece fora de /app.
+  it('em / renderiza a landing, não o Início do app', () => {
     const roteador = createMemoryRouter(rotas, { initialEntries: ['/'] });
 
     render(<RouterProvider router={roteador} />);
 
-    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Começar grátis' })).toBeTruthy();
+    expect(roteador.state.location.pathname).toBe('/');
   });
 });

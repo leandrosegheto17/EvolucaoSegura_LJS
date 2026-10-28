@@ -23,6 +23,7 @@ import { GuardaPerfil, Shell } from './app/shell.tsx';
 import { criarQueryClient } from './lib/api.ts';
 import { Cadastro, Confirmar } from './publico/cadastro.tsx';
 import { Entrar } from './publico/entrar.tsx';
+import { Landing } from './publico/landing.tsx';
 import { ConfirmarExclusao, DesistirExclusao } from './publico/exclusao.tsx';
 import { Recuperar, Redefinir } from './publico/recuperar.tsx';
 import { Privacidade, Termos } from './publico/termos.tsx';
@@ -95,6 +96,7 @@ export const rotas: RouteObject[] = [
           },
         ],
       },
+      { path: '/', element: <Landing /> },
       { path: '/termos', element: <Termos /> },
       { path: '/privacidade', element: <Privacidade /> },
       { path: '/cadastro', element: <Cadastro /> },

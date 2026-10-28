@@ -3555,8 +3555,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Botão leva a `/cadastro`
-- [ ] Preços e limites iguais à spec
+- [x] Botão leva a `/cadastro`
+- [x] Preços e limites iguais à spec
+
+- 2026-10-28, nota: o teste `rotas.test.tsx` "não renderiza a página inicial fora do prefixo /app" (esperava `/` sem h1) contradizia o PUB-01; trocado, com aprovação do usuário em 2026-10-28, por "em / renderiza a landing, não o Início do app" (link "Começar grátis" presente e caminho continua `/`).
 
 **Tests**: unit
 **Gate**: quick
