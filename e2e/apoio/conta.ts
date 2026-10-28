@@ -84,3 +84,14 @@ export async function criarContaLogada(
 
 // CPF válido (dígitos verificadores corretos) para o sandbox do Asaas; não é de uma pessoa real.
 export const CPF_DE_TESTE = '529.982.247-25';
+
+// PLANO-05: assina o Pro em "Meu plano" e espera o Pix aparecer.
+export async function assinarPro(page: Page, conta: Conta): Promise<void> {
+  await page.goto('/app/plano');
+  await page.getByLabel('Nome completo').fill(conta.nome);
+  await page.getByLabel('CPF ou CNPJ').fill(CPF_DE_TESTE);
+  await page.getByRole('button', { name: 'Assinar', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Pagamento por Pix' })).toBeVisible({
+    timeout: 45_000,
+  });
+}
