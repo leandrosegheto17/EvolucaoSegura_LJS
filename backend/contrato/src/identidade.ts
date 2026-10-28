@@ -86,6 +86,8 @@ export const esquemaProblema = z.strictObject({
       }),
     )
     .optional(),
+  // CONTA-01: no 422 requisitos_exclusao, cada requisito do pedido de exclusão que falta.
+  requisitos: z.array(z.string()).optional(),
 });
 export type Problema = z.infer<typeof esquemaProblema>;
 

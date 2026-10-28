@@ -3356,7 +3356,9 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Cada requisito que falta é indicado no 422
+- [x] Cada requisito que falta é indicado no 422
+
+- 2026-10-28, feito: `POST /api/conta/excluir` (sessão e CSRF; a rota abre a própria transação para o e-mail da T180 sair depois do COMMIT). 422 `requisitos_exclusao` com `requisitos` (campo novo e opcional do `esquemaProblema`) na ordem `exportacao`, `declaracao_guarda`, `senha`; todos conferidos a cada pedido. Exportação = evento `exportacao.concluida` (T173) nas últimas 24 h pelo relógio do banco. PREMISSAS: campo ausente conta como requisito que falta (tipo errado ou chave extra = 422 `validacao`); senha conferida por `conferir_senha`, sem contar no bloqueio de login; contrato em `@es/contrato/conta`.
 
 **Tests**: integration
 **Gate**: full
