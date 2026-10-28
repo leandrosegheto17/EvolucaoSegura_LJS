@@ -3721,7 +3721,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Pagamento registrado e débito some
+- [x] Pagamento registrado e débito some
 
 **Tests**: e2e
 **Gate**: full

@@ -70,3 +70,15 @@ export async function registrarEvolucao(
   await page.getByRole('button', { name: 'Registrar evolução' }).click();
   await expect(page.getByText('Evolução registrada.')).toBeVisible();
 }
+
+// FIN-09: valor padrão da sessão do paciente, em reais (ex.: '150,00').
+export async function definirPrecoDoPaciente(
+  page: Page,
+  pacienteId: string,
+  valor: string,
+): Promise<void> {
+  await page.goto(`/app/financeiro/preco/paciente/${pacienteId}`);
+  await page.getByLabel('Valor padrão da sessão').fill(valor);
+  await page.getByRole('button', { name: 'Salvar' }).click();
+  await expect(page.getByText(/Valor atual: R\$\s*150,00/)).toBeVisible();
+}
