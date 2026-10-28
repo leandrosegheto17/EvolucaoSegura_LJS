@@ -3517,8 +3517,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Botão só com os três requisitos
-- [ ] Mensagens do servidor exibidas
+- [x] Botão só com os três requisitos
+- [x] Mensagens do servidor exibidas
+
+- 2026-10-28, feito: tela `/app/conta/excluir` (link "Excluir minha conta" no cartão "Meus dados" das Configurações) com três passos: exportar aqui mesmo (a rotina da tela de exportação virou o hook `useExportacaoCompleta`, sem mudar a tela), declaração de guarda e senha. "Pedir a exclusão" só fica ativo com a exportação concluída nesta tela, a declaração marcada e a senha preenchida; manda `POST /api/conta/excluir` `{senha, declaracao_guarda}`. 202: aviso do link de confirmação no e-mail (30 min) e senha limpa; 422 `requisitos_exclusao`: uma mensagem por requisito (o `ErroApi` passou a ler `requisitos`); 429 e falha inesperada com mensagem própria. Telas públicas dos links dos e-mails, `/confirmar-exclusao` e `/desistir-exclusao` (`publico/exclusao.tsx`): o token sai da URL e só é enviado no clique do botão (leitor de e-mail que abre links não confirma nem desiste sozinho); confirmação mostra a data da purga em DD/MM/AAAA (America/Sao_Paulo); 400 `link_invalido`, 503 `cobranca_indisponivel` (nada mudou, tentar de novo com o mesmo link) e falha genérica tratados; desistência leva a `/entrar`. PREMISSAS: a tela não enxerga exportação feita antes noutra aba (a API não expõe), o requisito da tela é exportar nela; as telas públicas entraram nesta tarefa (a T150 e a T181 as atribuíram à T153); clique explícito e textos escritos pelo implementador; sem mockup (`.specs/mockup/` não existe), padrão das Configurações; sem teste novo para o link das Configurações.
 
 **Tests**: unit
 **Gate**: quick

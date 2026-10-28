@@ -140,6 +140,11 @@ export function SettingsPage() {
                 Exportar meus dados
               </Link>
             </div>
+            <div>
+              <Link to="/app/conta/excluir" className="underline">
+                Excluir minha conta
+              </Link>
+            </div>
           </Card>
 
           <Card id="cfg-session" title="Sessão">

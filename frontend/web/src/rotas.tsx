@@ -10,6 +10,7 @@ import { PagamentoPage } from './app/financeiro/pagamento.tsx';
 import { PrecoPacientePage, PrecoSessaoPage } from './app/financeiro/preco.tsx';
 import { GuardaInatividade, SessaoExpirada } from './app/inatividade.tsx';
 import { MeuPlanoPage } from './app/plano/meu-plano.tsx';
+import { ExcluirContaPage } from './app/conta/excluir.tsx';
 import { Inicio } from './app/inicio/inicio.tsx';
 import { PatientFichaPage } from './app/pacientes/ficha.tsx';
 import { PatientFormPage } from './app/pacientes/novo.tsx';
@@ -22,6 +23,7 @@ import { GuardaPerfil, Shell } from './app/shell.tsx';
 import { criarQueryClient } from './lib/api.ts';
 import { Cadastro, Confirmar } from './publico/cadastro.tsx';
 import { Entrar } from './publico/entrar.tsx';
+import { ConfirmarExclusao, DesistirExclusao } from './publico/exclusao.tsx';
 import { Recuperar, Redefinir } from './publico/recuperar.tsx';
 
 // PUB-02: o app fica sob /app. As páginas públicas ficam ao lado, fora deste prefixo.
@@ -67,6 +69,7 @@ export const rotas: RouteObject[] = [
                   { path: 'perfil', element: <ProfilePage /> },
                   { path: 'configuracoes', element: <SettingsPage /> },
                   { path: 'exportar', element: <ExportarPage /> },
+                  { path: 'conta/excluir', element: <ExcluirContaPage /> },
                   { path: 'agenda', element: <AgendaComAcoes /> },
                   { path: 'agenda/nova', element: <NovaSessaoPage /> },
                   { path: 'agenda/serie/nova', element: <NovaSeriePage /> },
@@ -97,6 +100,8 @@ export const rotas: RouteObject[] = [
       { path: '/recuperar', element: <Recuperar /> },
       { path: '/redefinir', element: <Redefinir /> },
       { path: '/sessao-expirada', element: <SessaoExpirada /> },
+      { path: '/confirmar-exclusao', element: <ConfirmarExclusao /> },
+      { path: '/desistir-exclusao', element: <DesistirExclusao /> },
     ],
   },
 ];

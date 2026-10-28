@@ -50,7 +50,9 @@ const descricao = (f: Fase): string =>
         ? 'Montando o arquivo .zip'
         : '';
 
-export function ExportarPage() {
+// Estado e ação da exportação completa, usados por esta tela e pelo fluxo de exclusão da conta
+// (T153, CONTA-01: a exportação é um dos requisitos do pedido).
+export function useExportacaoCompleta() {
   const [fase, setFase] = useState<Fase>({ tipo: 'parado' });
   const [erro, setErro] = useState<string | null>(null);
   const [concluida, setConcluida] = useState(false);
@@ -85,6 +87,12 @@ export function ExportarPage() {
     }
   }
 
+  return { ocupado, concluida, erro, progresso: descricao(fase), exportar };
+}
+
+export function ExportarPage() {
+  const { ocupado, concluida, erro, progresso, exportar } = useExportacaoCompleta();
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <header>
@@ -102,7 +110,7 @@ export function ExportarPage() {
       </div>
 
       <div role="status" aria-live="polite" className="text-mut">
-        {descricao(fase)}
+        {progresso}
       </div>
       {concluida && <Alert tone="ok">Exportação concluída. O arquivo foi baixado.</Alert>}
       {erro !== null && <Alert tone="err">{erro}</Alert>}
