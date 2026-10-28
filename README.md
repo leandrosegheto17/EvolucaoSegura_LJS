@@ -36,6 +36,15 @@ docker compose exec postgres psql -U postgres -d evolucao_segura -c "alter role 
 pnpm build:web
 ```
 
+O `docker-compose.yml` fixa o nome do container (`evolucao-segura-postgres`) e a porta 5433. Se
+outro Postgres seu já usa essa porta ou esse nome, o `docker compose up` falha; nesse caso suba um
+Postgres 16 à parte, por exemplo
+`docker run -d --name es-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=evolucao_segura -p 5440:5432 postgres:16`,
+e aponte tudo para ele: `export DATABASE_URL=postgresql://postgres:postgres@localhost:5440/evolucao_segura`
+(vale para `pnpm migrar`, `pnpm test` e os scripts) e, para o Worker, a variável
+`CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` com a mesma URL. O passo 3b então roda
+no seu container: `docker exec es-pg psql -U postgres -d evolucao_segura -c "alter role app with login password 'app'"`.
+
 Subir o Worker local (front e API juntos em http://localhost:8787), a partir da raiz:
 
 ```bash
@@ -58,7 +67,8 @@ O banco local vem do `localConnectionString` do Hyperdrive em `wrangler.jsonc` (
 docker-compose). Para apontar para outro banco, defina
 `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE`. No Windows, `Ctrl+C` pode deixar o
 `workerd` vivo e ocupando a porta 8787: confira com `netstat -ano | findstr :8787` e encerre o
-processo antes de subir de novo.
+processo antes de subir de novo (`taskkill /PID <pid> /F /T`). Podem sobrar também processos
+`node` e `esbuild` do wrangler, que travam a pasta (não dá para apagá-la): encerre todos antes.
 
 ## Variáveis de ambiente
 
@@ -93,7 +103,7 @@ Com o Postgres local no ar (`docker compose up -d`) e as migrations aplicadas:
 ```bash
 pnpm lint            # eslint + prettier --check
 pnpm typecheck       # tsc em todos os pacotes
-pnpm test            # vitest (unidade e integração): 198 arquivos, 3080 testes
+pnpm test            # vitest (unidade e integração): 198 arquivos, 3080 testes (~5 min)
 pnpm test:isolamento # só os testes de isolamento entre contas (usado no CI)
 pnpm e2e             # Playwright: sobe coletor de e-mail e Worker local, banco evolucao_segura_e2e
 ```
@@ -101,6 +111,14 @@ pnpm e2e             # Playwright: sobe coletor de e-mail e Worker local, banco 
 O gate do projeto (`.specs/projeto/testes.json`) é `pnpm lint && pnpm typecheck && pnpm test`.
 
 Observações da execução na máquina de desenvolvimento (Windows):
+
+- Numa cópia limpa do repositório (validada seguindo só este README), `pnpm test` e
+  `pnpm exec vitest run` na raiz falharam nas primeiras execuções com o mesmo
+  `Startup Error: code.charCodeAt is not a function` (o erro esconde a causa real e é do
+  carregamento do projeto `@es/api`). A causa não foi isolada: depois de editar temporariamente um
+  arquivo do vite em `node_modules` e desfazer a edição, as execuções seguintes passaram (198
+  arquivos, 3080 testes). Se acontecer com você, `pnpm install --frozen-lockfile` de novo e repita;
+  se persistir, abra um problema com a saída completa.
 
 - `pnpm test:isolamento` falhou aqui com `Startup Error: code.charCodeAt is not a function` (erro
   do vitest ao carregar a configuração a partir de `backend/api`). A mesma suíte passa pela raiz:
@@ -164,9 +182,10 @@ evento, ex.: `evt_xxx&1`) e `event` (ex.: `PAYMENT_RECEIVED`); eventos de pagame
 
 1. Defina `ASAAS_WEBHOOK_TOKEN` (32 caracteres ou mais) no `.dev.vars` e suba o Worker (seção
    "Rodar localmente"; precisa do banco migrado e da role app liberada).
-2. Envie um evento simulado (executado; `$T` é o valor do token):
+2. Envie um evento simulado (executado; `T` é o mesmo valor do token do `.dev.vars`):
 
 ```bash
+T=<o valor de ASAAS_WEBHOOK_TOKEN>
 curl -i -X POST http://localhost:8787/api/webhooks/asaas   -H "asaas-access-token: $T" -H "content-type: application/json"   -d '{"id":"evt_local_1&1","event":"PAYMENT_UPDATED"}'
 ```
 

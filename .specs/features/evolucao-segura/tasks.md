@@ -3862,8 +3862,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Um agente sem contexto roda o projeto seguindo só o README
-- [ ] Tropeços registrados e corrigidos no README
+- [x] Um agente sem contexto roda o projeto seguindo só o README
+- [x] Tropeços registrados e corrigidos no README
 
 **Tests**: none
 **Gate**: build
