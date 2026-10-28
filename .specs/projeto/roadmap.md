@@ -24,9 +24,9 @@ As 23 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan), reor
 | 18 | Etapa 13: Push | Concluída |  |
 | 19 | Etapa 11, parte 2: Exportação completa (depende de Neon e Hyperdrive de teste) | Concluída | Lote 20 em 2026-10-27; T122 com página de 25 linhas (SPEC_DEVIATION, risco de CPU aceito no Free) |
 | 20 | Etapa 14, parte 1: Exclusão de conta | Concluída | Lotes 21 e 22 em 2026-10-28; ADR-012 |
-| 21 | Etapa 14, parte 2: Termos, landing e PWA | Não começada | Ação do usuário na T156: checagem do Chrome instalável |
-| 22 | Etapa 15, parte 1: Testes de ponta a ponta (e2e) | Não começada |  |
-| 23 | Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook) | Não começada | Ações do usuário: conferência visual (T161, T188 a T190) e roles do Neon (T195) |
+| 21 | Etapa 14, parte 2: Termos, landing e PWA | Concluída | Lote 23; checagem do Chrome da T156 registrada em 2026-10-28 |
+| 22 | Etapa 15, parte 1: Testes de ponta a ponta (e2e) | Concluída | Lote 24 em 2026-10-28 |
+| 23 | Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook) | Em andamento | T165 bloqueada: backup_ro sem acesso a pgmigrations e sequences e sem row security; ações do usuário: conferência visual (T161, T188 a T190) e roles do Neon (T195) |
 
 ## Pendências do usuário
 
