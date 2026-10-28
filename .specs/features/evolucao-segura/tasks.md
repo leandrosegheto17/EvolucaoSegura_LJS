@@ -3296,7 +3296,9 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Zip contém um PDF por paciente
+- [x] Zip contém um PDF por paciente
+
+- 2026-10-27, feito: `gerarPdfsPacientes` busca o prontuário completo de cada paciente (um por vez) e gera o PDF `prontuarios/prontuario-<8 do id>.pdf`. SPEC_DEVIATION: usa `gerarPdfProntuario` (o motor que `baixarPdfProntuario` chama), porque a segunda só dispara o download e não devolve os bytes.
 
 **Tests**: unit
 **Gate**: build
