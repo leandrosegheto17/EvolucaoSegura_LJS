@@ -20,12 +20,16 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 // - Por que usuario_id e não id do Asaas na mudança: o cron leva trial vencido a free, e o trial
 //   pode não ter id no Asaas; o webhook acha o usuario_id pela função de localizar.
 // - A RLS forçada vale também para o owner (0004), então a função sozinha não veria linha alheia.
-//   Cada função liga app.tarefa_assinatura só durante a própria execução (SET na definição) e duas
-//   policies, só para o owner e só SELECT e UPDATE, liberam a assinatura com esse contexto. A app
-//   ligar a variável não muda nada para ela (as policies são do owner) e o owner fora das funções
-//   continua sem ver linha. Cuidado: outra função SECURITY DEFINER do owner que toque a
-//   assinatura herdaria a variável que a app ligasse; uma assim deve fixar
-//   SET app.tarefa_assinatura = 'off' na definição (hoje não existe nenhuma).
+//   Cada função liga app.tarefa_assinatura só durante a própria execução e duas policies, só para
+//   o owner e só SELECT e UPDATE, liberam a assinatura com esse contexto. A app ligar a variável
+//   não muda nada para ela (as policies são do owner) e o owner fora das funções continua sem ver
+//   linha. Cuidado: outra função SECURITY DEFINER do owner que toque a assinatura herdaria a
+//   variável que a app ligasse; uma assim deve desligar app.tarefa_assinatura no corpo, como a
+//   0013 e a 0023.
+// - O contexto é ligado no corpo (set_config local) e o valor que a transação tinha volta antes
+//   de cada RETURN; erro desfaz a mudança junto com a transação. Sem SET app.* na definição: no
+//   Neon (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na
+//   definição falha com "permission denied to set parameter" (T197).
 // - Ids do Asaas passam a ser únicos: localizar devolve no máximo uma assinatura.
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem UPDATE direto.
@@ -52,14 +56,17 @@ CREATE FUNCTION tarefas.localizar_assinatura_asaas(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_assinatura = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_assinatura', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_assinatura', 'on', true);
   IF p_asaas_subscription_id IS NOT NULL THEN
     RETURN QUERY
       SELECT a.usuario_id, a.status, a.periodo_fim, a.vencimento_atraso
       FROM public.assinatura a WHERE a.asaas_subscription_id = p_asaas_subscription_id;
     IF FOUND THEN
+      PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
       RETURN;
     END IF;
   END IF;
@@ -68,6 +75,7 @@ BEGIN
       SELECT a.usuario_id, a.status, a.periodo_fim, a.vencimento_atraso
       FROM public.assinatura a WHERE a.asaas_customer_id = p_asaas_customer_id;
   END IF;
+  PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.localizar_assinatura_asaas(text, text) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.localizar_assinatura_asaas(text, text) FROM PUBLIC;
@@ -81,12 +89,13 @@ CREATE FUNCTION tarefas.mudar_estado_assinatura(
 ) RETURNS TABLE (resultado text, status_anterior text)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_assinatura = 'on'
 AS $$
 DECLARE
   v_atual public.assinatura%ROWTYPE;
   v_permitida boolean;
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_assinatura', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_assinatura', 'on', true);
   IF p_usuario_id IS NULL THEN
     RAISE EXCEPTION 'mudar_estado_assinatura: usuário ausente' USING ERRCODE = '22023';
   END IF;
@@ -108,6 +117,7 @@ BEGIN
   SELECT * INTO v_atual FROM public.assinatura a WHERE a.usuario_id = p_usuario_id FOR UPDATE;
   IF NOT FOUND THEN
     RETURN QUERY SELECT 'inexistente'::text, NULL::text;
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN;
   END IF;
 
@@ -117,6 +127,7 @@ BEGIN
       WHERE a.usuario_id = p_usuario_id;
     END IF;
     RETURN QUERY SELECT 'mesmo_estado'::text, v_atual.status;
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN;
   END IF;
 
@@ -131,6 +142,7 @@ BEGIN
   END;
   IF NOT v_permitida THEN
     RETURN QUERY SELECT 'transicao_invalida'::text, v_atual.status;
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN;
   END IF;
 
@@ -142,6 +154,7 @@ BEGIN
     atualizado_em = now()
   WHERE a.usuario_id = p_usuario_id;
   RETURN QUERY SELECT 'permitida'::text, v_atual.status;
+  PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.mudar_estado_assinatura(uuid, text, timestamptz, timestamptz)
   OWNER TO "owner";

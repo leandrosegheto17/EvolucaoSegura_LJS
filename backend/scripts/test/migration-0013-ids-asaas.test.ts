@@ -83,8 +83,10 @@ describe('catálogo (ISO-03)', () => {
         `select pg_get_userbyid(p.proowner) as dono, p.prosecdef as definer,
                 exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
                         where c = 'search_path=pg_catalog, pg_temp') as search_path_fixo,
-                exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
-                        where c = 'app.tarefa_assinatura=off') as contexto_tarefas_desligado,
+                not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
+                            where c like 'app.%') as sem_app_na_configuracao,
+                p.prosrc ~ 'set_config\\(''app\\.tarefa_assinatura'', ''off'', true\\)'
+                  as contexto_tarefas_desligado,
                 pg_get_function_identity_arguments(p.oid) as argumentos,
                 p.prosrc ~* '\\mexecute\\M' as sql_dinamico
          from pg_proc p where p.oid = $1::regprocedure`,
@@ -95,6 +97,7 @@ describe('catálogo (ISO-03)', () => {
         dono: 'owner',
         definer: true,
         search_path_fixo: true,
+        sem_app_na_configuracao: true,
         contexto_tarefas_desligado: true,
         argumentos: 'p_asaas_customer_id text, p_asaas_subscription_id text',
         sql_dinamico: false,
@@ -148,6 +151,19 @@ describe('gravar_ids_asaas (PLANO-05)', () => {
     expect(resultado).toBe(false);
     expect(a).toMatchObject({ asaas_customer_id: null, asaas_subscription_id: null });
     expect(b).toMatchObject({ asaas_subscription_id: 'sub_b' });
+  });
+
+  it('com o contexto das tarefas ligado pela app, grava só a própria e o valor volta ao fim', async () => {
+    const { resultado, b } = await comoApp(A, async () => {
+      await banco.cliente.query("select set_config('app.tarefa_assinatura', 'on', true)");
+      const gravou = await gravar('cus_a2', 'sub_a2');
+      const [linha] = await consultar<{ c: string }>(
+        "select current_setting('app.tarefa_assinatura', true) as c",
+      );
+      return { gravou, contexto: linha!.c };
+    });
+    expect(resultado).toEqual({ gravou: true, contexto: 'on' });
+    expect(b).toMatchObject({ asaas_customer_id: 'cus_b', asaas_subscription_id: 'sub_b' });
   });
 
   it('id já usado por outra assinatura é recusado', async () => {

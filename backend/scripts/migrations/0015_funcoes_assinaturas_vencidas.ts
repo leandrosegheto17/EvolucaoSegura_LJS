@@ -14,6 +14,10 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   o id, para o GET /api/plano não consultar mais o Asaas). Devolve 'desvinculada', 'sem_vinculo'
 //   (já sem id), 'nao_free' (nada muda) ou 'inexistente'. Mantém o asaas_customer_id.
 // - As duas passam pelas policies da 0012 ligando app.tarefa_assinatura só durante a execução.
+//   O contexto vai no corpo (set_config local) e o valor que a transação tinha volta antes de cada
+//   RETURN; erro desfaz a mudança junto com a transação. Sem SET app.* na definição: no Neon
+//   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
+//   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem UPDATE direto.
 
@@ -29,9 +33,11 @@ CREATE FUNCTION tarefas.listar_assinaturas_vencidas(
 )
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_assinatura = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_assinatura', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_assinatura', 'on', true);
   IF p_agora IS NULL THEN
     RAISE EXCEPTION 'listar_assinaturas_vencidas: agora ausente' USING ERRCODE = '22023';
   END IF;
@@ -52,6 +58,7 @@ BEGIN
     WHERE v.vence_em <= p_agora
     ORDER BY v.vence_em, v.usuario_id
     LIMIT p_limite;
+  PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) FROM PUBLIC;
@@ -60,26 +67,31 @@ GRANT EXECUTE ON FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integ
 CREATE FUNCTION tarefas.desvincular_assinatura_asaas(p_usuario_id uuid) RETURNS text
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_assinatura = 'on'
 AS $$
 DECLARE
   v_atual public.assinatura%ROWTYPE;
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_assinatura', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_assinatura', 'on', true);
   IF p_usuario_id IS NULL THEN
     RAISE EXCEPTION 'desvincular_assinatura_asaas: usuário ausente' USING ERRCODE = '22023';
   END IF;
   SELECT * INTO v_atual FROM public.assinatura a WHERE a.usuario_id = p_usuario_id FOR UPDATE;
   IF NOT FOUND THEN
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN 'inexistente';
   END IF;
   IF v_atual.status <> 'free' THEN
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN 'nao_free';
   END IF;
   IF v_atual.asaas_subscription_id IS NULL THEN
+    PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
     RETURN 'sem_vinculo';
   END IF;
   UPDATE public.assinatura a SET asaas_subscription_id = NULL, atualizado_em = now()
   WHERE a.usuario_id = p_usuario_id;
+  PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
   RETURN 'desvinculada';
 END $$;
 ALTER FUNCTION tarefas.desvincular_assinatura_asaas(uuid) OWNER TO "owner";

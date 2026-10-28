@@ -8,9 +8,13 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   assinatura de app_usuario_id(); devolve true se havia assinatura e false se não havia. Não
 //   mexe em plano, status, periodo_fim nem vencimento_atraso. Sem usuário na transação: 42501;
 //   id nulo ou vazio: 22023. Id já usado por outra assinatura: 23505 (índices únicos da 0012).
-// - Enxerga a linha pela policy do usuário (assinatura_usuario vale também para o owner). Fixa
-//   app.tarefa_assinatura = 'off' na definição: as policies das funções tarefas.* (0012) não
-//   valem aqui, mesmo que a app tenha ligado a variável antes de chamar.
+// - Enxerga a linha pela policy do usuário (assinatura_usuario vale também para o owner). Desliga
+//   app.tarefa_assinatura durante a execução: as policies das funções tarefas.* (0012) não valem
+//   aqui, mesmo que a app tenha ligado a variável antes de chamar.
+//   O contexto vai no corpo (set_config local) e o valor que a transação tinha volta antes de cada
+//   RETURN; erro desfaz a mudança junto com a transação. Sem SET app.* na definição: no Neon
+//   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
+//   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa.
 
@@ -22,11 +26,13 @@ CREATE FUNCTION public.gravar_ids_asaas(
 ) RETURNS boolean
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_assinatura = 'off'
 AS $$
 DECLARE
   v_usuario uuid := public.app_usuario_id();
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_assinatura', true), '');
+  v_gravou boolean;
 BEGIN
+  PERFORM set_config('app.tarefa_assinatura', 'off', true);
   IF v_usuario IS NULL THEN
     RAISE EXCEPTION 'gravar_ids_asaas: sem usuário na transação' USING ERRCODE = '42501';
   END IF;
@@ -38,7 +44,10 @@ BEGIN
     asaas_subscription_id = p_asaas_subscription_id,
     atualizado_em = now()
   WHERE a.usuario_id = v_usuario;
-  RETURN FOUND;
+  -- O PERFORM abaixo muda o FOUND: guardar antes.
+  v_gravou := FOUND;
+  PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
+  RETURN v_gravou;
 END $$;
 ALTER FUNCTION public.gravar_ids_asaas(text, text) OWNER TO "owner";
 REVOKE ALL ON FUNCTION public.gravar_ids_asaas(text, text) FROM PUBLIC;

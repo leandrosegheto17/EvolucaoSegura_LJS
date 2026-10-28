@@ -12,10 +12,14 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 // - O webhook roda gravar, processar e marcar numa transação só (decisão do usuário,
 //   2026-10-27): erro desfaz tudo e o reenvio do Asaas chega como 'novo'.
 // - A RLS forçada vale também para o owner (0004). Cada função liga app.tarefa_webhook só durante
-//   a própria execução (SET na definição) e três policies, só para o owner (SELECT, INSERT e
-//   UPDATE), liberam webhook_evento nesse contexto. A app ligar a variável não muda nada para ela.
-//   Outra função SECURITY DEFINER do owner que toque webhook_evento deve fixar
-//   SET app.tarefa_webhook = 'off' na definição (hoje não existe nenhuma).
+//   a própria execução e três policies, só para o owner (SELECT, INSERT e UPDATE), liberam
+//   webhook_evento nesse contexto. A app ligar a variável não muda nada para ela. Outra função
+//   SECURITY DEFINER do owner que toque webhook_evento deve desligar app.tarefa_webhook no corpo
+//   (hoje não existe nenhuma).
+//   O contexto vai no corpo (set_config local) e o valor que a transação tinha volta antes de cada
+//   RETURN; erro desfaz a mudança junto com a transação. Sem SET app.* na definição: no Neon
+//   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
+//   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
 // para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem INSERT e UPDATE.
 
@@ -36,16 +40,22 @@ CREATE FUNCTION tarefas.gravar_webhook_evento(
 ) RETURNS text
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_webhook = 'on'
 AS $$
+DECLARE
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_webhook', true), '');
+  v_novo boolean;
 BEGIN
+  PERFORM set_config('app.tarefa_webhook', 'on', true);
   IF coalesce(p_event_id, '') = '' OR coalesce(p_tipo, '') = '' OR p_payload IS NULL THEN
     RAISE EXCEPTION 'gravar_webhook_evento: parâmetro ausente' USING ERRCODE = '22023';
   END IF;
   INSERT INTO public.webhook_evento (event_id, tipo, payload)
   VALUES (p_event_id, p_tipo, p_payload)
   ON CONFLICT (event_id) DO NOTHING;
-  RETURN CASE WHEN FOUND THEN 'novo' ELSE 'repetido' END;
+  -- O PERFORM abaixo muda o FOUND: guardar antes.
+  v_novo := FOUND;
+  PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
+  RETURN CASE WHEN v_novo THEN 'novo' ELSE 'repetido' END;
 END $$;
 ALTER FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) OWNER TO "owner";
 REVOKE ALL ON FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) FROM PUBLIC;
@@ -57,24 +67,28 @@ CREATE FUNCTION tarefas.marcar_webhook_processado(
 ) RETURNS text
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
-SET app.tarefa_webhook = 'on'
 AS $$
 DECLARE
   v_processado timestamptz;
+  v_ant_tarefa text := coalesce(current_setting('app.tarefa_webhook', true), '');
 BEGIN
+  PERFORM set_config('app.tarefa_webhook', 'on', true);
   IF coalesce(p_event_id, '') = '' THEN
     RAISE EXCEPTION 'marcar_webhook_processado: event_id ausente' USING ERRCODE = '22023';
   END IF;
   SELECT w.processado_em INTO v_processado
   FROM public.webhook_evento w WHERE w.event_id = p_event_id FOR UPDATE;
   IF NOT FOUND THEN
+    PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
     RETURN 'inexistente';
   END IF;
   IF v_processado IS NOT NULL THEN
+    PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
     RETURN 'ja_processado';
   END IF;
   UPDATE public.webhook_evento w SET processado_em = now(), usuario_id = p_usuario_id
   WHERE w.event_id = p_event_id;
+  PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
   RETURN 'marcado';
 END $$;
 ALTER FUNCTION tarefas.marcar_webhook_processado(text, uuid) OWNER TO "owner";

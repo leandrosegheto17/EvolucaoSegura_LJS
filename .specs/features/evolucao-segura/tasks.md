@@ -3932,9 +3932,9 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
-- [ ] Os testes de funções `tarefas.*` e de assinatura seguem verdes sem enfraquecer asserção
-- [ ] Achado registrado em `medicao-exportacao.md` marcado como tratado
+- [x] Nenhuma dessas quatro migrations declara `SET <parâmetro personalizado>` na definição de função
+- [x] Os testes de funções `tarefas.*` e de assinatura seguem verdes sem enfraquecer asserção
+- [x] Achado registrado em `medicao-exportacao.md` marcado como tratado
 
 **Tests**: integration
 **Gate**: full
