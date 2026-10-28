@@ -3914,8 +3914,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Pré-requisitos da publicação listados (conta Asaas de produção, chave Pix, domínio, revisão jurídica)
-- [ ] Plano B do Resend e chave Pix do Asaas descritos
+- [x] Pré-requisitos da publicação listados (conta Asaas de produção, chave Pix, domínio, revisão jurídica)
+- [x] Plano B do Resend e chave Pix do Asaas descritos
 
 **Tests**: none
 **Gate**: build

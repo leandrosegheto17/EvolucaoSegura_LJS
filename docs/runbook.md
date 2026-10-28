@@ -402,3 +402,119 @@ passo 1 falha com `permission denied to set parameter`.
 - Contas, pacientes e registros criados depois do backup não existem mais: comunique os
   profissionais afetados.
 - Registre a restauração (data, backup usado, contagens) no histórico do incidente.
+
+## 6. Pré-requisitos da publicação
+
+Nada abaixo foi feito por este runbook: cada item é decisão e ação do dono do produto, em contas
+externas. Marque cada um antes do primeiro `deploy.yml`.
+
+### 6.1 Conta do Asaas de produção
+
+- [ ] Conta de produção aprovada no Asaas (dados da empresa e conta bancária).
+- [ ] Chave da API de produção gravada no Worker: `wrangler secret put ASAAS_API_KEY` (seção 4).
+- [ ] `ASAAS_BASE_URL=https://api.asaas.com/v3` no Worker (no sandbox é
+      `https://api-sandbox.asaas.com/v3`; formatos aceitos em `.env.example`).
+- [ ] Webhook cadastrado no painel (Integrações > Webhooks): URL
+      `https://<domínio>/api/webhooks/asaas`, o mesmo token de `ASAAS_WEBHOOK_TOKEN` e os eventos
+      `PAYMENT_CREATED`, `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED` e `PAYMENT_OVERDUE`.
+- [ ] Revalidar com um Pix real o que o spike S3 não provou (ADR-009): o evento do Pix pago, a
+      reentrega do webhook e o nascimento do ciclo seguinte (`.specs/STATE.md`, spike S3).
+
+**Não executado**: exige a conta de produção do Asaas.
+
+### 6.2 Chave Pix na conta do Asaas
+
+- [ ] Chave Pix cadastrada na conta de produção do Asaas.
+
+Sem chave Pix cadastrada, o QR do Pix que o Asaas gera expira às 23:59 do mesmo dia (design,
+riscos, P-4). O app busca o QR na hora de mostrar o "Meu plano" (`GET /api/plano`), então o QR
+exibido é sempre o do momento; o risco é o profissional copiar o código e pagar em outro dia.
+**Não executado**: exige a conta de produção.
+
+### 6.3 Domínio
+
+- [ ] Subdomínio do app escolhido (spec, D-25). [A ESCLARECER: raiz evolucaosegura.com.br ou
+      outro subdomínio, sem colidir com o legado em app.]
+- [ ] Rota ou domínio personalizado do Worker configurado na Cloudflare para esse endereço (o
+      `wrangler.jsonc` ainda não tem `routes`).
+- [ ] `URL_PUBLICA` (variável `vars.URL_PUBLICA` do environment `producao`) com o endereço final,
+      `https` e sem barra no fim; o `deploy.yml` a passa ao Worker com `--var`.
+- [ ] Remetente `@evolucaosegura.com.br` verificado no Resend (D-27) e `MAIL_FROM` no Worker.
+
+Conferido em 2026-10-28 (só leitura, DNS público):
+
+```bash
+nslookup -type=NS evolucaosegura.com.br 8.8.8.8
+# nameservers *.ns.cloudflare.com: a zona está na Cloudflare
+nslookup -type=TXT resend._domainkey.evolucaosegura.com.br 8.8.8.8
+# Non-existent domain: o registro DKIM do Resend ainda não existe
+```
+
+O segundo resultado indica que o domínio ainda **não está verificado** no Resend (o Resend pede
+um registro TXT `resend._domainkey`; o nome exato vem do painel dele ao adicionar o domínio).
+Rota e verificação do domínio: **não executado** (exigem as contas Cloudflare e Resend).
+
+### 6.4 Revisão jurídica
+
+- [ ] Termos de uso e política de privacidade (`/termos` e `/privacidade`, versões
+      `VERSAO_TERMOS` e `VERSAO_PRIVACIDADE` em `backend/contrato/src/identidade.ts`) revisados
+      por advogado antes de usuários reais. Os textos atuais foram escritos na construção, sem
+      revisão.
+- [ ] Prazo legal de guarda do prontuário definido (spec); afeta os termos e o texto da exclusão
+      de conta. [A ESCLARECER: parecer jurídico sobre 5 anos (CFP 001/2009) × 20 anos (Lei
+      13.787/2018)]
+- [ ] Se o texto mudar, suba a versão em `identidade.ts` para que o aceite novo seja registrado.
+
+**Não executado**: depende de parecer externo.
+
+## 7. Plano B
+
+### 7.1 Resend: limite de e-mails
+
+O plano gratuito do Resend envia 100 e-mails por dia, e todo login manda um código de 2FA por
+e-mail. PREMISSA: os três apps LJS usam a mesma conta do Resend, então o limite é dividido entre
+eles.
+
+Como aparece:
+
+- Sentry: um evento de nível `fatal` com a impressão `resend`/`limite` no primeiro `429` de cada
+  instância do Worker (`backend/api/src/integracoes/resend.ts`).
+- Usuário: o login responde `503 mail_unavailable` ("Não foi possível enviar o código agora") e
+  não conta como falha de login; cadastro, recuperação de senha e e-mails de cobrança também não
+  saem (os de cobrança só vão ao Sentry, sem desfazer nada).
+
+O que fazer:
+
+1. Confirme no painel do Resend que é o limite (e não chave revogada ou domínio desverificado:
+   nesses casos o erro não é `429`; corrija pela seção 4 ou 6.3).
+2. Imediato: o envio volta quando a cota do Resend renovar. Avise os profissionais que o login
+   pode falhar até lá. Não desligue o 2FA: não há chave para isso e ele é requisito de
+   segurança.
+3. Se o limite foi atingido por uso legítimo: assine um plano pago do Resend na mesma conta
+   (decisão do dono do produto, sai do custo fixo R$ 0). A chave e o domínio continuam os
+   mesmos; se a conta mudar, troque `RESEND_API_KEY` (seção 4) e verifique o domínio na conta
+   nova.
+4. Se foi abuso (muitos pedidos de código, cadastro ou recuperação): confira os 429 do limite por
+   IP (OPS-07) e o bloqueio por e-mail (AUTH-07); o Resend volta sozinho quando o abuso para.
+
+Trocar de provedor de e-mail exige mudar `integracoes/resend.ts`: não é plano B imediato, é
+tarefa nova. **Não executado**: exige a conta do Resend.
+
+### 7.2 Chave Pix do Asaas
+
+O app cobra só por Pix (`billingType: 'PIX'` em `backend/api/src/integracoes/asaas.ts`); não há
+boleto nem cartão como alternativa no código.
+
+- **Chave Pix indisponível** (removida, conta bancária trocada, bloqueio): cadastre outra chave
+  (por exemplo, aleatória ou CNPJ) no painel do Asaas. Enquanto isso o QR continua sendo gerado
+  sem chave cadastrada e expira no mesmo dia (6.2): oriente o profissional a abrir o "Meu plano"
+  e pagar no mesmo dia. PREMISSA: a geração do QR sem chave cadastrada, vista no sandbox (spike
+  S3), vale também na produção.
+- **Asaas fora do ar**: o "Meu plano" responde `503 cobranca_indisponivel` e o erro vai ao
+  Sentry; assinar também falha. Quem está em atraso tem 7 dias de tolerância a partir do
+  vencimento (D-21) antes de ir para free, e os eventos que o webhook não recebeu chegam quando o
+  Asaas voltar (seção 1).
+- **Pagou e a assinatura não voltou** (pagamento feito fora do prazo, durante a falha): siga a
+  seção 2. Se a assinatura já foi para free, o profissional assina de novo (seção 3.1).
+
+**Não executado**: exige a conta de produção do Asaas.
