@@ -20,12 +20,12 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   por app.tarefa_webhook, que também libera INSERT e UPDATE; aqui basta ler). A app ligar a
 //   variável não muda nada para ela (as policies são do owner).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. Gravar o envio e ler as assinaturas fica
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. Gravar o envio e ler as assinaturas fica
 // com a tarefa, numa transação do próprio profissional (RLS).
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
-CREATE POLICY webhook_evento_tarefa_push ON public.webhook_evento FOR SELECT TO "owner"
+CREATE POLICY webhook_evento_tarefa_push ON public.webhook_evento FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_push', true) = 'on');
 
 -- Eventos processados e ligados a um profissional, por instante de processamento.
@@ -84,11 +84,11 @@ BEGIN
   PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)
-  OWNER TO "owner";
+  OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)
   FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)
-  TO app;
+  TO evolucao_app;
 `);
 };
 

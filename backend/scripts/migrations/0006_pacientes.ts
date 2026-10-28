@@ -9,7 +9,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 // - consentimento_tcle: só inclusão (PAC-05). A app tem só SELECT e INSERT, e o trigger
 //   negar_alteracao (0002) barra UPDATE, DELETE e TRUNCATE para qualquer role. A FK composta
 //   (paciente_id, usuario_id) impede TCLE de paciente de outro profissional (ISO-02).
-// RLS forçada nas duas: a app só lê e cria o que é do usuário da transação; backup_ro lê tudo.
+// RLS forçada nas duas: a app só lê e cria o que é do usuário da transação; evolucao_backup_ro lê tudo.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -26,7 +26,7 @@ CREATE TABLE public.paciente (
   atualizado_em timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT paciente_id_usuario_uq UNIQUE (id, usuario_id)
 );
-ALTER TABLE public.paciente OWNER TO "owner";
+ALTER TABLE public.paciente OWNER TO "evolucao_owner";
 CREATE INDEX paciente_usuario_nome_idx ON public.paciente (usuario_id, lower(nome));
 
 CREATE TABLE public.consentimento_tcle (
@@ -41,7 +41,7 @@ CREATE TABLE public.consentimento_tcle (
   criado_em timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (paciente_id, usuario_id) REFERENCES public.paciente (id, usuario_id)
 );
-ALTER TABLE public.consentimento_tcle OWNER TO "owner";
+ALTER TABLE public.consentimento_tcle OWNER TO "evolucao_owner";
 CREATE INDEX consentimento_tcle_paciente_idx ON public.consentimento_tcle (paciente_id);
 
 CREATE TRIGGER consentimento_tcle_so_inclusao BEFORE UPDATE OR DELETE
@@ -54,7 +54,7 @@ ALTER TABLE public.paciente FORCE ROW LEVEL SECURITY;
 CREATE POLICY paciente_usuario ON public.paciente
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY paciente_backup_ro ON public.paciente FOR SELECT TO backup_ro USING (true);
+CREATE POLICY paciente_backup_ro ON public.paciente FOR SELECT TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.consentimento_tcle ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.consentimento_tcle FORCE ROW LEVEL SECURITY;
@@ -62,15 +62,15 @@ CREATE POLICY consentimento_tcle_usuario ON public.consentimento_tcle
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY consentimento_tcle_backup_ro ON public.consentimento_tcle FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
-REVOKE ALL ON public.paciente, public.consentimento_tcle FROM PUBLIC, app;
-GRANT SELECT ON public.paciente, public.consentimento_tcle TO backup_ro;
-GRANT SELECT ON public.paciente, public.consentimento_tcle TO app;
-GRANT INSERT (usuario_id, nome, telefone, email, endereco) ON public.paciente TO app;
-GRANT UPDATE (ativo, row_version, atualizado_em) ON public.paciente TO app;
+REVOKE ALL ON public.paciente, public.consentimento_tcle FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.paciente, public.consentimento_tcle TO evolucao_backup_ro;
+GRANT SELECT ON public.paciente, public.consentimento_tcle TO evolucao_app;
+GRANT INSERT (usuario_id, nome, telefone, email, endereco) ON public.paciente TO evolucao_app;
+GRANT UPDATE (ativo, row_version, atualizado_em) ON public.paciente TO evolucao_app;
 GRANT INSERT (usuario_id, paciente_id, finalidade, data_consentimento, versao_termo)
-  ON public.consentimento_tcle TO app;
+  ON public.consentimento_tcle TO evolucao_app;
 `);
 };
 

@@ -8,7 +8,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // - notificacao_enviada: registro do que já foi enviado, único por tipo e referência (design) do
 //   profissional; é o que garante "uma única vez" (PUSH-02 a PUSH-04): duplicar o envio viola a
 //   restrição. A app só grava e lê; não apaga nem altera (apagar abriria um reenvio).
-// - As duas têm usuario_id e RLS forçada (entram no harness de isolamento); backup_ro lê tudo.
+// - As duas têm usuario_id e RLS forçada (entram no harness de isolamento); evolucao_backup_ro lê tudo.
 
 const SEM_PERMISSAO_OU_RLS = '42501';
 const VIOLA_UNICIDADE = '23505';
@@ -45,7 +45,7 @@ const consultar = async <T>(sql: string, parametros: unknown[] = []): Promise<T[
   (await banco.cliente.query(sql, parametros)).rows as T[];
 
 const comoApp = <T>(usuario: string | undefined, fn: () => Promise<T>) =>
-  comoRole(banco.cliente, 'app', fn, usuario);
+  comoRole(banco.cliente, 'evolucao_app', fn, usuario);
 
 const registrarEnvio = (usuario: string, tipo: string, ref: string) =>
   banco.cliente.query(
@@ -72,7 +72,7 @@ describe('notificacao_enviada: uma vez por tipo e referência (PUSH-02 a PUSH-04
     await banco.cliente.query('begin');
     try {
       await banco.cliente.query("select set_config('app.usuario_id', $1, true)", [A]);
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       await registrarEnvio(A, 'evolucao_pendente', '2026-11-10');
       await banco.cliente.query('savepoint duplicata');
       expect(await codigoDoErro(() => registrarEnvio(A, 'evolucao_pendente', '2026-11-10'))).toBe(
@@ -136,11 +136,11 @@ describe('notificacao_enviada: uma vez por tipo e referência (PUSH-02 a PUSH-04
 
   it('a app só grava e lê: sem UPDATE, DELETE nem TRUNCATE (não reabre um envio)', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'notificacao_enviada', 'SELECT') as select,
-              has_table_privilege('app', 'notificacao_enviada', 'INSERT') as insert,
-              has_any_column_privilege('app', 'notificacao_enviada', 'UPDATE') as update,
-              has_table_privilege('app', 'notificacao_enviada', 'DELETE') as delete,
-              has_table_privilege('app', 'notificacao_enviada', 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', 'notificacao_enviada', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'notificacao_enviada', 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', 'notificacao_enviada', 'UPDATE') as update,
+              has_table_privilege('evolucao_app', 'notificacao_enviada', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'notificacao_enviada', 'TRUNCATE') as truncate`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -214,14 +214,14 @@ describe('push_subscription: assinatura por dispositivo (PUSH-01)', () => {
 
   it('a app só atualiza as chaves, nunca o dono nem o endpoint; sem TRUNCATE', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'push_subscription', 'SELECT') as select,
-              has_table_privilege('app', 'push_subscription', 'INSERT') as insert,
-              has_table_privilege('app', 'push_subscription', 'DELETE') as delete,
-              has_table_privilege('app', 'push_subscription', 'TRUNCATE') as truncate,
-              has_column_privilege('app', 'push_subscription', 'p256dh', 'UPDATE') as p256dh,
-              has_column_privilege('app', 'push_subscription', 'auth', 'UPDATE') as auth,
-              has_column_privilege('app', 'push_subscription', 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', 'push_subscription', 'endpoint', 'UPDATE') as endpoint`,
+      `select has_table_privilege('evolucao_app', 'push_subscription', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'push_subscription', 'INSERT') as insert,
+              has_table_privilege('evolucao_app', 'push_subscription', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'push_subscription', 'TRUNCATE') as truncate,
+              has_column_privilege('evolucao_app', 'push_subscription', 'p256dh', 'UPDATE') as p256dh,
+              has_column_privilege('evolucao_app', 'push_subscription', 'auth', 'UPDATE') as auth,
+              has_column_privilege('evolucao_app', 'push_subscription', 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', 'push_subscription', 'endpoint', 'UPDATE') as endpoint`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -289,8 +289,8 @@ describe('RLS forçada e isolamento (ISO-01, ISO-04)', () => {
       expect(await comoApp(A, visiveis)).toEqual([A]);
       expect(await comoApp(B, visiveis)).toEqual([B]);
       expect(await comoApp(undefined, visiveis)).toEqual([]);
-      expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
-      expect(await comoRole(banco.cliente, 'backup_ro', visiveis)).toEqual([A, B]);
+      expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
+      expect(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis)).toEqual([A, B]);
     },
   );
 
@@ -326,10 +326,10 @@ describe('RLS forçada e isolamento (ISO-01, ISO-04)', () => {
     );
   });
 
-  it('backup_ro só lê', async () => {
+  it('evolucao_backup_ro só lê', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', 'push_subscription', 'INSERT, UPDATE, DELETE') as push,
-              has_table_privilege('backup_ro', 'notificacao_enviada', 'INSERT, UPDATE, DELETE') as notif`,
+      `select has_table_privilege('evolucao_backup_ro', 'push_subscription', 'INSERT, UPDATE, DELETE') as push,
+              has_table_privilege('evolucao_backup_ro', 'notificacao_enviada', 'INSERT, UPDATE, DELETE') as notif`,
     );
     expect(privilegios).toEqual({ push: false, notif: false });
   });

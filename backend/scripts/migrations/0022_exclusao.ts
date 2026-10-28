@@ -10,7 +10,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   da purga. Nenhum dado pessoal: sem e-mail, nome, IP ou qualquer texto. Sem usuario_id (não é
 //   tabela do profissional: o harness de isolamento não a alcança e ela não entra na exportação).
 // - Quem grava é a função de purga (T152, SECURITY DEFINER do owner): a app não tem privilégio
-//   algum aqui; backup_ro só lê.
+//   algum aqui; evolucao_backup_ro só lê.
 // Sem função nesta migration (e sem SET app.* na definição de função): roda no Neon com o
 // neondb_owner sem superusuário.
 
@@ -22,9 +22,9 @@ CREATE TABLE public.conta_excluida (
   purgado_em timestamptz NOT NULL,
   CHECK (purgado_em >= pedido_em)
 );
-ALTER TABLE public.conta_excluida OWNER TO "owner";
-REVOKE ALL ON public.conta_excluida FROM PUBLIC, app;
-GRANT SELECT ON public.conta_excluida TO backup_ro;
+ALTER TABLE public.conta_excluida OWNER TO "evolucao_owner";
+REVOKE ALL ON public.conta_excluida FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.conta_excluida TO evolucao_backup_ro;
 
 -- Contas bloqueadas para exclusão, pela data da confirmação (a purga vem 30 dias depois).
 CREATE INDEX usuario_bloqueado_exclusao_idx ON public.usuario (bloqueado_exclusao_em)

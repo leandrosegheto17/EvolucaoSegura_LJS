@@ -335,7 +335,7 @@ describe('contexto devolvido ao fim da chamada, em todo caminho de saída', () =
     async ({ sql, parametros, usuario, esperado, variavel }) => {
       const r = await comoRole(
         banco.cliente,
-        'app',
+        'evolucao_app',
         async () => {
           await consultar('select set_config($1, $2, true)', [variavel, ANTERIOR]);
           const linhas = await consultar(sql, parametros);
@@ -352,7 +352,7 @@ describe('contexto devolvido ao fim da chamada, em todo caminho de saída', () =
     async ({ sql, parametros, usuario, esperado, variavel }) => {
       const r = await comoRole(
         banco.cliente,
-        'app',
+        'evolucao_app',
         async () => {
           const linhas = await consultar(sql, parametros);
           return { linhas, depois: await contexto(variavel) };
@@ -368,7 +368,7 @@ describe('contexto devolvido ao fim da chamada, em todo caminho de saída', () =
     async ({ invalida, variavel }) => {
       const r = await comoRole(
         banco.cliente,
-        'app',
+        'evolucao_app',
         async () => {
           await consultar('select set_config($1, $2, true)', [variavel, ANTERIOR]);
           await consultar('savepoint antes_do_erro');

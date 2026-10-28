@@ -26,7 +26,7 @@ As 23 fases do `.specs/features/evolucao-segura/tasks.md` (Execution Plan), reor
 | 20 | Etapa 14, parte 1: Exclusão de conta | Concluída | Lotes 21 e 22 em 2026-10-28; ADR-012 |
 | 21 | Etapa 14, parte 2: Termos, landing e PWA | Concluída | Lote 23; checagem do Chrome da T156 registrada em 2026-10-28 |
 | 22 | Etapa 15, parte 1: Testes de ponta a ponta (e2e) | Concluída | Lote 24 em 2026-10-28 |
-| 23 | Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook) | Em andamento | T165 bloqueada: backup_ro sem acesso a pgmigrations e sequences e sem row security; ações do usuário: conferência visual (T161, T188 a T190) e roles do Neon (T195) |
+| 23 | Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook) | Em andamento | T165 bloqueada: evolucao_backup_ro sem acesso a pgmigrations e sequences e sem row security; ações do usuário: conferência visual (T161, T188 a T190) e roles do Neon (T195) |
 
 ## Pendências do usuário
 
@@ -35,6 +35,6 @@ Ações que só o usuário faz; cada uma bloqueia a tarefa indicada e exige conf
 - **Antes da T122 (Phase 19):** criar Neon e Hyperdrive de teste para medir a CPU da exportação.
 - **T156 (Phase 21):** conferir no Chrome que o app é reconhecido como instalável.
 - **T161 e T188 a T190 (Phase 23):** conferência visual das telas contra o legado (as telas dos lotes 8 a 14 seguem com a conferência visual pendente).
-- **T195 (Phase 23):** provisionar login e senha das roles `owner`, `app` e `backup_ro` no Neon, depois do primeiro deploy.
+- **T195 (Phase 23):** provisionar login e senha das roles `evolucao_owner`, `evolucao_app` e `evolucao_backup_ro` no Neon, depois do primeiro deploy.
 - **Antes da primeira liberação:** provar no Asaas com Pix real o evento de pagamento, a reentrega do webhook e o ciclo seguinte (ADR-009); conta Asaas de produção, chave Pix, domínio e revisão jurídica dos termos (T194).
 - **Sem prazo:** o CI do GitHub não roda por cobrança da conta `leandrosegheto17`; commits locais seguem sem push até confirmação específica.

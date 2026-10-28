@@ -13,8 +13,8 @@ O produto guarda dado de saúde, e o risco principal é perder dado ou publicar 
 
 Dois workflows, e só eles tocam produção:
 
-- **`deploy.yml`**: só `workflow_dispatch`, só pela `main`, environment `producao`, `concurrency` sem cancelamento. Ordem fixa: build do web, dump cifrado com `age` (guardado como artefato por 30 dias), migração com a role `owner` (`NEON_URL_MIGRACAO`) e o deploy do Worker com `--var URL_PUBLICA`. O SHA do commit vira o release do Sentry no web e no Worker.
-- **`backup.yml`**: todo dia às 04:00 de Brasília (cron `0 7 * * *`, UTC), também manual. `pg_dump -Fc` pela role `backup_ro` em conexão direta (sem pooler), cifrado com `age` (chave pública em secret) e guardado como artefato por 30 dias.
+- **`deploy.yml`**: só `workflow_dispatch`, só pela `main`, environment `producao`, `concurrency` sem cancelamento. Ordem fixa: build do web, dump cifrado com `age` (guardado como artefato por 30 dias), migração com a role `evolucao_owner` (`NEON_URL_MIGRACAO`) e o deploy do Worker com `--var URL_PUBLICA`. O SHA do commit vira o release do Sentry no web e no Worker.
+- **`backup.yml`**: todo dia às 04:00 de Brasília (cron `0 7 * * *`, UTC), também manual. `pg_dump -Fc` pela role `evolucao_backup_ro` em conexão direta (sem pooler), cifrado com `age` (chave pública em secret) e guardado como artefato por 30 dias.
 - **Branches do Neon**: só duas, permanentes: `main` (produção; é a que os secrets `NEON_URL_*` do environment `producao` apontam) e `dev` (desenvolvimento). Nenhum workflow cria ou apaga branch (revisado em 2026-10-28: saiu a branch `restauracao-<run_id>` por deploy). O ponto de volta antes de migrar é só o dump cifrado com `age`.
 - O comando de deploy do Worker só pode existir no `deploy.yml`; um teste da suíte falha se aparecer em outro arquivo (OPS-04).
 - Os testes leem o YAML. Nenhum workflow é executado por testes, e a primeira execução real depende de confirmação do dono do produto.

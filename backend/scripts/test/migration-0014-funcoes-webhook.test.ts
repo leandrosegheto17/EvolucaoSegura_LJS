@@ -9,7 +9,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 //   devolve 'repetido' sem alterar o registro.
 // - marcar_webhook_processado(event_id, usuario_id): só em evento existente e só uma vez
 //   ('marcado'; depois 'ja_processado' sem mudar nada; 'inexistente' sem criar nada).
-// - SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, backup_ro e
+// - SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, evolucao_backup_ro e
 //   PUBLIC não.
 
 const PARAMETRO_INVALIDO = '22023';
@@ -70,7 +70,7 @@ const eventos = () =>
 
 // Roda `fn` como app sem usuário, numa transação desfeita; devolve o resultado e os eventos.
 const comoApp = <T>(fn: () => Promise<T>) =>
-  comoRole(banco.cliente, 'app', async () => {
+  comoRole(banco.cliente, 'evolucao_app', async () => {
     const resultado = await fn();
     await banco.cliente.query('reset role');
     return { resultado, eventos: await eventos() };
@@ -97,31 +97,40 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
           [assinatura],
         ),
       ).toEqual([
-        { dono: 'owner', definer: true, search_path_fixo: true, argumentos, sql_dinamico: false },
+        {
+          dono: 'evolucao_owner',
+          definer: true,
+          search_path_fixo: true,
+          argumentos,
+          sql_dinamico: false,
+        },
       ]);
     },
   );
 
-  it.each(Object.keys(FUNCOES))('%s: app executa; backup_ro e PUBLIC não', async (assinatura) => {
-    expect(
-      await consultar(
-        `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-                has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+  it.each(Object.keys(FUNCOES))(
+    '%s: app executa; evolucao_backup_ro e PUBLIC não',
+    async (assinatura) => {
+      expect(
+        await consultar(
+          `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+                has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
                 exists (select 1 from aclexplode((select proacl from pg_proc
                                                   where oid = $1::regprocedure)) a
                         where a.grantee = 0) as public`,
-        [assinatura],
-      ),
-    ).toEqual([{ app: true, backup_ro: false, public: false }]);
-  });
+          [assinatura],
+        ),
+      ).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
+    },
+  );
 
   it('a app continua sem INSERT, UPDATE, DELETE e TRUNCATE diretos em webhook_evento', async () => {
     expect(
       await consultar(
-        `select has_table_privilege('app', 'webhook_evento', 'INSERT') as insert,
-                has_any_column_privilege('app', 'webhook_evento', 'UPDATE') as update,
-                has_table_privilege('app', 'webhook_evento', 'DELETE') as delete,
-                has_table_privilege('app', 'webhook_evento', 'TRUNCATE') as truncate`,
+        `select has_table_privilege('evolucao_app', 'webhook_evento', 'INSERT') as insert,
+                has_any_column_privilege('evolucao_app', 'webhook_evento', 'UPDATE') as update,
+                has_table_privilege('evolucao_app', 'webhook_evento', 'DELETE') as delete,
+                has_table_privilege('evolucao_app', 'webhook_evento', 'TRUNCATE') as truncate`,
       ),
     ).toEqual([{ insert: false, update: false, delete: false, truncate: false }]);
   });
@@ -177,7 +186,7 @@ describe('gravar_webhook_evento (PLANO-07)', () => {
     ];
     for (const [eventId, tipo, payload] of casos)
       expect(
-        await comoRole(banco.cliente, 'app', () =>
+        await comoRole(banco.cliente, 'evolucao_app', () =>
           codigoDoErro(() => gravar(eventId, tipo, payload)),
         ),
         JSON.stringify([eventId, tipo]),
@@ -198,10 +207,10 @@ describe('gravar_webhook_evento (PLANO-07)', () => {
       );
     try {
       await c1.query('begin');
-      await c1.query('set local role app');
+      await c1.query('set local role evolucao_app');
       const primeira = await chamar(c1);
       await c2.query('begin');
-      await c2.query('set local role app');
+      await c2.query('set local role evolucao_app');
       const segunda = chamar(c2);
       await c1.query('commit');
       const resultado = await segunda;
@@ -241,7 +250,7 @@ describe('marcar_webhook_processado', () => {
          values ($1, $2, 'PAYMENT_RECEIVED', '{}', '2026-10-27T14:00:00Z')`,
         [EVENTO, A],
       );
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       const resultado = await marcar(EVENTO, B);
       await banco.cliente.query('reset role');
       expect(resultado).toBe('ja_processado');
@@ -262,7 +271,7 @@ describe('marcar_webhook_processado', () => {
   it('event_id ausente recusa com 22023', async () => {
     for (const eventId of [null, ''])
       expect(
-        await comoRole(banco.cliente, 'app', () => codigoDoErro(() => marcar(eventId, A))),
+        await comoRole(banco.cliente, 'evolucao_app', () => codigoDoErro(() => marcar(eventId, A))),
       ).toBe(PARAMETRO_INVALIDO);
   });
 });
@@ -271,7 +280,7 @@ describe('isolamento (ISO-01, ISO-03)', () => {
   it('depois de marcado, o evento fica visível só ao profissional dele', async () => {
     await banco.cliente.query('begin');
     try {
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       await gravar(EVENTO, 'PAYMENT_RECEIVED', PAYLOAD);
       await marcar(EVENTO, A);
       const visiveis = async (usuario: string) => {
@@ -288,7 +297,7 @@ describe('isolamento (ISO-01, ISO-03)', () => {
   });
 
   it('a app não ganha acesso ligando o contexto das tarefas', async () => {
-    const { visiveis, inserir } = await comoRole(banco.cliente, 'app', async () => {
+    const { visiveis, inserir } = await comoRole(banco.cliente, 'evolucao_app', async () => {
       await banco.cliente.query("select set_config('app.tarefa_webhook', 'on', true)");
       await gravar(EVENTO, 'PAYMENT_RECEIVED', PAYLOAD);
       const visiveis = await consultar('select event_id from webhook_evento');
@@ -304,7 +313,7 @@ describe('isolamento (ISO-01, ISO-03)', () => {
   });
 
   it('depois das funções, o contexto das tarefas fica desligado na transação', async () => {
-    const contexto = await comoRole(banco.cliente, 'app', async () => {
+    const contexto = await comoRole(banco.cliente, 'evolucao_app', async () => {
       await gravar(EVENTO, 'PAYMENT_RECEIVED', PAYLOAD);
       await marcar(EVENTO, A);
       return (

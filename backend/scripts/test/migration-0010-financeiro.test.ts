@@ -7,7 +7,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // - Um preço por paciente, um ajuste por sessão e um pagamento por sessão (FIN-05).
 // - Mudança de fato grava revisão antes/depois por trigger; sem mudança, nenhuma (FIN-02).
 // - Revisões só de inclusão; a app não tem DELETE nem TRUNCATE em nenhuma tabela (FIN-08, ISO-03).
-// - RLS forçada; backup_ro lê tudo (ISO-01, ISO-04).
+// - RLS forçada; evolucao_backup_ro lê tudo (ISO-01, ISO-04).
 
 const VIOLA_CHECK = '23514';
 const VIOLA_FK = '23503';
@@ -201,7 +201,7 @@ describe.each(PRINCIPAIS)('%s: revisão antes/depois (FIN-02, FIN-05)', (tabela)
   const atualizarComoApp = (set: string) =>
     comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         const antes = await banco.cliente.query<{ total: number }>(
           `select count(*)::int as total from ${revisao}`,
@@ -241,7 +241,7 @@ describe.each(PRINCIPAIS)('%s: revisão antes/depois (FIN-02, FIN-05)', (tabela)
       `delete from ${revisao}`,
       `truncate ${revisao}`,
     ])
-      for (const role of [null, 'owner']) {
+      for (const role of [null, 'evolucao_owner']) {
         const codigo = await comoRole(
           banco.cliente,
           role,
@@ -254,9 +254,9 @@ describe.each(PRINCIPAIS)('%s: revisão antes/depois (FIN-02, FIN-05)', (tabela)
 
   it('a app só lê a revisão (quem grava é o trigger)', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', $1, 'SELECT') as select,
-              has_any_column_privilege('app', $1, 'INSERT') as insert,
-              has_any_column_privilege('app', $1, 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_app', $1, 'SELECT') as select,
+              has_any_column_privilege('evolucao_app', $1, 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', $1, 'UPDATE') as update`,
       [revisao],
     );
     expect(privilegios).toEqual({ select: true, insert: false, update: false });
@@ -270,11 +270,11 @@ describe('a app só muda o valor (e a data e o meio do pagamento)', () => {
     ['pagamento', 'sessao_id'],
   ])('%s: dono, %s e criado_em fixos', async (tabela, ref) => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', $1, 'valor_centavos', 'UPDATE') as valor,
-              has_column_privilege('app', $1, 'row_version', 'UPDATE') as versao,
-              has_column_privilege('app', $1, $2, 'UPDATE') as ref,
-              has_column_privilege('app', $1, 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', $1, 'criado_em', 'UPDATE') as criado`,
+      `select has_column_privilege('evolucao_app', $1, 'valor_centavos', 'UPDATE') as valor,
+              has_column_privilege('evolucao_app', $1, 'row_version', 'UPDATE') as versao,
+              has_column_privilege('evolucao_app', $1, $2, 'UPDATE') as ref,
+              has_column_privilege('evolucao_app', $1, 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', $1, 'criado_em', 'UPDATE') as criado`,
       [tabela, ref],
     );
     expect(privilegios).toEqual({
@@ -288,8 +288,8 @@ describe('a app só muda o valor (e a data e o meio do pagamento)', () => {
 
   it('pagamento: data e meio editáveis', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'pagamento', 'data_pagamento', 'UPDATE') as data,
-              has_column_privilege('app', 'pagamento', 'meio', 'UPDATE') as meio`,
+      `select has_column_privilege('evolucao_app', 'pagamento', 'data_pagamento', 'UPDATE') as data,
+              has_column_privilege('evolucao_app', 'pagamento', 'meio', 'UPDATE') as meio`,
     );
     expect(privilegios).toEqual({ data: true, meio: true });
   });
@@ -298,8 +298,8 @@ describe('a app só muda o valor (e a data e o meio do pagamento)', () => {
 describe('nada é apagado (FIN-08, ISO-03)', () => {
   it.each(TABELAS)('%s: a app não tem DELETE nem TRUNCATE', async (tabela) => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', $1, 'DELETE') as delete,
-              has_table_privilege('app', $1, 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', $1, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', $1, 'TRUNCATE') as truncate`,
       [tabela],
     );
     expect(privilegios).toEqual({ delete: false, truncate: false });
@@ -322,20 +322,26 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
   });
 
   it('o profissional só enxerga as próprias linhas', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, A))).toEqual(new Set([A]));
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, B))).toEqual(new Set([B]));
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, A))).toEqual(
+      new Set([A]),
+    );
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, B))).toEqual(
+      new Set([B]),
+    );
   });
 
   it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
   });
 
-  it('backup_ro lê todas as linhas e não escreve', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'backup_ro', visiveis))).toEqual(new Set([A, B]));
+  it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis))).toEqual(
+      new Set([A, B]),
+    );
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', $1, 'INSERT') as insert,
-              has_table_privilege('backup_ro', $1, 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_backup_ro', $1, 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', $1, 'UPDATE') as update`,
       [tabela],
     );
     expect(privilegios).toEqual({ insert: false, update: false });
@@ -363,7 +369,7 @@ describe('a app não cria linha em nome de outro profissional (ISO-02)', () => {
   ])('%s', async (_tabela, comando, ref) => {
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () => codigoDoErro(() => banco.cliente.query(comando, [B, ref])),
       A,
     );
@@ -375,7 +381,7 @@ describe('a app registra preço e pagamento do próprio paciente', () => {
   it('cria preço, ajuste e pagamento e corrige o pagamento', async () => {
     const resultado = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         await banco.cliente.query(
           `insert into preco_paciente (usuario_id, paciente_id, valor_centavos) values ($1, $2, 9000)`,

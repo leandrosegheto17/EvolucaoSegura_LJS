@@ -156,11 +156,11 @@ describe('consentimento_tcle: dados (PAC-05)', () => {
 describe('consentimento_tcle: só inclusão (PAC-05)', () => {
   it('a app só tem SELECT e INSERT', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'consentimento_tcle', 'SELECT') as select,
-              has_any_column_privilege('app', 'consentimento_tcle', 'INSERT') as insert,
-              has_any_column_privilege('app', 'consentimento_tcle', 'UPDATE') as update,
-              has_table_privilege('app', 'consentimento_tcle', 'DELETE') as delete,
-              has_table_privilege('app', 'consentimento_tcle', 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', 'consentimento_tcle', 'SELECT') as select,
+              has_any_column_privilege('evolucao_app', 'consentimento_tcle', 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', 'consentimento_tcle', 'UPDATE') as update,
+              has_table_privilege('evolucao_app', 'consentimento_tcle', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'consentimento_tcle', 'TRUNCATE') as truncate`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -176,7 +176,7 @@ describe('consentimento_tcle: só inclusão (PAC-05)', () => {
     ['DELETE', 'delete from consentimento_tcle'],
     ['TRUNCATE', 'truncate consentimento_tcle'],
   ])('%s é barrado pelo trigger mesmo para owner e superusuário', async (_rotulo, comando) => {
-    for (const role of [null, 'owner']) {
+    for (const role of [null, 'evolucao_owner']) {
       const codigo = await comoRole(
         banco.cliente,
         role,
@@ -190,7 +190,7 @@ describe('consentimento_tcle: só inclusão (PAC-05)', () => {
   it('a app grava TCLE do próprio paciente', async () => {
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () =>
         codigoDoErro(() =>
           banco.cliente.query(
@@ -208,11 +208,11 @@ describe('consentimento_tcle: só inclusão (PAC-05)', () => {
 describe('paciente: nunca é apagado (PAC-07)', () => {
   it('a app lê, cria e troca só ativo; sem DELETE nem TRUNCATE', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'paciente', 'SELECT') as select,
-              has_table_privilege('app', 'paciente', 'DELETE') as delete,
-              has_table_privilege('app', 'paciente', 'TRUNCATE') as truncate,
-              has_column_privilege('app', 'paciente', 'ativo', 'UPDATE') as update_ativo,
-              has_column_privilege('app', 'paciente', 'usuario_id', 'UPDATE') as update_dono`,
+      `select has_table_privilege('evolucao_app', 'paciente', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'paciente', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'paciente', 'TRUNCATE') as truncate,
+              has_column_privilege('evolucao_app', 'paciente', 'ativo', 'UPDATE') as update_ativo,
+              has_column_privilege('evolucao_app', 'paciente', 'usuario_id', 'UPDATE') as update_dono`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -242,22 +242,26 @@ describe.each(['paciente', 'consentimento_tcle'])(
     });
 
     it('o profissional só enxerga as próprias linhas', async () => {
-      expect(new Set(await comoRole(banco.cliente, 'app', visiveis, A))).toEqual(new Set([A]));
-      expect(new Set(await comoRole(banco.cliente, 'app', visiveis, B))).toEqual(new Set([B]));
+      expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, A))).toEqual(
+        new Set([A]),
+      );
+      expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, B))).toEqual(
+        new Set([B]),
+      );
     });
 
     it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-      expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-      expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+      expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+      expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
     });
 
-    it('backup_ro lê todas as linhas e não escreve', async () => {
-      expect(new Set(await comoRole(banco.cliente, 'backup_ro', visiveis))).toEqual(
+    it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+      expect(new Set(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis))).toEqual(
         new Set([A, B]),
       );
       const [privilegios] = await consultar<Record<string, boolean>>(
-        `select has_table_privilege('backup_ro', $1, 'INSERT') as insert,
-              has_table_privilege('backup_ro', $1, 'UPDATE') as update`,
+        `select has_table_privilege('evolucao_backup_ro', $1, 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', $1, 'UPDATE') as update`,
         [tabela],
       );
       expect(privilegios).toEqual({ insert: false, update: false });
@@ -265,8 +269,8 @@ describe.each(['paciente', 'consentimento_tcle'])(
 
     it('a app não tem DELETE nem TRUNCATE', async () => {
       const [privilegios] = await consultar<Record<string, boolean>>(
-        `select has_table_privilege('app', $1, 'DELETE') as delete,
-              has_table_privilege('app', $1, 'TRUNCATE') as truncate`,
+        `select has_table_privilege('evolucao_app', $1, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', $1, 'TRUNCATE') as truncate`,
         [tabela],
       );
       expect(privilegios).toEqual({ delete: false, truncate: false });
@@ -275,7 +279,7 @@ describe.each(['paciente', 'consentimento_tcle'])(
     it('a app não cria linha em nome de outro profissional', async () => {
       const codigo = await comoRole(
         banco.cliente,
-        'app',
+        'evolucao_app',
         () =>
           codigoDoErro(() =>
             tabela === 'paciente'
@@ -297,7 +301,7 @@ describe('paciente: a app inativa só o que é dela', () => {
   it('troca ativo do próprio paciente; o de outro fica intacto', async () => {
     const alterados = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () =>
         (
           await banco.cliente.query(
@@ -315,7 +319,7 @@ describe('paciente: a app inativa só o que é dela', () => {
   it('a app não troca o dono do paciente', async () => {
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () => codigoDoErro(() => banco.cliente.query('update paciente set usuario_id = $1', [B])),
       A,
     );

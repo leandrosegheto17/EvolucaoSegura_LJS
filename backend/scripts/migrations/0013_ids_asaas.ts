@@ -16,7 +16,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
 //   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -49,9 +49,9 @@ BEGIN
   PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
   RETURN v_gravou;
 END $$;
-ALTER FUNCTION public.gravar_ids_asaas(text, text) OWNER TO "owner";
+ALTER FUNCTION public.gravar_ids_asaas(text, text) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION public.gravar_ids_asaas(text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.gravar_ids_asaas(text, text) TO app;
+GRANT EXECUTE ON FUNCTION public.gravar_ids_asaas(text, text) TO evolucao_app;
 `);
 };
 

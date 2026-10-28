@@ -1,4 +1,4 @@
-# Só o Postgres 18 local (a mesma versão maior do Neon e do CI). As roles owner, app e backup_ro nascem na migration 0001 (etapa 3).
+# Só o Postgres 18 local (a mesma versão maior do Neon e do CI). As roles evolucao_owner, evolucao_app e evolucao_backup_ro nascem na migration 0001 (etapa 3).
 services:
   postgres:
     image: postgres:18

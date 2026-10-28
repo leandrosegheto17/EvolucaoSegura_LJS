@@ -13,7 +13,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   (PUSH-02 a PUSH-04): a tarefa grava antes de enviar e a duplicata viola a restrição. A
 //   referência é do profissional (ex.: o dia de "evolução pendente" é o mesmo para todos), por
 //   isso a chave inclui usuario_id. A app só grava e lê: apagar ou alterar reabriria um envio.
-// backup_ro lê todas as linhas para o pg_dump.
+// evolucao_backup_ro lê todas as linhas para o pg_dump.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -26,7 +26,7 @@ CREATE TABLE public.push_subscription (
   auth text NOT NULL CHECK (char_length(auth) <= 100 AND auth ~ '^[A-Za-z0-9_-]+={0,2}$'),
   criado_em timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.push_subscription OWNER TO "owner";
+ALTER TABLE public.push_subscription OWNER TO "evolucao_owner";
 CREATE INDEX push_subscription_usuario_idx ON public.push_subscription (usuario_id);
 
 CREATE TABLE public.notificacao_enviada (
@@ -38,14 +38,14 @@ CREATE TABLE public.notificacao_enviada (
   enviada_em timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT notificacao_enviada_uq UNIQUE (usuario_id, tipo, ref)
 );
-ALTER TABLE public.notificacao_enviada OWNER TO "owner";
+ALTER TABLE public.notificacao_enviada OWNER TO "evolucao_owner";
 
 ALTER TABLE public.push_subscription ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.push_subscription FORCE ROW LEVEL SECURITY;
 CREATE POLICY push_subscription_usuario ON public.push_subscription
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY push_subscription_backup_ro ON public.push_subscription FOR SELECT TO backup_ro
+CREATE POLICY push_subscription_backup_ro ON public.push_subscription FOR SELECT TO evolucao_backup_ro
   USING (true);
 
 ALTER TABLE public.notificacao_enviada ENABLE ROW LEVEL SECURITY;
@@ -53,14 +53,14 @@ ALTER TABLE public.notificacao_enviada FORCE ROW LEVEL SECURITY;
 CREATE POLICY notificacao_enviada_usuario ON public.notificacao_enviada
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY notificacao_enviada_backup_ro ON public.notificacao_enviada FOR SELECT TO backup_ro
+CREATE POLICY notificacao_enviada_backup_ro ON public.notificacao_enviada FOR SELECT TO evolucao_backup_ro
   USING (true);
 
-REVOKE ALL ON public.push_subscription, public.notificacao_enviada FROM PUBLIC, app;
-GRANT SELECT ON public.push_subscription, public.notificacao_enviada TO backup_ro;
-GRANT SELECT, INSERT, DELETE ON public.push_subscription TO app;
-GRANT UPDATE (p256dh, auth) ON public.push_subscription TO app;
-GRANT SELECT, INSERT ON public.notificacao_enviada TO app;
+REVOKE ALL ON public.push_subscription, public.notificacao_enviada FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.push_subscription, public.notificacao_enviada TO evolucao_backup_ro;
+GRANT SELECT, INSERT, DELETE ON public.push_subscription TO evolucao_app;
+GRANT UPDATE (p256dh, auth) ON public.push_subscription TO evolucao_app;
+GRANT SELECT, INSERT ON public.notificacao_enviada TO evolucao_app;
 `);
 };
 

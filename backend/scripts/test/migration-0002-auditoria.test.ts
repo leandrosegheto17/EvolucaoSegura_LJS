@@ -3,7 +3,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 
 // T30 / AUD-01, ISO-01, ISO-03, ISO-04: audit_log é só de inclusão (UPDATE, DELETE e TRUNCATE
 // barrados por trigger, inclusive para owner e superusuário), tem RLS forçada e cada profissional
-// só enxerga as próprias linhas. backup_ro lê todas para o pg_dump.
+// só enxerga as próprias linhas. evolucao_backup_ro lê todas para o pg_dump.
 
 const SO_INCLUSAO = 'ES001';
 const VIOLA_RLS_OU_SEM_PERMISSAO = '42501';
@@ -36,7 +36,7 @@ const usuariosVisiveis = async (): Promise<string[]> =>
 
 describe('audit_log: só inclusão', () => {
   it.each([
-    ['owner', 'owner'],
+    ['evolucao_owner', 'evolucao_owner'],
     ['superusuário (quem roda a migration localmente)', null],
   ])('UPDATE é barrado pelo trigger para %s', async (_rotulo, role) => {
     const codigo = await comoRole(
@@ -49,7 +49,7 @@ describe('audit_log: só inclusão', () => {
   });
 
   it.each([
-    ['owner', 'owner'],
+    ['evolucao_owner', 'evolucao_owner'],
     ['superusuário (quem roda a migration localmente)', null],
   ])('DELETE é barrado pelo trigger para %s', async (_rotulo, role) => {
     const codigo = await comoRole(
@@ -62,7 +62,7 @@ describe('audit_log: só inclusão', () => {
   });
 
   it('TRUNCATE é barrado pelo trigger mesmo para owner', async () => {
-    const codigo = await comoRole(banco.cliente, 'owner', () =>
+    const codigo = await comoRole(banco.cliente, 'evolucao_owner', () =>
       codigoDoErro(() => banco.cliente.query('truncate audit_log')),
     );
     expect(codigo).toBe(SO_INCLUSAO);
@@ -74,11 +74,11 @@ describe('audit_log: só inclusão', () => {
 
   it('app tem só SELECT e INSERT: sem UPDATE, DELETE nem TRUNCATE', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'audit_log', 'SELECT') as select,
-              has_table_privilege('app', 'audit_log', 'INSERT') as insert,
-              has_table_privilege('app', 'audit_log', 'UPDATE') as update,
-              has_table_privilege('app', 'audit_log', 'DELETE') as delete,
-              has_table_privilege('app', 'audit_log', 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', 'audit_log', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'audit_log', 'INSERT') as insert,
+              has_table_privilege('evolucao_app', 'audit_log', 'UPDATE') as update,
+              has_table_privilege('evolucao_app', 'audit_log', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'audit_log', 'TRUNCATE') as truncate`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -100,19 +100,19 @@ describe('audit_log: RLS forçada e isolamento', () => {
   });
 
   it('o profissional só enxerga as próprias linhas', async () => {
-    expect(await comoRole(banco.cliente, 'app', usuariosVisiveis, A)).toEqual([A]);
-    expect(await comoRole(banco.cliente, 'app', usuariosVisiveis, B)).toEqual([B]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', usuariosVisiveis, A)).toEqual([A]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', usuariosVisiveis, B)).toEqual([B]);
   });
 
   it('sem usuário na transação, nenhuma linha fica visível (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', usuariosVisiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', usuariosVisiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', usuariosVisiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', usuariosVisiveis)).toEqual([]);
   });
 
   it('o profissional grava evento próprio e não grava em nome de outro', async () => {
     const proprio = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         await banco.cliente.query(
           "insert into audit_log (usuario_id, ator, acao, alvo_tipo) values ($1::text::uuid, $1::text, 'auth.logout', 'conta')",
@@ -126,7 +126,7 @@ describe('audit_log: RLS forçada e isolamento', () => {
 
     const deOutro = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () =>
         codigoDoErro(() =>
           banco.cliente.query(
@@ -139,7 +139,7 @@ describe('audit_log: RLS forçada e isolamento', () => {
     expect(deOutro).toBe(VIOLA_RLS_OU_SEM_PERMISSAO);
   });
 
-  it('backup_ro lê todas as linhas, sem usuário na transação', async () => {
-    expect(await comoRole(banco.cliente, 'backup_ro', usuariosVisiveis)).toEqual([A, B]);
+  it('evolucao_backup_ro lê todas as linhas, sem usuário na transação', async () => {
+    expect(await comoRole(banco.cliente, 'evolucao_backup_ro', usuariosVisiveis)).toEqual([A, B]);
   });
 });

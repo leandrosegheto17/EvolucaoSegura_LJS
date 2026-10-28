@@ -172,7 +172,7 @@ describe('anamnese: edição só no dia do cadastro (ANA-05)', () => {
       ]);
       await banco.cliente.query('set local session_replication_role = origin');
       await banco.cliente.query("select set_config('app.usuario_id', $1, true)", [A]);
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       return codigoDoErro(() =>
         banco.cliente.query(
           `update anamnese set valores = '{"x": "y"}', row_version = row_version + 1,
@@ -200,13 +200,13 @@ describe('anamnese: edição só no dia do cadastro (ANA-05)', () => {
 
   it('a app só altera valores e modelo_revisao (paciente, modelo, data e dono fixos)', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'anamnese', 'valores', 'UPDATE') as valores,
-              has_column_privilege('app', 'anamnese', 'modelo_revisao', 'UPDATE') as revisao,
-              has_column_privilege('app', 'anamnese', 'paciente_id', 'UPDATE') as paciente,
-              has_column_privilege('app', 'anamnese', 'modelo_id', 'UPDATE') as modelo,
-              has_column_privilege('app', 'anamnese', 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', 'anamnese', 'criado_em', 'UPDATE') as criado,
-              has_column_privilege('app', 'anamnese', 'criado_em', 'INSERT') as criado_insert`,
+      `select has_column_privilege('evolucao_app', 'anamnese', 'valores', 'UPDATE') as valores,
+              has_column_privilege('evolucao_app', 'anamnese', 'modelo_revisao', 'UPDATE') as revisao,
+              has_column_privilege('evolucao_app', 'anamnese', 'paciente_id', 'UPDATE') as paciente,
+              has_column_privilege('evolucao_app', 'anamnese', 'modelo_id', 'UPDATE') as modelo,
+              has_column_privilege('evolucao_app', 'anamnese', 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', 'anamnese', 'criado_em', 'UPDATE') as criado,
+              has_column_privilege('evolucao_app', 'anamnese', 'criado_em', 'INSERT') as criado_insert`,
     );
     expect(privilegios).toEqual({
       valores: true,
@@ -247,7 +247,7 @@ describe('anamnese_retificacao: nova versão, só de inclusão (ANA-06)', () => 
     ['DELETE', 'delete from anamnese_retificacao'],
     ['TRUNCATE', 'truncate anamnese_retificacao'],
   ])('%s é barrado pelo trigger mesmo para owner e superusuário', async (_rotulo, comando) => {
-    for (const role of [null, 'owner']) {
+    for (const role of [null, 'evolucao_owner']) {
       const codigo = await comoRole(
         banco.cliente,
         role,
@@ -260,9 +260,9 @@ describe('anamnese_retificacao: nova versão, só de inclusão (ANA-06)', () => 
 
   it('a app só tem SELECT e INSERT', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'anamnese_retificacao', 'SELECT') as select,
-              has_any_column_privilege('app', 'anamnese_retificacao', 'INSERT') as insert,
-              has_any_column_privilege('app', 'anamnese_retificacao', 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_app', 'anamnese_retificacao', 'SELECT') as select,
+              has_any_column_privilege('evolucao_app', 'anamnese_retificacao', 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', 'anamnese_retificacao', 'UPDATE') as update`,
     );
     expect(privilegios).toEqual({ select: true, insert: true, update: false });
   });
@@ -332,14 +332,14 @@ describe('modelo de anamnese: itens (ANA-02, ANA-03)', () => {
 
   it('"remover" é marcar removido: a app não troca dono, modelo nem revisão de inclusão', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'modelo_anamnese_item', 'removido', 'UPDATE') as removido,
-              has_column_privilege('app', 'modelo_anamnese_item', 'rotulo', 'UPDATE') as rotulo,
-              has_column_privilege('app', 'modelo_anamnese_item', 'ordem', 'UPDATE') as ordem,
-              has_column_privilege('app', 'modelo_anamnese_item', 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', 'modelo_anamnese_item', 'modelo_id', 'UPDATE') as modelo,
-              has_column_privilege('app', 'modelo_anamnese_item', 'revisao_inclusao', 'UPDATE') as inclusao,
-              has_column_privilege('app', 'modelo_anamnese', 'especialidade', 'UPDATE') as especialidade,
-              has_column_privilege('app', 'modelo_anamnese', 'revisao', 'UPDATE') as revisao`,
+      `select has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'removido', 'UPDATE') as removido,
+              has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'rotulo', 'UPDATE') as rotulo,
+              has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'ordem', 'UPDATE') as ordem,
+              has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'modelo_id', 'UPDATE') as modelo,
+              has_column_privilege('evolucao_app', 'modelo_anamnese_item', 'revisao_inclusao', 'UPDATE') as inclusao,
+              has_column_privilege('evolucao_app', 'modelo_anamnese', 'especialidade', 'UPDATE') as especialidade,
+              has_column_privilege('evolucao_app', 'modelo_anamnese', 'revisao', 'UPDATE') as revisao`,
     );
     expect(privilegios).toEqual({
       removido: true,
@@ -357,8 +357,8 @@ describe('modelo de anamnese: itens (ANA-02, ANA-03)', () => {
 describe('nada é apagado (ISO-03)', () => {
   it.each(TABELAS)('%s: a app não tem DELETE nem TRUNCATE', async (tabela) => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', $1, 'DELETE') as delete,
-              has_table_privilege('app', $1, 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', $1, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', $1, 'TRUNCATE') as truncate`,
       [tabela],
     );
     expect(privilegios).toEqual({ delete: false, truncate: false });
@@ -381,20 +381,26 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
   });
 
   it('o profissional só enxerga as próprias linhas', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, A))).toEqual(new Set([A]));
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, B))).toEqual(new Set([B]));
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, A))).toEqual(
+      new Set([A]),
+    );
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, B))).toEqual(
+      new Set([B]),
+    );
   });
 
   it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
   });
 
-  it('backup_ro lê todas as linhas e não escreve', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'backup_ro', visiveis))).toEqual(new Set([A, B]));
+  it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis))).toEqual(
+      new Set([A, B]),
+    );
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', $1, 'INSERT') as insert,
-              has_table_privilege('backup_ro', $1, 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_backup_ro', $1, 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', $1, 'UPDATE') as update`,
       [tabela],
     );
     expect(privilegios).toEqual({ insert: false, update: false });
@@ -425,7 +431,7 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
     const [comando, parametros] = comandos[tabela];
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () => codigoDoErro(() => banco.cliente.query(comando, parametros)),
       A,
     );
@@ -437,7 +443,7 @@ describe('a app monta o modelo e registra a anamnese do próprio paciente', () =
   it('cria modelo, item e anamnese e edita no dia', async () => {
     const resultado = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         const { rows: modelo } = await banco.cliente.query<{ id: string }>(
           `insert into modelo_anamnese (usuario_id, especialidade) values ($1, 'fisioterapia')

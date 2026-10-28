@@ -5,7 +5,7 @@ import { migrar } from '../../backend/scripts/src/migrar.ts';
 import { BANCO_E2E, RAIZ, URL_BANCO_ADMIN } from './config.ts';
 
 // OPS-05: Postgres do docker-compose no ar, banco do e2e criado, migrations aplicadas e login da
-// role app liberado (como o globalSetup dos testes da API).
+// role evolucao_app liberado (como o globalSetup dos testes da API).
 export async function prepararBanco(): Promise<void> {
   const subir = spawnSync('docker', ['compose', 'up', '-d', '--wait', 'postgres'], {
     cwd: RAIZ,
@@ -35,7 +35,7 @@ export async function prepararBanco(): Promise<void> {
   const admin = new pg.Client({ connectionString: URL_BANCO_ADMIN });
   await admin.connect();
   try {
-    await admin.query("alter role app with login password 'app'");
+    await admin.query("alter role evolucao_app with login password 'evolucao_app'");
   } finally {
     await admin.end();
   }

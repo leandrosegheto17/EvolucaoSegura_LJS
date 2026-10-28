@@ -22,7 +22,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   corpo até 50.000. Arquivar é preencher `arquivado_em`.
 // - FKs compostas com usuario_id: nada referencia linha de outro profissional (ISO-02).
 // RLS forçada nas quatro: a app só lê e escreve o que é do usuário da transação, sem DELETE nem
-// TRUNCATE (EVO-07, ISO-03); backup_ro lê tudo.
+// TRUNCATE (EVO-07, ISO-03); evolucao_backup_ro lê tudo.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -39,7 +39,7 @@ CREATE TABLE public.evolucao (
   FOREIGN KEY (paciente_id, usuario_id) REFERENCES public.paciente (id, usuario_id),
   FOREIGN KEY (sessao_id, usuario_id) REFERENCES public.sessao_atendimento (id, usuario_id)
 );
-ALTER TABLE public.evolucao OWNER TO "owner";
+ALTER TABLE public.evolucao OWNER TO "evolucao_owner";
 CREATE UNIQUE INDEX evolucao_sessao_uq ON public.evolucao (sessao_id) WHERE sessao_id IS NOT NULL;
 CREATE INDEX evolucao_paciente_idx ON public.evolucao (paciente_id, criado_em);
 
@@ -54,7 +54,7 @@ CREATE TABLE public.evolucao_retificacao (
   CONSTRAINT evolucao_retificacao_seq_uq UNIQUE (evolucao_id, seq),
   FOREIGN KEY (evolucao_id, usuario_id) REFERENCES public.evolucao (id, usuario_id)
 );
-ALTER TABLE public.evolucao_retificacao OWNER TO "owner";
+ALTER TABLE public.evolucao_retificacao OWNER TO "evolucao_owner";
 
 CREATE TABLE public.rascunho (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -67,7 +67,7 @@ CREATE TABLE public.rascunho (
   atualizado_em timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT rascunho_chave_uq UNIQUE (usuario_id, tipo, ref)
 );
-ALTER TABLE public.rascunho OWNER TO "owner";
+ALTER TABLE public.rascunho OWNER TO "evolucao_owner";
 
 CREATE TABLE public.modelo_texto (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -80,7 +80,7 @@ CREATE TABLE public.modelo_texto (
   criado_em timestamptz NOT NULL DEFAULT now(),
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.modelo_texto OWNER TO "owner";
+ALTER TABLE public.modelo_texto OWNER TO "evolucao_owner";
 CREATE UNIQUE INDEX modelo_texto_nome_uq ON public.modelo_texto (usuario_id, tipo, lower(nome))
   WHERE arquivado_em IS NULL;
 
@@ -95,7 +95,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
-ALTER FUNCTION public.evolucao_janela_do_dia() OWNER TO "owner";
+ALTER FUNCTION public.evolucao_janela_do_dia() OWNER TO "evolucao_owner";
 CREATE TRIGGER evolucao_janela BEFORE UPDATE ON public.evolucao
   FOR EACH ROW EXECUTE FUNCTION public.evolucao_janela_do_dia();
 
@@ -109,7 +109,7 @@ ALTER TABLE public.evolucao FORCE ROW LEVEL SECURITY;
 CREATE POLICY evolucao_usuario ON public.evolucao
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY evolucao_backup_ro ON public.evolucao FOR SELECT TO backup_ro USING (true);
+CREATE POLICY evolucao_backup_ro ON public.evolucao FOR SELECT TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.evolucao_retificacao ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evolucao_retificacao FORCE ROW LEVEL SECURITY;
@@ -117,35 +117,35 @@ CREATE POLICY evolucao_retificacao_usuario ON public.evolucao_retificacao
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY evolucao_retificacao_backup_ro ON public.evolucao_retificacao FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.rascunho ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rascunho FORCE ROW LEVEL SECURITY;
 CREATE POLICY rascunho_usuario ON public.rascunho
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY rascunho_backup_ro ON public.rascunho FOR SELECT TO backup_ro USING (true);
+CREATE POLICY rascunho_backup_ro ON public.rascunho FOR SELECT TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.modelo_texto ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.modelo_texto FORCE ROW LEVEL SECURITY;
 CREATE POLICY modelo_texto_usuario ON public.modelo_texto
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY modelo_texto_backup_ro ON public.modelo_texto FOR SELECT TO backup_ro USING (true);
+CREATE POLICY modelo_texto_backup_ro ON public.modelo_texto FOR SELECT TO evolucao_backup_ro USING (true);
 
 REVOKE ALL ON public.evolucao, public.evolucao_retificacao, public.rascunho, public.modelo_texto
-  FROM PUBLIC, app;
+  FROM PUBLIC, evolucao_app;
 GRANT SELECT ON public.evolucao, public.evolucao_retificacao, public.rascunho, public.modelo_texto
-  TO backup_ro;
+  TO evolucao_backup_ro;
 GRANT SELECT ON public.evolucao, public.evolucao_retificacao, public.rascunho, public.modelo_texto
-  TO app;
-GRANT INSERT (usuario_id, paciente_id, sessao_id, texto) ON public.evolucao TO app;
-GRANT UPDATE (texto, row_version, atualizado_em) ON public.evolucao TO app;
-GRANT INSERT (usuario_id, evolucao_id, seq, texto, motivo) ON public.evolucao_retificacao TO app;
-GRANT INSERT (usuario_id, tipo, ref, payload) ON public.rascunho TO app;
-GRANT UPDATE (payload, row_version, atualizado_em) ON public.rascunho TO app;
-GRANT INSERT (usuario_id, tipo, nome, corpo) ON public.modelo_texto TO app;
-GRANT UPDATE (nome, corpo, arquivado_em, row_version, atualizado_em) ON public.modelo_texto TO app;
+  TO evolucao_app;
+GRANT INSERT (usuario_id, paciente_id, sessao_id, texto) ON public.evolucao TO evolucao_app;
+GRANT UPDATE (texto, row_version, atualizado_em) ON public.evolucao TO evolucao_app;
+GRANT INSERT (usuario_id, evolucao_id, seq, texto, motivo) ON public.evolucao_retificacao TO evolucao_app;
+GRANT INSERT (usuario_id, tipo, ref, payload) ON public.rascunho TO evolucao_app;
+GRANT UPDATE (payload, row_version, atualizado_em) ON public.rascunho TO evolucao_app;
+GRANT INSERT (usuario_id, tipo, nome, corpo) ON public.modelo_texto TO evolucao_app;
+GRANT UPDATE (nome, corpo, arquivado_em, row_version, atualizado_em) ON public.modelo_texto TO evolucao_app;
 `);
 };
 

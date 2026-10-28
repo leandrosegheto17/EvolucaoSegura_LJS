@@ -175,8 +175,8 @@ describe('serie_recorrencia: dados (AGE-13)', () => {
 describe('nada é apagado (AGE-17, ISO-03)', () => {
   it.each(TABELAS)('%s: a app não tem DELETE nem TRUNCATE', async (tabela) => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', $1, 'DELETE') as delete,
-              has_table_privilege('app', $1, 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', $1, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', $1, 'TRUNCATE') as truncate`,
       [tabela],
     );
     expect(privilegios).toEqual({ delete: false, truncate: false });
@@ -184,12 +184,12 @@ describe('nada é apagado (AGE-17, ISO-03)', () => {
 
   it('a app não troca o dono nem a série de uma sessão', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'sessao_atendimento', 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', 'sessao_atendimento', 'serie_id', 'UPDATE') as serie,
-              has_column_privilege('app', 'sessao_atendimento', 'status', 'UPDATE') as status,
-              has_column_privilege('app', 'sessao_atendimento', 'row_version', 'UPDATE') as versao,
-              has_column_privilege('app', 'serie_recorrencia', 'usuario_id', 'UPDATE') as dono_serie,
-              has_column_privilege('app', 'serie_recorrencia', 'cancelada', 'UPDATE') as cancelada`,
+      `select has_column_privilege('evolucao_app', 'sessao_atendimento', 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', 'sessao_atendimento', 'serie_id', 'UPDATE') as serie,
+              has_column_privilege('evolucao_app', 'sessao_atendimento', 'status', 'UPDATE') as status,
+              has_column_privilege('evolucao_app', 'sessao_atendimento', 'row_version', 'UPDATE') as versao,
+              has_column_privilege('evolucao_app', 'serie_recorrencia', 'usuario_id', 'UPDATE') as dono_serie,
+              has_column_privilege('evolucao_app', 'serie_recorrencia', 'cancelada', 'UPDATE') as cancelada`,
     );
     expect(privilegios).toEqual({
       dono: false,
@@ -203,8 +203,8 @@ describe('nada é apagado (AGE-17, ISO-03)', () => {
 
   it('a sessão nasce agendada: a app não escolhe o status ao criar', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'sessao_atendimento', 'status', 'INSERT') as status,
-              has_column_privilege('app', 'sessao_atendimento', 'inicio', 'INSERT') as inicio`,
+      `select has_column_privilege('evolucao_app', 'sessao_atendimento', 'status', 'INSERT') as status,
+              has_column_privilege('evolucao_app', 'sessao_atendimento', 'inicio', 'INSERT') as inicio`,
     );
     expect(privilegios).toEqual({ status: false, inicio: true });
   });
@@ -238,20 +238,26 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
   });
 
   it('o profissional só enxerga as próprias linhas', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, A))).toEqual(new Set([A]));
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, B))).toEqual(new Set([B]));
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, A))).toEqual(
+      new Set([A]),
+    );
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, B))).toEqual(
+      new Set([B]),
+    );
   });
 
   it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
   });
 
-  it('backup_ro lê todas as linhas e não escreve', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'backup_ro', visiveis))).toEqual(new Set([A, B]));
+  it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis))).toEqual(
+      new Set([A, B]),
+    );
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', $1, 'INSERT') as insert,
-              has_table_privilege('backup_ro', $1, 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_backup_ro', $1, 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', $1, 'UPDATE') as update`,
       [tabela],
     );
     expect(privilegios).toEqual({ insert: false, update: false });
@@ -260,7 +266,7 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
   it('a app não cria linha em nome de outro profissional', async () => {
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () =>
         codigoDoErro(() =>
           tabela === 'serie_recorrencia'
@@ -284,7 +290,7 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
     const coluna = tabela === 'serie_recorrencia' ? 'cancelada = true' : "status = 'cancelada'";
     const alteradas = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () =>
         (
           await banco.cliente.query(
@@ -304,7 +310,7 @@ describe('a app cria e remarca a própria sessão', () => {
   it('cria sessão do próprio paciente e move o horário', async () => {
     const resultado = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         const { rows } = await banco.cliente.query<{ id: string }>(
           `insert into sessao_atendimento (usuario_id, paciente_id, inicio, fim, link, cobravel)

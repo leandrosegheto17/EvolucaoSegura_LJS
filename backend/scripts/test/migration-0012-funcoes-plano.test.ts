@@ -12,7 +12,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 //   é ignorada (nada muda) e devolvida como 'transicao_invalida' para quem chama registrar; o
 //   mesmo estado é 'mesmo_estado' (renovação de ativa só adianta periodo_fim, PLANO-08).
 // - SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico; a app
-//   executa as duas, backup_ro e PUBLIC não. A app continua sem UPDATE direto na assinatura.
+//   executa as duas, evolucao_backup_ro e PUBLIC não. A app continua sem UPDATE direto na assinatura.
 
 const PARAMETRO_INVALIDO = '22023';
 const DUPLICADO = '23505';
@@ -132,7 +132,7 @@ async function comoApp<T>(preparar: () => Promise<unknown>, fn: () => Promise<T>
   await banco.cliente.query('begin');
   try {
     await preparar();
-    await banco.cliente.query('set local role app');
+    await banco.cliente.query('set local role evolucao_app');
     return await fn();
   } finally {
     await banco.cliente.query('rollback');
@@ -165,7 +165,7 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
         ),
       ).toEqual([
         {
-          dono: 'owner',
+          dono: 'evolucao_owner',
           definer: true,
           search_path_fixo: true,
           argumentos,
@@ -175,25 +175,28 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
     },
   );
 
-  it.each(Object.keys(FUNCOES))('%s: app executa; backup_ro e PUBLIC não', async (assinatura) => {
-    expect(
-      await consultar(
-        `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-                has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+  it.each(Object.keys(FUNCOES))(
+    '%s: app executa; evolucao_backup_ro e PUBLIC não',
+    async (assinatura) => {
+      expect(
+        await consultar(
+          `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+                has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
                 exists (select 1 from aclexplode((select proacl from pg_proc
                                                   where oid = $1::regprocedure)) a
                         where a.grantee = 0) as public`,
-        [assinatura],
-      ),
-    ).toEqual([{ app: true, backup_ro: false, public: false }]);
-  });
+          [assinatura],
+        ),
+      ).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
+    },
+  );
 
   it('a app continua sem UPDATE, DELETE e TRUNCATE diretos na assinatura', async () => {
     expect(
       await consultar(
-        `select has_any_column_privilege('app', 'assinatura', 'UPDATE') as update,
-                has_table_privilege('app', 'assinatura', 'DELETE') as delete,
-                has_table_privilege('app', 'assinatura', 'TRUNCATE') as truncate`,
+        `select has_any_column_privilege('evolucao_app', 'assinatura', 'UPDATE') as update,
+                has_table_privilege('evolucao_app', 'assinatura', 'DELETE') as delete,
+                has_table_privilege('evolucao_app', 'assinatura', 'TRUNCATE') as truncate`,
       ),
     ).toEqual([{ update: false, delete: false, truncate: false }]);
   });
@@ -219,15 +222,17 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
 
 describe('localizar_assinatura_asaas: por id do Asaas, sem a RLS do usuário', () => {
   it('acha pelo id da assinatura, sem usuário na transação, só com as colunas necessárias', async () => {
-    const achadas = await comoRole(banco.cliente, 'app', () => localizar('sub_a', null));
+    const achadas = await comoRole(banco.cliente, 'evolucao_app', () => localizar('sub_a', null));
     expect(achadas).toEqual([
       { usuario_id: A, status: 'ativa', periodo_fim: PERIODO_A, vencimento_atraso: null },
     ]);
   });
 
   it('sem o id da assinatura (ou com um que não existe), acha pelo id do cliente', async () => {
-    const porCliente = await comoRole(banco.cliente, 'app', () => localizar(null, 'cus_c'));
-    const assinaturaDesconhecida = await comoRole(banco.cliente, 'app', () =>
+    const porCliente = await comoRole(banco.cliente, 'evolucao_app', () =>
+      localizar(null, 'cus_c'),
+    );
+    const assinaturaDesconhecida = await comoRole(banco.cliente, 'evolucao_app', () =>
       localizar('sub_nova', 'cus_c'),
     );
     expect(porCliente.map((l) => [l.usuario_id, l.status])).toEqual([[C, 'trial']]);
@@ -235,7 +240,9 @@ describe('localizar_assinatura_asaas: por id do Asaas, sem a RLS do usuário', (
   });
 
   it('o id da assinatura vale mais que o do cliente', async () => {
-    const achadas = await comoRole(banco.cliente, 'app', () => localizar('sub_a', 'cus_b'));
+    const achadas = await comoRole(banco.cliente, 'evolucao_app', () =>
+      localizar('sub_a', 'cus_b'),
+    );
     expect(achadas.map((l) => l.usuario_id)).toEqual([A]);
   });
 
@@ -248,13 +255,18 @@ describe('localizar_assinatura_asaas: por id do Asaas, sem a RLS do usuário', (
     ];
     for (const [assinatura, cliente] of ids)
       expect(
-        await comoRole(banco.cliente, 'app', () => localizar(assinatura, cliente)),
+        await comoRole(banco.cliente, 'evolucao_app', () => localizar(assinatura, cliente)),
         `${assinatura} ${cliente}`,
       ).toEqual([]);
   });
 
   it('com outro usuário na transação, acha a do Asaas e nada mais', async () => {
-    const achadas = await comoRole(banco.cliente, 'app', () => localizar('sub_a', null), B);
+    const achadas = await comoRole(
+      banco.cliente,
+      'evolucao_app',
+      () => localizar('sub_a', null),
+      B,
+    );
     expect(achadas.map((l) => l.usuario_id)).toEqual([A]);
   });
 });
@@ -408,7 +420,7 @@ describe('mudar_estado_assinatura: periodo_fim e vencimento_atraso', () => {
     ];
     for (const [usuario, status, periodo, vencimento] of casos)
       expect(
-        await comoRole(banco.cliente, 'app', () =>
+        await comoRole(banco.cliente, 'evolucao_app', () =>
           codigoDoErro(() => mudar(usuario, status, periodo, vencimento)),
         ),
         JSON.stringify([usuario, status, periodo, vencimento]),
@@ -416,7 +428,7 @@ describe('mudar_estado_assinatura: periodo_fim e vencimento_atraso', () => {
   });
 
   it('usuário sem assinatura devolve inexistente e não cria nada', async () => {
-    const { mudanca, n } = await comoRole(banco.cliente, 'app', async () => {
+    const { mudanca, n } = await comoRole(banco.cliente, 'evolucao_app', async () => {
       const mudanca = await mudar(INEXISTENTE, 'free');
       await banco.cliente.query('reset role');
       const [{ n }] = (await consultar<{ n: number }>(
@@ -447,7 +459,7 @@ describe('isolamento (ISO-01, ISO-03)', () => {
   it('depois das funções, a app continua sem ver assinatura alheia na transação', async () => {
     const { visiveis, contexto } = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         await localizar('sub_a', null);
         await mudar(A, 'cancelada');
@@ -466,7 +478,7 @@ describe('isolamento (ISO-01, ISO-03)', () => {
   });
 
   it('a app não ganha acesso a assinatura alheia ligando o contexto das tarefas', async () => {
-    const { visiveis, atualizar } = await comoRole(banco.cliente, 'app', async () => {
+    const { visiveis, atualizar } = await comoRole(banco.cliente, 'evolucao_app', async () => {
       await banco.cliente.query("select set_config('app.tarefa_assinatura', 'on', true)");
       const visiveis = await consultar('select usuario_id from assinatura');
       const atualizar = await codigoDoErro(() =>
@@ -480,7 +492,9 @@ describe('isolamento (ISO-01, ISO-03)', () => {
 
   it('owner sem estar numa das funções continua sem ver linha', async () => {
     expect(
-      await comoRole(banco.cliente, 'owner', () => consultar('select usuario_id from assinatura')),
+      await comoRole(banco.cliente, 'evolucao_owner', () =>
+        consultar('select usuario_id from assinatura'),
+      ),
     ).toEqual([]);
   });
 
@@ -498,10 +512,10 @@ describe('isolamento (ISO-01, ISO-03)', () => {
           vencimento,
         ]);
       await c1.query('begin');
-      await c1.query('set local role app');
+      await c1.query('set local role evolucao_app');
       const primeira = await chamar(c1, 'atrasada', PERIODO_B);
       await c2.query('begin');
-      await c2.query('set local role app');
+      await c2.query('set local role evolucao_app');
       const segunda = chamar(c2, 'cancelada', null);
       await c1.query('commit');
       const resultado = await segunda;

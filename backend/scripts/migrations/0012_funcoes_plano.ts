@@ -32,16 +32,16 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   definição falha com "permission denied to set parameter" (T197).
 // - Ids do Asaas passam a ser únicos: localizar devolve no máximo uma assinatura.
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem UPDATE direto.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. A app continua sem UPDATE direto.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
 CREATE UNIQUE INDEX assinatura_asaas_subscription_uq ON public.assinatura (asaas_subscription_id);
 CREATE UNIQUE INDEX assinatura_asaas_customer_uq ON public.assinatura (asaas_customer_id);
 
-CREATE POLICY assinatura_tarefas_leitura ON public.assinatura FOR SELECT TO "owner"
+CREATE POLICY assinatura_tarefas_leitura ON public.assinatura FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_assinatura', true) = 'on');
-CREATE POLICY assinatura_tarefas_mudanca ON public.assinatura FOR UPDATE TO "owner"
+CREATE POLICY assinatura_tarefas_mudanca ON public.assinatura FOR UPDATE TO "evolucao_owner"
   USING (current_setting('app.tarefa_assinatura', true) = 'on')
   WITH CHECK (current_setting('app.tarefa_assinatura', true) = 'on');
 
@@ -77,9 +77,9 @@ BEGIN
   END IF;
   PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
-ALTER FUNCTION tarefas.localizar_assinatura_asaas(text, text) OWNER TO "owner";
+ALTER FUNCTION tarefas.localizar_assinatura_asaas(text, text) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.localizar_assinatura_asaas(text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.localizar_assinatura_asaas(text, text) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.localizar_assinatura_asaas(text, text) TO evolucao_app;
 
 CREATE FUNCTION tarefas.mudar_estado_assinatura(
   p_usuario_id uuid,
@@ -157,11 +157,11 @@ BEGIN
   PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
 ALTER FUNCTION tarefas.mudar_estado_assinatura(uuid, text, timestamptz, timestamptz)
-  OWNER TO "owner";
+  OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.mudar_estado_assinatura(uuid, text, timestamptz, timestamptz)
   FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION tarefas.mudar_estado_assinatura(uuid, text, timestamptz, timestamptz)
-  TO app;
+  TO evolucao_app;
 `);
 };
 

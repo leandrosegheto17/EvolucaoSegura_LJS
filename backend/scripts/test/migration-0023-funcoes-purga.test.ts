@@ -11,7 +11,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // - Tabelas só de inclusão seguem barrando UPDATE, TRUNCATE e DELETE fora da purga (ES001).
 // - Outro profissional intacto; reexecução não muda nada; limite e parâmetros validados.
 // SECURITY DEFINER do owner, search_path fixo, sem SET app.* na definição (Neon); app executa,
-// backup_ro e PUBLIC não.
+// evolucao_backup_ro e PUBLIC não.
 
 const PARAMETRO_INVALIDO = '22023';
 const SO_INCLUSAO = 'ES001';
@@ -153,7 +153,7 @@ describe('catálogo: SECURITY DEFINER, search_path fixo e grants (ISO-03)', () =
     );
     expect(linhas).toEqual([
       {
-        dono: 'owner',
+        dono: 'evolucao_owner',
         definer: true,
         config: ['search_path=pg_catalog, pg_temp'],
         argumentos: 'p_agora timestamp with time zone, p_limite integer',
@@ -163,22 +163,22 @@ describe('catálogo: SECURITY DEFINER, search_path fixo e grants (ISO-03)', () =
     ]);
   });
 
-  it('app executa; backup_ro e PUBLIC não', async () => {
+  it('app executa; evolucao_backup_ro e PUBLIC não', async () => {
     const linhas = await consultar(
-      `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-              has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+      `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+              has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
               exists (select 1 from aclexplode((select proacl from pg_proc
                                                 where oid = $1::regprocedure)) a
                       where a.grantee = 0) as public`,
       [ASSINATURA],
     );
-    expect(linhas).toEqual([{ app: true, backup_ro: false, public: false }]);
+    expect(linhas).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
   });
 
   it('a app continua sem DELETE em conta_excluida, usuario e audit_log', async () => {
     const linhas = await consultar(
-      `select bool_or(has_table_privilege('app', t, 'DELETE')) as delete,
-              bool_or(has_table_privilege('app', 'conta_excluida', p)) as conta_excluida
+      `select bool_or(has_table_privilege('evolucao_app', t, 'DELETE')) as delete,
+              bool_or(has_table_privilege('evolucao_app', 'conta_excluida', p)) as conta_excluida
        from unnest(array['conta_excluida', 'usuario', 'audit_log']) t,
             unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE']) p`,
     );
@@ -327,7 +327,7 @@ describe('depois de 30 dias: apaga tudo e guarda só conta_excluida (CONTA-05)',
 
   it('chamada pela app (sem usuário na transação) e devolve o contexto da transação', async () => {
     const c = await conta(antes(31 * DIA));
-    const contexto = await comoRole(banco.cliente, 'app', async () => {
+    const contexto = await comoRole(banco.cliente, 'evolucao_app', async () => {
       const [r] = await consultar<{ n: number }>('select tarefas.purgar_contas($1, 10) as n', [
         AGORA,
       ]);
@@ -347,7 +347,7 @@ describe('tabelas só de inclusão continuam barradas fora da purga (ES001)', ()
   const tentarApagar = (usuarioId: string, purga: string | null) =>
     comoRole(
       banco.cliente,
-      'owner',
+      'evolucao_owner',
       async () => {
         if (purga !== null)
           await consultar("select set_config('app.purga_usuario', $1, true)", [purga]);
@@ -383,7 +383,7 @@ describe('tabelas só de inclusão continuam barradas fora da purga (ES001)', ()
     const c = await conta(antes(31 * DIA));
     const codigos = await comoRole(
       banco.cliente,
-      'owner',
+      'evolucao_owner',
       async () => {
         await consultar("select set_config('app.purga_usuario', $1, true)", [c.id]);
         return [
@@ -394,7 +394,7 @@ describe('tabelas só de inclusão continuam barradas fora da purga (ES001)', ()
       },
       c.id,
     );
-    const truncate = await comoRole(banco.cliente, 'owner', async () => {
+    const truncate = await comoRole(banco.cliente, 'evolucao_owner', async () => {
       await consultar("select set_config('app.purga_usuario', $1, true)", [c.id]);
       return codigoDoErro(() => consultar('truncate audit_log'));
     });

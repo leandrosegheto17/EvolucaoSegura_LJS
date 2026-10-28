@@ -10,7 +10,7 @@ import { pastaMigrations, urlComBanco } from './banco.ts';
 // (PG 18): LOGIN, CREATEDB e CREATEROLE, sem SUPERUSER nem BYPASSRLS, dona do banco. O Postgres
 // local dos outros testes roda como superusuário e não pega o que só falha sem ele (achado da
 // medição da exportação: SET app.* na definição de função, "permission denied to set parameter").
-// - As roles owner, app e backup_ro são do cluster e os outros testes já as criaram como
+// - As roles evolucao_owner, evolucao_app e evolucao_backup_ro são do cluster e os outros testes já as criaram como
 //   superusuário. No Neon quem as cria é o neondb_owner, na 0001, e o CREATE ROLE do PG 16 em
 //   diante lhe dá ADMIN sem SET nem INHERIT. O teste reproduz esse vínculo antes de migrar.
 // - Uma cópia das migrations com uma função que declara SET de parâmetro personalizado prova que
@@ -18,7 +18,7 @@ import { pastaMigrations, urlComBanco } from './banco.ts';
 // - Só dois bancos (um migrado por inteiro e um em que a transação é desfeita): cada DROP DATABASE
 //   pede um checkpoint, e a suíte inteira já cria um banco por arquivo de teste.
 
-const ROLES_DO_CLUSTER = ['owner', 'app', 'backup_ro'];
+const ROLES_DO_CLUSTER = ['evolucao_owner', 'evolucao_app', 'evolucao_backup_ro'];
 const semLog = { info: () => {}, warn: () => {}, error: () => {} };
 const sufixo = `${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
 const PAPEL = `es_sem_su_${sufixo}`;

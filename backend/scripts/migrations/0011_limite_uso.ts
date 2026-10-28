@@ -13,7 +13,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 // - A função é SECURITY DEFINER do owner e conta só para app_usuario_id(): a app só lê a tabela e
 //   não consegue zerar nem forjar o contador. Ela usa só app_usuario_id() (do owner) e funções do
 //   pg_catalog; não precisa de GRANT EXECUTE extra ao owner (a 0003 precisou para o pgcrypto).
-// RLS forçada: cada profissional só vê o próprio contador; backup_ro lê tudo (ISO-04). Sem DELETE
+// RLS forçada: cada profissional só vê o próprio contador; evolucao_backup_ro lê tudo (ISO-04). Sem DELETE
 // nem TRUNCATE para a app (ISO-03).
 
 export const up = (pgm: MigrationBuilder): void => {
@@ -25,17 +25,17 @@ CREATE TABLE public.limite_uso (
   contagem integer NOT NULL DEFAULT 1 CHECK (contagem >= 1),
   PRIMARY KEY (usuario_id, chave)
 );
-ALTER TABLE public.limite_uso OWNER TO "owner";
+ALTER TABLE public.limite_uso OWNER TO "evolucao_owner";
 
 ALTER TABLE public.limite_uso ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.limite_uso FORCE ROW LEVEL SECURITY;
 CREATE POLICY limite_uso_usuario ON public.limite_uso
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY limite_uso_backup_ro ON public.limite_uso FOR SELECT TO backup_ro USING (true);
+CREATE POLICY limite_uso_backup_ro ON public.limite_uso FOR SELECT TO evolucao_backup_ro USING (true);
 
-REVOKE ALL ON public.limite_uso FROM PUBLIC, app;
-GRANT SELECT ON public.limite_uso TO backup_ro, app;
+REVOKE ALL ON public.limite_uso FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.limite_uso TO evolucao_backup_ro, evolucao_app;
 
 CREATE FUNCTION public.contar_uso(p_chave text, p_janela_segundos integer) RETURNS integer
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
@@ -60,9 +60,9 @@ BEGIN
   RETURNING l.contagem INTO v_contagem;
   RETURN v_contagem;
 END $$;
-ALTER FUNCTION public.contar_uso(text, integer) OWNER TO "owner";
+ALTER FUNCTION public.contar_uso(text, integer) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION public.contar_uso(text, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.contar_uso(text, integer) TO app;
+GRANT EXECUTE ON FUNCTION public.contar_uso(text, integer) TO evolucao_app;
 `);
 };
 

@@ -4,27 +4,27 @@
 
 ## 1. Ativos
 
-| Ativo                                                        | Por que importa                                    |
-| ------------------------------------------------------------ | -------------------------------------------------- |
-| Prontuário (anamnese, evolução, TCLE) e agenda dos pacientes | Dado de saúde, sensível pela LGPD (art. 11)        |
-| Credenciais, sessões e códigos 2FA                           | Quem os tem se passa pelo profissional             |
-| Dados financeiros (preços, pagamentos) e assinatura          | Sigilo do profissional e integridade da cobrança   |
-| Trilha de auditoria                                          | Prova de quem fez o quê                            |
-| Backups cifrados e a chave privada do `age`                  | Cópia completa do banco                            |
-| Segredos (Asaas, Resend, VAPID, Sentry, `NEON_URL_MIGRACAO`) | Acesso a serviços externos e ao banco como `owner` |
+| Ativo                                                        | Por que importa                                             |
+| ------------------------------------------------------------ | ----------------------------------------------------------- |
+| Prontuário (anamnese, evolução, TCLE) e agenda dos pacientes | Dado de saúde, sensível pela LGPD (art. 11)                 |
+| Credenciais, sessões e códigos 2FA                           | Quem os tem se passa pelo profissional                      |
+| Dados financeiros (preços, pagamentos) e assinatura          | Sigilo do profissional e integridade da cobrança            |
+| Trilha de auditoria                                          | Prova de quem fez o quê                                     |
+| Backups cifrados e a chave privada do `age`                  | Cópia completa do banco                                     |
+| Segredos (Asaas, Resend, VAPID, Sentry, `NEON_URL_MIGRACAO`) | Acesso a serviços externos e ao banco como `evolucao_owner` |
 
 ## 2. Fronteiras de confiança
 
-| Fronteira | De → Para                                  | O que cruza                                | Controle principal                                                  |
-| --------- | ------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------- |
-| F1        | Internet → Worker (`/api/*` e assets)      | Qualquer requisição, de qualquer IP        | Rate limit, cabeçalhos, validação Zod, CSRF, sessão                 |
-| F2        | Worker → Postgres (Hyperdrive, role `app`) | Consultas com `app.usuario_id`             | RLS forçada, transação por requisição, grants mínimos               |
-| F3        | Asaas → Worker (`/api/webhooks/asaas`)     | Eventos de cobrança                        | Token no cabeçalho, `event_id` único, estado calculado pelo domínio |
-| F4        | Worker → Resend, Asaas, serviços de push   | Dados mínimos para e-mail, cobrança e push | Texto puro, sem dado clínico, erro tipado, tempo limite             |
-| F5        | Worker → Sentry                            | Erros                                      | Scrubbing de corpo, cookie e e-mail                                 |
-| F6        | Navegador ↔ dispositivo do profissional    | Sessão, cache, rascunhos, exportações      | Cookie `__Host-sid`, `no-store`, limpeza do cache ao expirar        |
-| F7        | GitHub Actions → Neon e Cloudflare         | Migração como `owner`, deploy, dump        | Environment `producao`, só `main`, segredos fora do repositório     |
-| F8        | Banco → artefato de backup                 | Dump completo                              | Role `backup_ro`, cifra com `age`, retenção de 30 dias              |
+| Fronteira | De → Para                                           | O que cruza                                  | Controle principal                                                  |
+| --------- | --------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| F1        | Internet → Worker (`/api/*` e assets)               | Qualquer requisição, de qualquer IP          | Rate limit, cabeçalhos, validação Zod, CSRF, sessão                 |
+| F2        | Worker → Postgres (Hyperdrive, role `evolucao_app`) | Consultas com `app.usuario_id`               | RLS forçada, transação por requisição, grants mínimos               |
+| F3        | Asaas → Worker (`/api/webhooks/asaas`)              | Eventos de cobrança                          | Token no cabeçalho, `event_id` único, estado calculado pelo domínio |
+| F4        | Worker → Resend, Asaas, serviços de push            | Dados mínimos para e-mail, cobrança e push   | Texto puro, sem dado clínico, erro tipado, tempo limite             |
+| F5        | Worker → Sentry                                     | Erros                                        | Scrubbing de corpo, cookie e e-mail                                 |
+| F6        | Navegador ↔ dispositivo do profissional             | Sessão, cache, rascunhos, exportações        | Cookie `__Host-sid`, `no-store`, limpeza do cache ao expirar        |
+| F7        | GitHub Actions → Neon e Cloudflare                  | Migração como `evolucao_owner`, deploy, dump | Environment `producao`, só `main`, segredos fora do repositório     |
+| F8        | Banco → artefato de backup                          | Dump completo                                | Role `evolucao_backup_ro`, cifra com `age`, retenção de 30 dias     |
 
 ## 3. Ameaças por área
 
@@ -46,15 +46,15 @@ Nas tabelas, "Planejado" significa que a tarefa que entrega o controle ainda est
 
 ### 3.2 Isolamento entre profissionais (F2)
 
-| STRIDE | Ameaça                                                        | Controle                                                                                                    | Critério               |
-| ------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------- |
-| I      | Profissional B lê dado de A por id ou por listagem            | RLS `FORCE` em toda tabela de negócio; 404 idêntico ao de inexistente; teste de isolamento varre o catálogo | ISO-01, ISO-02         |
-| T      | B altera ou referencia recurso de A                           | RLS na escrita; chaves estrangeiras checadas dentro da transação do próprio usuário                         | ISO-02                 |
-| I      | Vazamento de contexto entre requisições pelo pooler           | `SET LOCAL` dentro de `BEGIN`; spike S1 prova o comportamento com o pooler do Hyperdrive. Pendente do spike | ISO-01, design (Risks) |
-| E      | Bug na API contorna o RLS por role privilegiada               | Runtime usa a role `app` (sem `BYPASSRLS`, sem DDL); `owner` só nas migrations                              | ISO-03                 |
-| E      | Função `SECURITY DEFINER` mal escrita escala privilégio       | `search_path` fixo, parâmetros tipados, sem SQL dinâmico; teste que a `app` executa só as funções listadas  | ISO-03                 |
-| T      | Apagar ou adulterar prontuário e auditoria                    | `app` sem DELETE e TRUNCATE; auditoria bloqueada para UPDATE e DELETE por trigger, inclusive para `owner`   | ISO-03, AUD-01         |
-| I      | Cache do Hyperdrive serve dado desatualizado de outro momento | Cache desligado (`--caching-disabled`)                                                                      | OPS-13                 |
+| STRIDE | Ameaça                                                        | Controle                                                                                                                    | Critério               |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| I      | Profissional B lê dado de A por id ou por listagem            | RLS `FORCE` em toda tabela de negócio; 404 idêntico ao de inexistente; teste de isolamento varre o catálogo                 | ISO-01, ISO-02         |
+| T      | B altera ou referencia recurso de A                           | RLS na escrita; chaves estrangeiras checadas dentro da transação do próprio usuário                                         | ISO-02                 |
+| I      | Vazamento de contexto entre requisições pelo pooler           | `SET LOCAL` dentro de `BEGIN`; spike S1 prova o comportamento com o pooler do Hyperdrive. Pendente do spike                 | ISO-01, design (Risks) |
+| E      | Bug na API contorna o RLS por role privilegiada               | Runtime usa a role `evolucao_app` (sem `BYPASSRLS`, sem DDL); `evolucao_owner` só nas migrations                            | ISO-03                 |
+| E      | Função `SECURITY DEFINER` mal escrita escala privilégio       | `search_path` fixo, parâmetros tipados, sem SQL dinâmico; teste que a `evolucao_app` executa só as funções listadas         | ISO-03                 |
+| T      | Apagar ou adulterar prontuário e auditoria                    | `evolucao_app` sem DELETE e TRUNCATE; auditoria bloqueada para UPDATE e DELETE por trigger, inclusive para `evolucao_owner` | ISO-03, AUD-01         |
+| I      | Cache do Hyperdrive serve dado desatualizado de outro momento | Cache desligado (`--caching-disabled`)                                                                                      | OPS-13                 |
 
 ### 3.3 Webhook do Asaas (F3)
 

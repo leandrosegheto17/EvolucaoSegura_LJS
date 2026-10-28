@@ -39,7 +39,7 @@ CREATE TABLE public.perfil (
   CONSTRAINT perfil_registro_com_especialidade CHECK (
     especialidade IS NOT NULL OR (conselho IS NULL AND numero_registro IS NULL AND regiao IS NULL))
 );
-ALTER TABLE public.perfil OWNER TO "owner";
+ALTER TABLE public.perfil OWNER TO "evolucao_owner";
 
 CREATE TABLE public.configuracao_usuario (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -49,14 +49,14 @@ CREATE TABLE public.configuracao_usuario (
   criado_em timestamptz NOT NULL DEFAULT now(),
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.configuracao_usuario OWNER TO "owner";
+ALTER TABLE public.configuracao_usuario OWNER TO "evolucao_owner";
 
 ALTER TABLE public.perfil ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.perfil FORCE ROW LEVEL SECURITY;
 CREATE POLICY perfil_usuario ON public.perfil
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY perfil_backup_ro ON public.perfil FOR SELECT TO backup_ro USING (true);
+CREATE POLICY perfil_backup_ro ON public.perfil FOR SELECT TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.configuracao_usuario ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.configuracao_usuario FORCE ROW LEVEL SECURITY;
@@ -64,19 +64,19 @@ CREATE POLICY configuracao_usuario_usuario ON public.configuracao_usuario
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY configuracao_usuario_backup_ro ON public.configuracao_usuario FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
-REVOKE ALL ON public.perfil, public.configuracao_usuario FROM PUBLIC, app;
-GRANT SELECT ON public.perfil, public.configuracao_usuario TO backup_ro;
-GRANT SELECT ON public.perfil, public.configuracao_usuario TO app;
+REVOKE ALL ON public.perfil, public.configuracao_usuario FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.perfil, public.configuracao_usuario TO evolucao_backup_ro;
+GRANT SELECT ON public.perfil, public.configuracao_usuario TO evolucao_app;
 GRANT INSERT (usuario_id, nome, contato, endereco, atende_sabado, atende_domingo, especialidade,
-  especialidade_nome, conselho, numero_registro, regiao) ON public.perfil TO app;
+  especialidade_nome, conselho, numero_registro, regiao) ON public.perfil TO evolucao_app;
 GRANT UPDATE (nome, contato, endereco, atende_sabado, atende_domingo, especialidade,
   especialidade_nome, conselho, numero_registro, regiao, row_version, atualizado_em)
-  ON public.perfil TO app;
-GRANT INSERT (usuario_id, privacidade_agenda) ON public.configuracao_usuario TO app;
+  ON public.perfil TO evolucao_app;
+GRANT INSERT (usuario_id, privacidade_agenda) ON public.configuracao_usuario TO evolucao_app;
 GRANT UPDATE (privacidade_agenda, row_version, atualizado_em) ON public.configuracao_usuario
-  TO app;
+  TO evolucao_app;
 `);
 };
 

@@ -209,7 +209,7 @@ describe('duas retificações ao mesmo tempo (padrão da anamnese)', LENTO, () =
         await new Promise((r) => setTimeout(r, 250));
         const { rows } = await admin.query<{ total: string }>(
           `select count(*)::text as total from pg_locks l join pg_stat_activity a on a.pid = l.pid
-           where not l.granted and a.usename = 'app' and a.query ilike '%evolucao_retificacao%'`,
+           where not l.granted and a.usename = 'evolucao_app' and a.query ilike '%evolucao_retificacao%'`,
         );
         if (rows[0]!.total !== '0') break;
         if (Date.now() > limite) throw new Error('a requisição não chegou a esperar o índice');

@@ -14,7 +14,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   só de série do mesmo profissional (ISO-02).
 // Sem a tabela sessao_revisao do legado: o design da agenda não a lista e a spec não pede o
 // histórico; a auditoria (sessao.*) registra o que mudou.
-// RLS forçada nas duas: a app só lê e escreve o que é do usuário da transação; backup_ro lê tudo.
+// RLS forçada nas duas: a app só lê e escreve o que é do usuário da transação; evolucao_backup_ro lê tudo.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -31,7 +31,7 @@ CREATE TABLE public.serie_recorrencia (
   CONSTRAINT serie_recorrencia_id_usuario_uq UNIQUE (id, usuario_id),
   FOREIGN KEY (paciente_id, usuario_id) REFERENCES public.paciente (id, usuario_id)
 );
-ALTER TABLE public.serie_recorrencia OWNER TO "owner";
+ALTER TABLE public.serie_recorrencia OWNER TO "evolucao_owner";
 
 CREATE TABLE public.sessao_atendimento (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -52,7 +52,7 @@ CREATE TABLE public.sessao_atendimento (
   FOREIGN KEY (paciente_id, usuario_id) REFERENCES public.paciente (id, usuario_id),
   FOREIGN KEY (serie_id, usuario_id) REFERENCES public.serie_recorrencia (id, usuario_id)
 );
-ALTER TABLE public.sessao_atendimento OWNER TO "owner";
+ALTER TABLE public.sessao_atendimento OWNER TO "evolucao_owner";
 -- Listagem por intervalo com cursor keyset (inicio, id) (AGE-03).
 CREATE INDEX sessao_atendimento_usuario_inicio_idx
   ON public.sessao_atendimento (usuario_id, inicio, id);
@@ -69,7 +69,7 @@ CREATE POLICY serie_recorrencia_usuario ON public.serie_recorrencia
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY serie_recorrencia_backup_ro ON public.serie_recorrencia FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.sessao_atendimento ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sessao_atendimento FORCE ROW LEVEL SECURITY;
@@ -77,17 +77,17 @@ CREATE POLICY sessao_atendimento_usuario ON public.sessao_atendimento
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY sessao_atendimento_backup_ro ON public.sessao_atendimento FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
-REVOKE ALL ON public.serie_recorrencia, public.sessao_atendimento FROM PUBLIC, app;
-GRANT SELECT ON public.serie_recorrencia, public.sessao_atendimento TO backup_ro;
-GRANT SELECT ON public.serie_recorrencia, public.sessao_atendimento TO app;
-GRANT INSERT (usuario_id, paciente_id, frequencia, ocorrencias) ON public.serie_recorrencia TO app;
-GRANT UPDATE (cancelada, row_version, atualizado_em) ON public.serie_recorrencia TO app;
+REVOKE ALL ON public.serie_recorrencia, public.sessao_atendimento FROM PUBLIC, evolucao_app;
+GRANT SELECT ON public.serie_recorrencia, public.sessao_atendimento TO evolucao_backup_ro;
+GRANT SELECT ON public.serie_recorrencia, public.sessao_atendimento TO evolucao_app;
+GRANT INSERT (usuario_id, paciente_id, frequencia, ocorrencias) ON public.serie_recorrencia TO evolucao_app;
+GRANT UPDATE (cancelada, row_version, atualizado_em) ON public.serie_recorrencia TO evolucao_app;
 GRANT INSERT (usuario_id, paciente_id, serie_id, inicio, fim, link, cobravel)
-  ON public.sessao_atendimento TO app;
+  ON public.sessao_atendimento TO evolucao_app;
 GRANT UPDATE (paciente_id, inicio, fim, link, status, cobravel, row_version, atualizado_em)
-  ON public.sessao_atendimento TO app;
+  ON public.sessao_atendimento TO evolucao_app;
 `);
 };
 

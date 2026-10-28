@@ -13,11 +13,11 @@ O cadastro é aberto e o login guarda acesso a prontuário. Não há provedor de
 
 ### Autenticação própria
 
-- **Senha só no Postgres** (migration 0003): bcrypt de custo 12 por `crypt()` e `gen_salt('bf', 12)`, nas funções `definir_senha()` e `conferir_senha()` (`SECURITY DEFINER`, `search_path` fixo), sempre com a senha como parâmetro. A role `app` não lê `credencial_senha`. Sem conta para o e-mail, `conferir_senha()` calcula um hash de mesmo custo (tempo equivalente, AUTH-02). Política de senha local (`backend/dominio/src/identidade/politica-senha.ts`, lista de 124 comuns do legado).
+- **Senha só no Postgres** (migration 0003): bcrypt de custo 12 por `crypt()` e `gen_salt('bf', 12)`, nas funções `definir_senha()` e `conferir_senha()` (`SECURITY DEFINER`, `search_path` fixo), sempre com a senha como parâmetro. A role `evolucao_app` não lê `credencial_senha`. Sem conta para o e-mail, `conferir_senha()` calcula um hash de mesmo custo (tempo equivalente, AUTH-02). Política de senha local (`backend/dominio/src/identidade/politica-senha.ts`, lista de 124 comuns do legado).
 - **Segundo fator por e-mail em todo login**: código de 6 dígitos por CSPRNG, guardado só como HMAC-SHA256, válido por 10 minutos, uso único, invalidado no 5º erro; reenvio só com mais de 60 s.
-- **Sessão opaca**: id de 256 bits no cookie `__Host-sid`, guardado só como SHA-256; encerra após 15 min sem uso ou 12 h do login. Encerrar, usar e invalidar são `UPDATE` de data; a `app` não apaga.
+- **Sessão opaca**: id de 256 bits no cookie `__Host-sid`, guardado só como SHA-256; encerra após 15 min sem uso ou 12 h do login. Encerrar, usar e invalidar são `UPDATE` de data; a `evolucao_app` não apaga.
 - **Tokens de e-mail** (confirmação, recuperação, exclusão, desistência): 256 bits, só SHA-256 no banco, 30 minutos, uso único.
-- **Tabelas de identidade sem RLS**: são lidas antes de existir usuário na transação. Em troca, grants mínimos por coluna e a lista `EXCECOES_SEM_RLS` do harness de isolamento, com o motivo e os privilégios exatos da `app` em cada uma.
+- **Tabelas de identidade sem RLS**: são lidas antes de existir usuário na transação. Em troca, grants mínimos por coluna e a lista `EXCECOES_SEM_RLS` do harness de isolamento, com o motivo e os privilégios exatos da `evolucao_app` em cada uma.
 - **Anti-enumeração**: cadastro e recuperação respondem o mesmo 202 em todos os casos; o login recusa com um só corpo de 401 para todos os motivos.
 
 ### Rate limit por IP

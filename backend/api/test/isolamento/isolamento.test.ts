@@ -6,7 +6,7 @@ import { comTransacao } from '../../src/db.ts';
 
 // T35 / ISO-01, ISO-02: harness de isolamento. Varre o catálogo e, para TODA tabela do schema
 // public com coluna usuario_id (as de hoje e as que vierem), exige RLS ativa e forçada e prova,
-// pela transação real da API (comTransacao, role app), que o profissional B não lê, não altera,
+// pela transação real da API (comTransacao, role evolucao_app), que o profissional B não lê, não altera,
 // não apaga e não cria linha em nome de A. Roda no `pnpm test` e no `pnpm test:isolamento` do CI.
 // A única saída é a lista EXCECOES_SEM_RLS, explícita e justificada tabela a tabela.
 //
@@ -186,9 +186,9 @@ const contarDeA = (usuarioId: string, tabela: string) =>
 const CONSULTA_PRIVILEGIOS_APP = `
   select p as privilegio from unnest(array['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE',
     'REFERENCES', 'TRIGGER']) p
-  where has_table_privilege('app', $1::regclass, p)
+  where has_table_privilege('evolucao_app', $1::regclass, p)
      or (p in ('SELECT', 'INSERT', 'UPDATE', 'REFERENCES')
-         and has_any_column_privilege('app', $1::regclass, p))
+         and has_any_column_privilege('evolucao_app', $1::regclass, p))
   order by 1`;
 
 const semRlsForcada = (lista: TabelaComUsuario[]): string[] =>

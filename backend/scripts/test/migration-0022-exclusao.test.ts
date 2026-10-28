@@ -3,7 +3,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 
 // T148 / CONTA-03, CONTA-05: migration 0022, exclusão de conta.
 // - conta_excluida guarda só id, data do pedido e data da purga, sem dado pessoal (CONTA-05); a
-//   app não lê nem grava (quem grava é a purga, T152); backup_ro lê.
+//   app não lê nem grava (quem grava é a purga, T152); evolucao_backup_ro lê.
 // - O bloqueio é por usuario.bloqueado_exclusao_em (CONTA-03): a app grava e limpa a data.
 // - token_email aceita os tipos exclusao (confirmação) e desistencia.
 
@@ -79,11 +79,11 @@ describe('conta_excluida sem dado pessoal (CONTA-05)', () => {
 
   it('a app não lê, não grava, não altera e não apaga', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'conta_excluida', 'SELECT') as select,
-              has_table_privilege('app', 'conta_excluida', 'INSERT') as insert,
-              has_table_privilege('app', 'conta_excluida', 'UPDATE') as update,
-              has_table_privilege('app', 'conta_excluida', 'DELETE') as delete,
-              has_table_privilege('app', 'conta_excluida', 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', 'conta_excluida', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'conta_excluida', 'INSERT') as insert,
+              has_table_privilege('evolucao_app', 'conta_excluida', 'UPDATE') as update,
+              has_table_privilege('evolucao_app', 'conta_excluida', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'conta_excluida', 'TRUNCATE') as truncate`,
     );
     expect(privilegios).toEqual({
       select: false,
@@ -93,26 +93,26 @@ describe('conta_excluida sem dado pessoal (CONTA-05)', () => {
       truncate: false,
     });
     expect(
-      await comoRole(banco.cliente, 'app', () =>
+      await comoRole(banco.cliente, 'evolucao_app', () =>
         codigoDoErro(() => consultar('select * from conta_excluida')),
       ),
     ).toBe(SEM_PERMISSAO);
   });
 
-  it('backup_ro só lê; o dono é a role owner', async () => {
+  it('evolucao_backup_ro só lê; o dono é a role owner', async () => {
     const [linha] = await consultar<Record<string, unknown>>(
-      `select has_table_privilege('backup_ro', 'conta_excluida', 'SELECT') as select,
-              has_table_privilege('backup_ro', 'conta_excluida', 'INSERT') as insert,
+      `select has_table_privilege('evolucao_backup_ro', 'conta_excluida', 'SELECT') as select,
+              has_table_privilege('evolucao_backup_ro', 'conta_excluida', 'INSERT') as insert,
               pg_get_userbyid(c.relowner) as dono
        from pg_class c where c.oid = 'public.conta_excluida'::regclass`,
     );
-    expect(linha).toEqual({ select: true, insert: false, dono: 'owner' });
+    expect(linha).toEqual({ select: true, insert: false, dono: 'evolucao_owner' });
   });
 });
 
 describe('bloqueio por bloqueado_exclusao_em (CONTA-03)', () => {
   it('a app grava e limpa a data do bloqueio', async () => {
-    const lido = await comoRole(banco.cliente, 'app', async () => {
+    const lido = await comoRole(banco.cliente, 'evolucao_app', async () => {
       await consultar('update usuario set bloqueado_exclusao_em = now() where id = $1', [
         usuarioId,
       ]);
@@ -133,7 +133,7 @@ describe('bloqueio por bloqueado_exclusao_em (CONTA-03)', () => {
 
   it('a app não apaga a conta', async () => {
     expect(
-      await comoRole(banco.cliente, 'app', () =>
+      await comoRole(banco.cliente, 'evolucao_app', () =>
         codigoDoErro(() => consultar('delete from usuario where id = $1', [usuarioId])),
       ),
     ).toBe(SEM_PERMISSAO);
@@ -152,7 +152,7 @@ describe('bloqueio por bloqueado_exclusao_em (CONTA-03)', () => {
 describe('token_email aceita exclusao e desistencia', () => {
   it.each(['exclusao', 'desistencia'])('%s', async (tipo) => {
     expect(
-      await comoRole(banco.cliente, 'app', () =>
+      await comoRole(banco.cliente, 'evolucao_app', () =>
         codigoDoErro(() =>
           consultar(
             `insert into token_email (usuario_id, tipo, token_hash, expira_em)

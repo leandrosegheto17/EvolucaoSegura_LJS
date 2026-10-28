@@ -5,9 +5,9 @@ import { exigirHostLocal } from '../../scripts/src/seguranca/trava-host.ts';
 import { nomeBancoTemporario, urlComBanco, urlServidorTeste } from '../vitest.urls.ts';
 
 // globalSetup dos testes da API (roda no Node, antes do runtime do Worker): cria um banco
-// TEMPORÁRIO no Postgres local (ou do CI), aplica as migrations nele e libera o login da role app,
+// TEMPORÁRIO no Postgres local (ou do CI), aplica as migrations nele e libera o login da role evolucao_app,
 // para o binding HYPERDRIVE dos testes conectar como em produção (sujeito ao RLS). No fim da
-// execução o banco é apagado. A senha 'app' é de teste local, como a do postgres no
+// execução o banco é apagado. A senha 'evolucao_app' é de teste local, como a do postgres no
 // docker-compose; em produção o login é provisionado fora do repositório. Trava de host: só o
 // Postgres local; a troca de senha de role nunca chega a um banco remoto (no Neon, mudaria a
 // senha da role do app de produção).
@@ -50,7 +50,7 @@ export async function prepararBancoEm(
     const admin = new pg.Client({ connectionString: urlBanco });
     await admin.connect();
     try {
-      await admin.query("alter role app with login password 'app'");
+      await admin.query("alter role evolucao_app with login password 'evolucao_app'");
     } finally {
       await admin.end();
     }

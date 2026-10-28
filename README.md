@@ -29,8 +29,8 @@ docker compose up -d
 # 3. Migrations (usa DATABASE_URL; sem ela, o Postgres local acima)
 pnpm migrar
 
-# 3b. Só no ambiente local: libera o login da role app (as migrations a criam sem senha)
-docker compose exec postgres psql -U postgres -d evolucao_segura -c "alter role app with login password 'app'"
+# 3b. Só no ambiente local: libera o login da role evolucao_app (as migrations a criam sem senha)
+docker compose exec postgres psql -U postgres -d evolucao_segura -c "alter role evolucao_app with login password 'evolucao_app'"
 
 # 4. Build do front (o Worker serve frontend/web/dist)
 pnpm build:web
@@ -43,7 +43,7 @@ Postgres 18 à parte, por exemplo
 e aponte tudo para ele: `export DATABASE_URL=postgresql://postgres:postgres@localhost:5440/evolucao_segura`
 (vale para `pnpm migrar`, `pnpm test` e os scripts) e, para o Worker, a variável
 `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` com a mesma URL. O passo 3b então roda
-no seu container: `docker exec es-pg psql -U postgres -d evolucao_segura -c "alter role app with login password 'app'"`.
+no seu container: `docker exec es-pg psql -U postgres -d evolucao_segura -c "alter role evolucao_app with login password 'evolucao_app'"`.
 
 Quem já tinha o Postgres 16 do compose: os dados do 16 não abrem no 18, e o compose usa um
 volume novo (`evolucao_segura_pgdata18`). Rode `docker compose down` e `docker compose up -d`, e
@@ -155,7 +155,7 @@ Observações da execução na máquina de desenvolvimento (Windows):
 ## Deploy
 
 O deploy é feito só pelo workflow `.github/workflows/deploy.yml` (único lugar que roda
-`wrangler deploy`): dump cifrado pré-deploy, `pnpm migrar` com a role owner e `wrangler deploy`
+`wrangler deploy`): dump cifrado pré-deploy, `pnpm migrar` com a role `evolucao_owner` e `wrangler deploy`
 do Worker com `URL_PUBLICA` e `SENTRY_RELEASE`. O backup diário é o `backup.yml`. Passo a passo,
 incluindo reversão e incidentes: `docs/runbook.md` (a ser escrito; ainda não existe).
 Nenhum comando de deploy foi executado: **não executado** (exige contas Cloudflare e Neon).
@@ -202,7 +202,7 @@ evento, ex.: `evt_xxx&1`) e `event` (ex.: `PAYMENT_RECEIVED`); eventos de pagame
 `payment.subscription` e `payment.customer`, que devem existir numa assinatura da conta.
 
 1. Defina `ASAAS_WEBHOOK_TOKEN` (32 caracteres ou mais) no `.dev.vars` e suba o Worker (seção
-   "Rodar localmente"; precisa do banco migrado e da role app liberada).
+   "Rodar localmente"; precisa do banco migrado e da role evolucao_app liberada).
 2. Envie um evento simulado (executado; `T` é o mesmo valor do token do `.dev.vars`):
 
 ```bash

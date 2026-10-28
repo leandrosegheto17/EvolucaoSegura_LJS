@@ -8,7 +8,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 //   vencimento_atraso; devolve true, ou false quando o profissional não tem assinatura.
 // - Nunca toca a assinatura de outro; sem usuário na transação, 42501; id ausente, 22023.
 // - SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico; app
-//   executa, backup_ro e PUBLIC não.
+//   executa, evolucao_backup_ro e PUBLIC não.
 
 const SEM_PERMISSAO_OU_RLS = '42501';
 const PARAMETRO_INVALIDO = '22023';
@@ -67,7 +67,7 @@ const linha = async (usuario: string) =>
 const comoApp = (usuario: string, fn: () => Promise<unknown>) =>
   comoRole(
     banco.cliente,
-    'app',
+    'evolucao_app',
     async () => {
       const resultado = await fn();
       await banco.cliente.query('reset role');
@@ -94,7 +94,7 @@ describe('catálogo (ISO-03)', () => {
       ),
     ).toEqual([
       {
-        dono: 'owner',
+        dono: 'evolucao_owner',
         definer: true,
         search_path_fixo: true,
         sem_app_na_configuracao: true,
@@ -105,17 +105,17 @@ describe('catálogo (ISO-03)', () => {
     ]);
   });
 
-  it('app executa; backup_ro e PUBLIC não', async () => {
+  it('app executa; evolucao_backup_ro e PUBLIC não', async () => {
     expect(
       await consultar(
-        `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-                has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+        `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+                has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
                 exists (select 1 from aclexplode((select proacl from pg_proc
                                                   where oid = $1::regprocedure)) a
                         where a.grantee = 0) as public`,
         [ASSINATURA],
       ),
-    ).toEqual([{ app: true, backup_ro: false, public: false }]);
+    ).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
   });
 });
 
@@ -169,7 +169,7 @@ describe('gravar_ids_asaas (PLANO-05)', () => {
   it('id já usado por outra assinatura é recusado', async () => {
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () => codigoDoErro(() => gravar('cus_b', 'sub_novo')),
       A,
     );
@@ -177,7 +177,7 @@ describe('gravar_ids_asaas (PLANO-05)', () => {
   });
 
   it('sem usuário na transação recusa com 42501', async () => {
-    const codigo = await comoRole(banco.cliente, 'app', () =>
+    const codigo = await comoRole(banco.cliente, 'evolucao_app', () =>
       codigoDoErro(() => gravar('cus_a', 'sub_a')),
     );
     expect(codigo).toBe(SEM_PERMISSAO_OU_RLS);
@@ -194,7 +194,7 @@ describe('gravar_ids_asaas (PLANO-05)', () => {
       expect(
         await comoRole(
           banco.cliente,
-          'app',
+          'evolucao_app',
           () => codigoDoErro(() => gravar(cliente, assinatura)),
           A,
         ),

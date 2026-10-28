@@ -81,37 +81,37 @@ CREATE TABLE public.aceite_termos (
 );
 CREATE INDEX aceite_termos_usuario_idx ON public.aceite_termos (usuario_id);
 
-ALTER TABLE public.usuario OWNER TO "owner";
-ALTER TABLE public.credencial_senha OWNER TO "owner";
-ALTER TABLE public.sessao OWNER TO "owner";
-ALTER TABLE public.desafio_2fa OWNER TO "owner";
-ALTER TABLE public.token_email OWNER TO "owner";
-ALTER TABLE public.tentativa_login OWNER TO "owner";
-ALTER TABLE public.aceite_termos OWNER TO "owner";
+ALTER TABLE public.usuario OWNER TO "evolucao_owner";
+ALTER TABLE public.credencial_senha OWNER TO "evolucao_owner";
+ALTER TABLE public.sessao OWNER TO "evolucao_owner";
+ALTER TABLE public.desafio_2fa OWNER TO "evolucao_owner";
+ALTER TABLE public.token_email OWNER TO "evolucao_owner";
+ALTER TABLE public.tentativa_login OWNER TO "evolucao_owner";
+ALTER TABLE public.aceite_termos OWNER TO "evolucao_owner";
 
 -- Grants mínimos da app, por coluna. Nada de DELETE nem TRUNCATE; credencial_senha só pelas
--- funções abaixo. backup_ro lê tudo para o pg_dump.
+-- funções abaixo. evolucao_backup_ro lê tudo para o pg_dump.
 REVOKE ALL ON public.usuario, public.credencial_senha, public.sessao, public.desafio_2fa,
-  public.token_email, public.tentativa_login, public.aceite_termos FROM PUBLIC, app;
+  public.token_email, public.tentativa_login, public.aceite_termos FROM PUBLIC, evolucao_app;
 GRANT SELECT ON public.usuario, public.credencial_senha, public.sessao, public.desafio_2fa,
-  public.token_email, public.tentativa_login, public.aceite_termos TO backup_ro;
+  public.token_email, public.tentativa_login, public.aceite_termos TO evolucao_backup_ro;
 
-GRANT SELECT, INSERT (email, nome) ON public.usuario TO app;
-GRANT UPDATE (nome, confirmado_em, bloqueado_exclusao_em) ON public.usuario TO app;
-GRANT SELECT, INSERT (usuario_id, token_hash) ON public.sessao TO app;
-GRANT UPDATE (ultimo_uso_em, encerrada_em) ON public.sessao TO app;
-GRANT SELECT, INSERT (usuario_id, codigo_hmac, expira_em) ON public.desafio_2fa TO app;
-GRANT UPDATE (erros, usado_em, invalidado_em) ON public.desafio_2fa TO app;
-GRANT SELECT, INSERT (usuario_id, tipo, token_hash, expira_em) ON public.token_email TO app;
-GRANT UPDATE (usado_em, invalidado_em) ON public.token_email TO app;
+GRANT SELECT, INSERT (email, nome) ON public.usuario TO evolucao_app;
+GRANT UPDATE (nome, confirmado_em, bloqueado_exclusao_em) ON public.usuario TO evolucao_app;
+GRANT SELECT, INSERT (usuario_id, token_hash) ON public.sessao TO evolucao_app;
+GRANT UPDATE (ultimo_uso_em, encerrada_em) ON public.sessao TO evolucao_app;
+GRANT SELECT, INSERT (usuario_id, codigo_hmac, expira_em) ON public.desafio_2fa TO evolucao_app;
+GRANT UPDATE (erros, usado_em, invalidado_em) ON public.desafio_2fa TO evolucao_app;
+GRANT SELECT, INSERT (usuario_id, tipo, token_hash, expira_em) ON public.token_email TO evolucao_app;
+GRANT UPDATE (usado_em, invalidado_em) ON public.token_email TO evolucao_app;
 GRANT SELECT, INSERT (tipo, chave_hash, falhas, janela_inicio, bloqueado_ate)
-  ON public.tentativa_login TO app;
-GRANT UPDATE (falhas, janela_inicio, bloqueado_ate) ON public.tentativa_login TO app;
-GRANT SELECT, INSERT (usuario_id, versao_termos, versao_privacidade) ON public.aceite_termos TO app;
+  ON public.tentativa_login TO evolucao_app;
+GRANT UPDATE (falhas, janela_inicio, bloqueado_ate) ON public.tentativa_login TO evolucao_app;
+GRANT SELECT, INSERT (usuario_id, versao_termos, versao_privacidade) ON public.aceite_termos TO evolucao_app;
 
 -- A 0001 tira o EXECUTE padrão de PUBLIC em funções novas, e isso alcança as do pgcrypto. As
 -- funções abaixo rodam como owner e precisam só destas duas.
-GRANT EXECUTE ON FUNCTION public.crypt(text, text), public.gen_salt(text, integer) TO "owner";
+GRANT EXECUTE ON FUNCTION public.crypt(text, text), public.gen_salt(text, integer) TO "evolucao_owner";
 
 -- AUTH-12: grava (ou troca) o hash bcrypt de custo 12. A senha chega como parâmetro e nunca
 -- sai do banco.
@@ -146,12 +146,12 @@ BEGIN
   RETURN NULL;
 END $$;
 
-ALTER FUNCTION public.definir_senha(uuid, text) OWNER TO "owner";
-ALTER FUNCTION public.conferir_senha(text, text) OWNER TO "owner";
+ALTER FUNCTION public.definir_senha(uuid, text) OWNER TO "evolucao_owner";
+ALTER FUNCTION public.conferir_senha(text, text) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION public.definir_senha(uuid, text), public.conferir_senha(text, text)
   FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.definir_senha(uuid, text), public.conferir_senha(text, text)
-  TO app;
+  TO evolucao_app;
 `);
 };
 

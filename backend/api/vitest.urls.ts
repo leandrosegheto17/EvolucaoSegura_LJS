@@ -1,7 +1,7 @@
 // URLs do Postgres dos testes da API. Local: docker-compose (5433 no host). CI: DATABASE_URL
 // aponta para o serviço (5432). DATABASE_URL só diz qual servidor usar: os testes rodam num banco
 // TEMPORÁRIO, criado pelo globalSetup (test/preparar-banco.ts) e apagado no fim da execução.
-// A URL da role app troca só usuário e senha (ver test/preparar-banco.ts).
+// A URL da role evolucao_app troca só usuário e senha (ver test/preparar-banco.ts).
 export const urlServidorTeste =
   process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
 
@@ -21,6 +21,6 @@ export function urlComBanco(url: string, banco: string): string {
 export const urlBancoAdmin = urlComBanco(urlServidorTeste, nomeBancoTemporario);
 
 const url = new URL(urlBancoAdmin);
-url.username = 'app';
-url.password = 'app';
+url.username = 'evolucao_app';
+url.password = 'evolucao_app';
 export const urlBancoApp = url.toString();

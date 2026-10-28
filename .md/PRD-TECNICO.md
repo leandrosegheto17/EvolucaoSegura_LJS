@@ -17,7 +17,7 @@
 ## 2. Segurança e isolamento
 
 - **Isolamento**: `usuario_id` e RLS com `FORCE ROW LEVEL SECURITY` em toda tabela de negócio; transação por requisição com `SET LOCAL app.usuario_id`; recurso de outro profissional responde 404 idêntico ao de inexistente (ISO-01, ISO-02).
-- **Roles**: `owner` (DDL, só nas migrations), `app` (runtime, sem DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria), `backup_ro` (só leitura) (ISO-03, ISO-04).
+- **Roles**: `evolucao_owner` (DDL, só nas migrations), `evolucao_app` (runtime, sem DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria), `evolucao_backup_ro` (só leitura) (ISO-03, ISO-04).
 - **Autenticação própria**: sessão opaca de 256 bits (CSPRNG) guardada como SHA-256; cookie `__Host-sid` com Path=/, Secure, HttpOnly, SameSite=Lax e sem Domain; inatividade de 15 min e limite absoluto de 12 h; id novo a cada login (AUTH-04, AUTH-09, AUTH-10).
 - **2FA por e-mail**: código de 6 dígitos (CSPRNG), guardado só como HMAC-SHA256, válido por 10 min, uso único, 5 erros invalidam o desafio (AUTH-03, AUTH-05).
 - **Senha**: hash e conferência no Postgres com `crypt()` e `gen_salt('bf', 12)`, senha sempre como parâmetro; política de 12 a 128 caracteres com lista de senhas comuns (AUTH-11, AUTH-12).
@@ -49,8 +49,8 @@
 ## 5. Operação
 
 - **CI** (`ci.yml`): lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e teste de isolamento (OPS-05).
-- **Deploy** (`deploy.yml`): manual, só pela `main`, environment `producao`, concurrency sem cancelamento; ordem fixa: build do web, dump cifrado (ponto de volta; o deploy não cria branch no Neon, que tem só `main` e `dev`), migração com `owner`, `wrangler deploy --var URL_PUBLICA`. Único lugar com `wrangler deploy` (OPS-03, OPS-04).
-- **Backup** (`backup.yml`): diário às 04:00 de Brasília (`0 7 * * *` em UTC), `pg_dump -Fc` pela role `backup_ro`, cifrado com `age`, artefato por 30 dias, também manual (OPS-01).
+- **Deploy** (`deploy.yml`): manual, só pela `main`, environment `producao`, concurrency sem cancelamento; ordem fixa: build do web, dump cifrado (ponto de volta; o deploy não cria branch no Neon, que tem só `main` e `dev`), migração com `evolucao_owner`, `wrangler deploy --var URL_PUBLICA`. Único lugar com `wrangler deploy` (OPS-03, OPS-04).
+- **Backup** (`backup.yml`): diário às 04:00 de Brasília (`0 7 * * *` em UTC), `pg_dump -Fc` pela role `evolucao_backup_ro`, cifrado com `age`, artefato por 30 dias, também manual (OPS-01).
 - **Restauração**: documentada no runbook e executada a partir de cópia limpa antes da publicação, conferindo contagem de linhas por tabela (OPS-02).
 - **Disponibilidade**: `GET /api/health` responde 200 sem tocar no banco (OPS-06).
 - **README e runbook**: rodar local, variáveis, deploy, testar o webhook local; webhook falhou, reprocessar pagamento, reativar usuário, rotacionar segredos, restaurar backup (OPS-12).

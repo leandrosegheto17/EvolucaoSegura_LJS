@@ -30,7 +30,7 @@ Antes de escrever código, apresente um plano com etapas, arquivos e riscos para
 | Front      | Cloudflare Worker com `assets` (`directory: frontend/web/dist`, `not_found_handling: single-page-application`). |
 | API        | Hono no MESMO Worker, rotas `/api/*` com `run_worker_first: ["/api/*"]`, `compatibility_flags: ["nodejs_compat"]`. Limite: 10 ms de CPU por requisição — espera de rede/banco não conta. |
 | Banco      | Neon Free (Postgres, `sa-east-1`) acessado por Hyperdrive. Kysely + `pg`. Branch `main` = produção; branch `dev` para desenvolvimento. Cache do Hyperdrive desligado para dados que mudam por ação do usuário. |
-| Roles      | `owner` (DDL, só nas migrations), `app` (runtime, sem DELETE/TRUNCATE onde não for regra), `backup_ro` (leitura). |
+| Roles      | `evolucao_owner` (DDL, só nas migrations), `evolucao_app` (runtime, sem DELETE/TRUNCATE onde não for regra), `evolucao_backup_ro` (leitura). |
 | Isolamento | Toda tabela de negócio tem a coluna do dono (`usuario_id` ou equivalente); RLS com `FORCE ROW LEVEL SECURITY`; a API abre transação por requisição e faz `SET LOCAL app.usuario_id`. Teste negativo obrigatório: usuário B não lê nem escreve nada de A. |
 | Auth       | Própria: sessão opaca (id 256 bits CSPRNG, guardado como SHA-256) em tabela; cookie `__Host-sid` (Secure, HttpOnly, SameSite=Lax, sem Domain). Hash de senha com bcrypt NO POSTGRES (`pgcrypto`, `crypt()/gen_salt('bf',12)`), senha sempre como parâmetro. Inatividade 15 min, absoluta 12 h, rotação no login. |
 | Cadastro   | Aberto, com confirmação por e-mail (token 256 bits, hash no banco, 30 min, uso único). Anti-enumeração: mesma resposta e tempo para e-mail existente ou não. Bloqueio: 5 falhas em 15 min por e-mail e por IP, estado em tabela. Aceite de termos registrado (data, hora, versão). |
@@ -40,7 +40,7 @@ Antes de escrever código, apresente um plano com etapas, arquivos e riscos para
 | Rate limit | Binding `ratelimits` do Worker: `LIMITE_ENTRAR` (10/min), `LIMITE_PUBLICO` (60/min), `LIMITE_WEBHOOK`. |
 | Erros      | Sentry free: `@sentry/cloudflare` no Worker, `@sentry/react` no front; release = SHA; scrubbing de payload, cookie e e-mail nos logs. |
 | Uptime     | UptimeRobot em `GET /api/health` (não toca o banco). |
-| Backup     | `backup.yml` no GitHub Actions: diário 04:00 BRT, `pg_dump -Fc` com role `backup_ro`, cifrado com `age` (chave pública em secret, privada fora do GitHub), artefato com retenção 30 dias. Teste de restauração documentado. |
+| Backup     | `backup.yml` no GitHub Actions: diário 04:00 BRT, `pg_dump -Fc` com role `evolucao_backup_ro`, cifrado com `age` (chave pública em secret, privada fora do GitHub), artefato com retenção 30 dias. Teste de restauração documentado. |
 | Domínio    | `<app>.ljssoftware.com.br` via `routes: [{ pattern, custom_domain: true }]`. Nenhuma URL absoluta no código ou no banco; única variável `URL_PUBLICA`, injetada no deploy. |
 | PWA        | Manifest completo (ícones 192/512 maskable, `display: standalone`), service worker com precache do shell e handler de `push`/`notificationclick`, página offline, instrução de instalação no iOS. API com `Cache-Control: no-store`. Lighthouse PWA ≥ 90. |
 | Segredos   | GitHub Secrets (environment `producao`) e `wrangler secret`. Nunca em arquivo versionado. `.env.example` lista toda variável com obrigatoriedade, formato e se é segredo. |
@@ -63,7 +63,7 @@ Antes de escrever código, apresente um plano com etapas, arquivos e riscos para
   1. build do web (falha antes de tocar produção);
   2. dump cifrado com `age` (o ponto de volta; o Neon tem só as branches `main` e `dev`, e o
      deploy não cria nenhuma);
-  3. migração com `NEON_URL_MIGRACAO` (role `owner`);
+  3. migração com `NEON_URL_MIGRACAO` (role `evolucao_owner`);
   4. `wrangler deploy` com `--var URL_PUBLICA`.
   Único lugar do repositório com `wrangler deploy`; um teste falha se aparecer outro.
 - `backup.yml` agendado + manual.

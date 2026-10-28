@@ -5,7 +5,7 @@
 - **Entradas**: [necessidade.md](../../produto/necessidade.md) (decisões D-01 a D-19), [padrao-ljs.md](../../produto/padrao-ljs.md), [analise-legado.md](../../produto/analise-legado.md) e o mapa de comportamentos do legado levantado em 2026-10-24 (citações `legado:arquivo:linha` relativas a `C:\Leandro\Projetos\EvolucaoSeguraWeb`).
 - **Aprovação**: spec aprovada pelo usuário em 2026-10-24 (Specify da fase 4).
 - **Decisões desta fase**: D-20 a D-31, na seção Assumptions & Open Questions e em [context.md](context.md).
-- **Convenções dos critérios**: "API" é o Worker Hono em `/api/*`; "app" é o front em `/app`. Dinheiro em **centavos inteiros**; datas de calendário em `America/Sao_Paulo`. Corpo de erro no formato problem+json com o campo `codigo`. Recurso de outro profissional responde **404 idêntico** ao de inexistente.
+- **Convenções dos critérios**: "API" é o Worker Hono em `/api/*`; "evolucao_app" é o front em `/app`. Dinheiro em **centavos inteiros**; datas de calendário em `America/Sao_Paulo`. Corpo de erro no formato problem+json com o campo `codigo`. Recurso de outro profissional responde **404 idêntico** ao de inexistente.
 
 ## Problem Statement
 
@@ -140,8 +140,8 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 **Acceptance Criteria**:
 1. The banco SHALL ter `usuario_id` e RLS com `FORCE ROW LEVEL SECURITY` em toda tabela de negócio, e a API SHALL abrir uma transação por requisição com `SET LOCAL app.usuario_id`. [ISO-01]
 2. [ISO-02] WHEN o profissional B lê, altera ou cria referência a qualquer recurso de A por id THEN a API SHALL responder 404 idêntico ao de recurso inexistente, sem alterar dados (teste negativo por tabela de negócio no CI).
-3. The role `app` SHALL não ter permissão de DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria; DDL só pela role `owner` nas migrations. [ISO-03]
-4. The role `backup_ro` SHALL ter só leitura e conseguir ler todas as linhas para o `pg_dump`. [ISO-04]
+3. The role `evolucao_app` SHALL não ter permissão de DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria; DDL só pela role `evolucao_owner` nas migrations. [ISO-03]
+4. The role `evolucao_backup_ro` SHALL ter só leitura e conseguir ler todas as linhas para o `pg_dump`. [ISO-04]
 
 **Independent Test**: suíte de isolamento cria dois profissionais e tenta cada operação cruzada.
 
@@ -396,9 +396,9 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 **Why P1**: O risco principal é perder dado de saúde.
 
 **Acceptance Criteria**:
-1. [OPS-01] WHEN são 04:00 em America/Sao_Paulo THEN o `backup.yml` SHALL rodar `pg_dump -Fc` com a role `backup_ro`, cifrar com `age` (chave pública em secret) e guardar como artefato com retenção de 30 dias.
+1. [OPS-01] WHEN são 04:00 em America/Sao_Paulo THEN o `backup.yml` SHALL rodar `pg_dump -Fc` com a role `evolucao_backup_ro`, cifrar com `age` (chave pública em secret) e guardar como artefato com retenção de 30 dias.
 2. The runbook SHALL documentar a restauração, e uma restauração a partir de cópia limpa SHALL ser executada e registrada antes da publicação, conferindo contagem de linhas por tabela. [OPS-02]
-3. [OPS-03] WHEN o `deploy.yml` roda (só manual, só pela `main`, environment `producao`, concurrency sem cancelamento) THEN ele SHALL executar na ordem: build do web, dump cifrado (sem criar branch no Neon: só `main` e `dev` são permanentes; revisado em 2026-10-28), migração com a role `owner`, `wrangler deploy` com `URL_PUBLICA`.
+3. [OPS-03] WHEN o `deploy.yml` roda (só manual, só pela `main`, environment `producao`, concurrency sem cancelamento) THEN ele SHALL executar na ordem: build do web, dump cifrado (sem criar branch no Neon: só `main` e `dev` são permanentes; revisado em 2026-10-28), migração com a role `evolucao_owner`, `wrangler deploy` com `URL_PUBLICA`.
 4. [OPS-04] IF `wrangler deploy` aparece em outro arquivo do repositório THEN um teste da suíte SHALL falhar.
 5. [OPS-05] WHEN há push ou PR THEN o `ci.yml` SHALL rodar lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e o teste de isolamento.
 6. [OPS-06] WHEN `GET /api/health` é chamado THEN a API SHALL responder 200 sem tocar no banco.

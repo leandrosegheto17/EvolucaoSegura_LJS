@@ -11,7 +11,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   Reexecução não muda nada (só linhas abertas entram). agora nulo: 22023.
 // - As tabelas de identidade não têm RLS (0003); a função é do owner, dono delas.
 // SECURITY DEFINER do owner, search_path fixo, parâmetro tipado, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -40,9 +40,9 @@ BEGIN
 
   RETURN QUERY SELECT v_tokens, v_sessoes;
 END $$;
-ALTER FUNCTION tarefas.vencer_tokens_e_sessoes(timestamptz) OWNER TO "owner";
+ALTER FUNCTION tarefas.vencer_tokens_e_sessoes(timestamptz) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.vencer_tokens_e_sessoes(timestamptz) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.vencer_tokens_e_sessoes(timestamptz) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.vencer_tokens_e_sessoes(timestamptz) TO evolucao_app;
 `);
 };
 

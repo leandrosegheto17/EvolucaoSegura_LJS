@@ -17,12 +17,12 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   por app.tarefa_assinatura, que também libera UPDATE; aqui basta ler). A app ligar a variável
 //   não muda nada para ela (as policies são do owner).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. Gravar o envio e ler as assinaturas de
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. Gravar o envio e ler as assinaturas de
 // push fica com a tarefa, numa transação do próprio profissional (RLS).
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
-CREATE POLICY assinatura_tarefa_push ON public.assinatura FOR SELECT TO "owner"
+CREATE POLICY assinatura_tarefa_push ON public.assinatura FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_push', true) = 'on');
 
 -- Trials por fim, entre todos os profissionais.
@@ -67,9 +67,9 @@ BEGIN
     LIMIT p_limite;
   PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
-ALTER FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) OWNER TO "owner";
+ALTER FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.listar_trials_terminando(timestamptz, integer) TO evolucao_app;
 `);
 };
 

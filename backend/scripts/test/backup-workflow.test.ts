@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-// OPS-01: todo dia às 04:00 de Brasília (07:00 UTC), pg_dump -Fc pela role backup_ro, cifrado com
+// OPS-01: todo dia às 04:00 de Brasília (07:00 UTC), pg_dump -Fc pela role evolucao_backup_ro, cifrado com
 // age e guardado como artefato por 30 dias; também manual. O teste só lê o YAML.
 
 interface Passo {
@@ -35,7 +35,7 @@ describe('backup.yml (OPS-01)', () => {
     expect(workflow.on).toHaveProperty('workflow_dispatch');
   });
 
-  it('faz pg_dump -Fc com a conexão da role backup_ro (NEON_URL_BACKUP)', () => {
+  it('faz pg_dump -Fc com a conexão da role evolucao_backup_ro (NEON_URL_BACKUP)', () => {
     expect(passoDoDump?.run).toContain('pg_dump -Fc "$NEON_URL_BACKUP"');
     expect(passoDoDump?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
   });

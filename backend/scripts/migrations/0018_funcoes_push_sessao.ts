@@ -20,16 +20,16 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
 //   falha com "permission denied to set parameter" (T198).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. Gravar o envio e ler as assinaturas fica
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. Gravar o envio e ler as assinaturas fica
 // com a tarefa, numa transação do próprio profissional (RLS).
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
-CREATE POLICY sessao_atendimento_tarefa_push ON public.sessao_atendimento FOR SELECT TO "owner"
+CREATE POLICY sessao_atendimento_tarefa_push ON public.sessao_atendimento FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_push', true) = 'on');
-CREATE POLICY push_subscription_tarefa_push ON public.push_subscription FOR SELECT TO "owner"
+CREATE POLICY push_subscription_tarefa_push ON public.push_subscription FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_push', true) = 'on');
-CREATE POLICY notificacao_enviada_tarefa_push ON public.notificacao_enviada FOR SELECT TO "owner"
+CREATE POLICY notificacao_enviada_tarefa_push ON public.notificacao_enviada FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_push', true) = 'on');
 
 -- Sessões agendadas por início, entre todos os profissionais.
@@ -71,9 +71,9 @@ BEGIN
     LIMIT p_limite;
   PERFORM set_config('app.tarefa_push', v_ant_tarefa, true);
 END $$;
-ALTER FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) OWNER TO "owner";
+ALTER FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.listar_sessoes_para_aviso(timestamptz, timestamptz, integer) TO evolucao_app;
 `);
 };
 

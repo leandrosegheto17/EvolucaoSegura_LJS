@@ -13,7 +13,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // tarefas.desvincular_assinatura_asaas(usuario) limpa o asaas_subscription_id da assinatura já em
 // free (decisão do usuário, 2026-10-27: depois de cancelar no Asaas por atraso, o GET /api/plano
 // não consulta mais o Asaas); nos demais estados não muda nada.
-// SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, backup_ro e
+// SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, evolucao_backup_ro e
 // PUBLIC não.
 
 const PARAMETRO_INVALIDO = '22023';
@@ -78,7 +78,7 @@ interface Vencida {
 
 // Chamada como app, sem usuário na transação (o cron não tem sessão).
 const listar = (agora: Date | null = AGORA, limite: number | null = 100) =>
-  comoRole(banco.cliente, 'app', async () => {
+  comoRole(banco.cliente, 'evolucao_app', async () => {
     const { rows } = await banco.cliente.query<Vencida>(
       'select * from tarefas.listar_assinaturas_vencidas($1, $2)',
       [agora, limite],
@@ -87,7 +87,7 @@ const listar = (agora: Date | null = AGORA, limite: number | null = 100) =>
   });
 
 const desvincular = (usuario: string | null) =>
-  comoRole(banco.cliente, 'app', async () => {
+  comoRole(banco.cliente, 'evolucao_app', async () => {
     const { rows } = await banco.cliente.query<{ r: string }>(
       'select tarefas.desvincular_assinatura_asaas($1) as r',
       [usuario],
@@ -129,22 +129,31 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
         [assinatura],
       );
       expect(rows).toEqual([
-        { dono: 'owner', definer: true, search_path_fixo: true, argumentos, sql_dinamico: false },
+        {
+          dono: 'evolucao_owner',
+          definer: true,
+          search_path_fixo: true,
+          argumentos,
+          sql_dinamico: false,
+        },
       ]);
     },
   );
 
-  it.each(Object.keys(FUNCOES))('%s: app executa; backup_ro e PUBLIC não', async (assinatura) => {
-    const { rows } = await banco.cliente.query(
-      `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-              has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+  it.each(Object.keys(FUNCOES))(
+    '%s: app executa; evolucao_backup_ro e PUBLIC não',
+    async (assinatura) => {
+      const { rows } = await banco.cliente.query(
+        `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+              has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
               exists (select 1 from aclexplode((select proacl from pg_proc
                                                 where oid = $1::regprocedure)) a
                       where a.grantee = 0) as public`,
-      [assinatura],
-    );
-    expect(rows).toEqual([{ app: true, backup_ro: false, public: false }]);
-  });
+        [assinatura],
+      );
+      expect(rows).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
+    },
+  );
 
   it('listar devolve só usuario_id, status e asaas_subscription_id', async () => {
     const { rows } = await banco.cliente.query(
@@ -155,7 +164,7 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
 
   it('a app continua sem UPDATE direto na assinatura', async () => {
     const { rows } = await banco.cliente.query(
-      `select has_any_column_privilege('app', 'assinatura', 'UPDATE') as update`,
+      `select has_any_column_privilege('evolucao_app', 'assinatura', 'UPDATE') as update`,
     );
     expect(rows).toEqual([{ update: false }]);
   });

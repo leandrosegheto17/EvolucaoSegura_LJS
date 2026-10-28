@@ -42,7 +42,7 @@ afterAll(async () => {
 const consultar = async <T>(sql: string, parametros: unknown[] = []): Promise<T[]> =>
   (await banco.cliente.query(sql, parametros)).rows as T[];
 
-const comoApp = <T>(fn: () => Promise<T>) => comoRole(banco.cliente, 'app', fn);
+const comoApp = <T>(fn: () => Promise<T>) => comoRole(banco.cliente, 'evolucao_app', fn);
 
 async function colunas(tabela: string): Promise<Record<string, string>> {
   const linhas = await consultar<{ coluna: string; tipo: string }>(
@@ -149,9 +149,9 @@ describe('senha: hash e conferência só no Postgres (AUTH-12)', () => {
 
   it('a app não lê nem grava a tabela de credenciais diretamente', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'credencial_senha', 'SELECT') as select,
-              has_table_privilege('app', 'credencial_senha', 'INSERT') as insert,
-              has_table_privilege('app', 'credencial_senha', 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_app', 'credencial_senha', 'SELECT') as select,
+              has_table_privilege('evolucao_app', 'credencial_senha', 'INSERT') as insert,
+              has_table_privilege('evolucao_app', 'credencial_senha', 'UPDATE') as update`,
     );
     expect(privilegios).toEqual({ select: false, insert: false, update: false });
     expect(
@@ -262,8 +262,8 @@ describe('tokens, sessão e código 2FA só como hash (CAD-03, AUTH-03, AUTH-09)
 describe('a app não apaga linhas (ISO-03)', () => {
   it('sem DELETE nem TRUNCATE em nenhuma tabela de identidade', async () => {
     const privilegios = await consultar<{ tabela: string; delete: boolean; truncate: boolean }>(
-      `select t as tabela, has_table_privilege('app', t, 'DELETE') as delete,
-              has_table_privilege('app', t, 'TRUNCATE') as truncate
+      `select t as tabela, has_table_privilege('evolucao_app', t, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', t, 'TRUNCATE') as truncate
        from unnest($1::text[]) t order by 1`,
       [TABELAS],
     );
@@ -293,10 +293,10 @@ describe('a app não apaga linhas (ISO-03)', () => {
     ).toBe(SEM_PERMISSAO);
   });
 
-  it('backup_ro lê todas as tabelas de identidade e não escreve', async () => {
+  it('evolucao_backup_ro lê todas as tabelas de identidade e não escreve', async () => {
     const privilegios = await consultar<{ select: boolean; insert: boolean }>(
-      `select bool_and(has_table_privilege('backup_ro', t, 'SELECT')) as select,
-              bool_or(has_table_privilege('backup_ro', t, 'INSERT')) as insert
+      `select bool_and(has_table_privilege('evolucao_backup_ro', t, 'SELECT')) as select,
+              bool_or(has_table_privilege('evolucao_backup_ro', t, 'INSERT')) as insert
        from unnest($1::text[]) t`,
       [TABELAS],
     );

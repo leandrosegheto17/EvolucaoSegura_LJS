@@ -4,7 +4,7 @@ import { type BancoDeTeste, criarBancoMigrado } from './banco.ts';
 
 // T36 / ISO-03 (ADR-005): as tarefas agendadas e o webhook só tocam o banco por funções do schema
 // tarefas. Toda função de tarefas é SECURITY DEFINER com search_path fixo; toda SECURITY DEFINER
-// (em qualquer schema do projeto) tem search_path fixo; e a role app só executa as funções desta
+// (em qualquer schema do projeto) tem search_path fixo; e a role evolucao_app só executa as funções desta
 // lista explícita. Função nova liberada para a app entra aqui de propósito, na mesma tarefa.
 
 const EXECUTAVEIS_PELA_APP = [
@@ -46,7 +46,7 @@ const FUNCOES_DO_PROJETO = `
          format('%s.%s(%s)', n.nspname, p.proname, pg_get_function_identity_arguments(p.oid)) as assinatura,
          p.prosecdef as definer,
          exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%') as search_path_fixo,
-         has_function_privilege('app', p.oid, 'EXECUTE') as app_executa
+         has_function_privilege('evolucao_app', p.oid, 'EXECUTE') as app_executa
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
   where n.nspname in ('public', 'tarefas')
@@ -147,7 +147,7 @@ describe('a checagem acusa função fora da regra', () => {
     const problemas = await comObjetos(
       `create function tarefas.liberada() returns int language sql security definer
          set search_path = pg_catalog as 'select 1';
-       grant execute on function tarefas.liberada() to app;`,
+       grant execute on function tarefas.liberada() to evolucao_app;`,
       () => examinar(banco.cliente),
     );
     expect(problemas.appExecuta).not.toEqual(EXECUTAVEIS_PELA_APP);
@@ -156,7 +156,7 @@ describe('a checagem acusa função fora da regra', () => {
 
   it('função nova de tarefas não fica executável pela app sem GRANT explícito', async () => {
     const problemas = await comObjetos(
-      `set local role "owner";
+      `set local role "evolucao_owner";
        create function tarefas.nova() returns int language sql security definer
          set search_path = pg_catalog as 'select 1';`,
       () => examinar(banco.cliente),

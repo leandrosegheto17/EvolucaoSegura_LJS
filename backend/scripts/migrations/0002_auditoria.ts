@@ -15,7 +15,7 @@ BEGIN
   RAISE EXCEPTION 'tabela % é só de inclusão (% proibido)', TG_TABLE_NAME, TG_OP
     USING ERRCODE = 'ES001';
 END $$;
-ALTER FUNCTION public.negar_alteracao() OWNER TO "owner";
+ALTER FUNCTION public.negar_alteracao() OWNER TO "evolucao_owner";
 
 CREATE TABLE public.audit_log (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -29,7 +29,7 @@ CREATE TABLE public.audit_log (
   origem_ua text CHECK (origem_ua IS NULL OR length(origem_ua) <= 80),
   criado_em timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.audit_log OWNER TO "owner";
+ALTER TABLE public.audit_log OWNER TO "evolucao_owner";
 CREATE INDEX audit_log_usuario_criado_idx ON public.audit_log (usuario_id, criado_em DESC);
 CREATE INDEX audit_log_alvo_idx ON public.audit_log (usuario_id, alvo_tipo, alvo_id);
 
@@ -44,12 +44,12 @@ ALTER TABLE public.audit_log FORCE ROW LEVEL SECURITY;
 CREATE POLICY audit_log_usuario ON public.audit_log
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
--- backup_ro (NOBYPASSRLS) lê todas as linhas para o pg_dump; não tem escrita.
-CREATE POLICY audit_log_backup_ro ON public.audit_log FOR SELECT TO backup_ro USING (true);
+-- evolucao_backup_ro (NOBYPASSRLS) lê todas as linhas para o pg_dump; não tem escrita.
+CREATE POLICY audit_log_backup_ro ON public.audit_log FOR SELECT TO evolucao_backup_ro USING (true);
 
-REVOKE ALL ON public.audit_log FROM PUBLIC, app;
-GRANT SELECT, INSERT ON public.audit_log TO app;
-GRANT SELECT ON public.audit_log TO backup_ro;
+REVOKE ALL ON public.audit_log FROM PUBLIC, evolucao_app;
+GRANT SELECT, INSERT ON public.audit_log TO evolucao_app;
+GRANT SELECT ON public.audit_log TO evolucao_backup_ro;
 `);
 };
 

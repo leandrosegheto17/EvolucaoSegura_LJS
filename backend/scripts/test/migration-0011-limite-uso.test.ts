@@ -10,7 +10,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // - Atômico: chamadas simultâneas da mesma chave nunca devolvem a mesma contagem.
 // - Cada profissional e cada chave têm o próprio contador; sem usuário na transação, recusa.
 // - A app só lê a tabela e só conta pela função; sem DELETE nem TRUNCATE (ISO-03).
-// - RLS forçada; backup_ro lê tudo (ISO-01, ISO-04).
+// - RLS forçada; evolucao_backup_ro lê tudo (ISO-01, ISO-04).
 
 const SEM_PERMISSAO_OU_RLS = '42501';
 const VIOLA_CHECK = '23514';
@@ -63,7 +63,7 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
   it('o primeiro uso abre a janela com 1 e os seguintes somam 1 cada', async () => {
     const contagens = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         const lista: number[] = [];
         for (let i = 0; i < 6; i++) lista.push(await contar('exportacao'));
@@ -77,7 +77,7 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
   it('grava o contador do profissional da transação, com o início da janela', async () => {
     const linhas = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         await contar('exportacao');
         await contar('exportacao');
@@ -94,7 +94,7 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
   it('cada chave tem o próprio contador', async () => {
     const contagens = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => [await contar('exportacao'), await contar('exportacao'), await contar('outra')],
       A,
     );
@@ -104,7 +104,7 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
   it('cada profissional tem o próprio contador', async () => {
     await banco.cliente.query('begin');
     try {
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       const usar = async (usuario: string) => {
         await banco.cliente.query("select set_config('app.usuario_id', $1, true)", [usuario]);
         return contar('exportacao');
@@ -164,7 +164,7 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
         clientes.map(async (c) => {
           await c.query('begin');
           await c.query("select set_config('app.usuario_id', $1, true)", [C]);
-          await c.query('set local role app');
+          await c.query('set local role evolucao_app');
           const { rows } = await c.query<{ n: number }>(
             "select public.contar_uso('exportacao', 60) as n",
           );
@@ -185,19 +185,24 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
 
   it('sem usuário na transação, recusa', async () => {
     expect(
-      await comoRole(banco.cliente, 'app', () => codigoDoErro(() => contar('exportacao'))),
+      await comoRole(banco.cliente, 'evolucao_app', () => codigoDoErro(() => contar('exportacao'))),
     ).toBe(SEM_PERMISSAO_OU_RLS);
   });
 
   it('recusa chave fora do formato e janela menor que 1 s', async () => {
     for (const chave of ['', 'Exportacao', 'com espaço', 'x'.repeat(101)])
       expect(
-        await comoRole(banco.cliente, 'app', () => codigoDoErro(() => contar(chave)), A),
+        await comoRole(banco.cliente, 'evolucao_app', () => codigoDoErro(() => contar(chave)), A),
         JSON.stringify(chave),
       ).toBe(VIOLA_CHECK);
     for (const janela of [0, -1])
       expect(
-        await comoRole(banco.cliente, 'app', () => codigoDoErro(() => contar('x', janela)), A),
+        await comoRole(
+          banco.cliente,
+          'evolucao_app',
+          () => codigoDoErro(() => contar('x', janela)),
+          A,
+        ),
       ).toBe(PARAMETRO_INVALIDO);
   });
 
@@ -207,12 +212,18 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
         `select pg_get_userbyid(p.proowner) as dono, p.prosecdef as definer,
                 exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
                         where c like 'search_path=%') as search_path_fixo,
-                has_function_privilege('app', p.oid, 'EXECUTE') as app,
-                has_function_privilege('backup_ro', p.oid, 'EXECUTE') as backup_ro
+                has_function_privilege('evolucao_app', p.oid, 'EXECUTE') as app,
+                has_function_privilege('evolucao_backup_ro', p.oid, 'EXECUTE') as evolucao_backup_ro
          from pg_proc p where p.oid = 'public.contar_uso(text, integer)'::regprocedure`,
       ),
     ).toEqual([
-      { dono: 'owner', definer: true, search_path_fixo: true, app: true, backup_ro: false },
+      {
+        dono: 'evolucao_owner',
+        definer: true,
+        search_path_fixo: true,
+        app: true,
+        evolucao_backup_ro: false,
+      },
     ]);
   });
 });
@@ -220,11 +231,11 @@ describe('contar_uso: contador por chave e janela (EXP-05)', () => {
 describe('a app só conta pela função (ISO-03)', () => {
   it('a app só lê a tabela: sem INSERT, UPDATE, DELETE nem TRUNCATE', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'limite_uso', 'SELECT') as select,
-              has_any_column_privilege('app', 'limite_uso', 'INSERT') as insert,
-              has_any_column_privilege('app', 'limite_uso', 'UPDATE') as update,
-              has_table_privilege('app', 'limite_uso', 'DELETE') as delete,
-              has_table_privilege('app', 'limite_uso', 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', 'limite_uso', 'SELECT') as select,
+              has_any_column_privilege('evolucao_app', 'limite_uso', 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', 'limite_uso', 'UPDATE') as update,
+              has_table_privilege('evolucao_app', 'limite_uso', 'DELETE') as delete,
+              has_table_privilege('evolucao_app', 'limite_uso', 'TRUNCATE') as truncate`,
     );
     expect(privilegios).toEqual({
       select: true,
@@ -243,7 +254,7 @@ describe('a app só conta pela função (ISO-03)', () => {
     expect(
       await comoRole(
         banco.cliente,
-        'app',
+        'evolucao_app',
         () => codigoDoErro(() => banco.cliente.query(comando, [A])),
         A,
       ),
@@ -269,20 +280,20 @@ describe('limite_uso: RLS forçada e isolamento (ISO-01, ISO-04)', () => {
   });
 
   it('o profissional só enxerga o próprio contador', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis, A)).toEqual([A]);
-    expect(await comoRole(banco.cliente, 'app', visiveis, B)).toEqual([B]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis, A)).toEqual([A]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis, B)).toEqual([B]);
   });
 
   it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
   });
 
-  it('backup_ro lê todas as linhas e não escreve', async () => {
-    expect(await comoRole(banco.cliente, 'backup_ro', visiveis)).toEqual([A, B]);
+  it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+    expect(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis)).toEqual([A, B]);
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', 'limite_uso', 'INSERT') as insert,
-              has_table_privilege('backup_ro', 'limite_uso', 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_backup_ro', 'limite_uso', 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', 'limite_uso', 'UPDATE') as update`,
     );
     expect(privilegios).toEqual({ insert: false, update: false });
   });
@@ -290,7 +301,7 @@ describe('limite_uso: RLS forçada e isolamento (ISO-01, ISO-04)', () => {
   it('contar_uso de B não mexe no contador de A', async () => {
     const contagemDeA = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         await contar('semente');
         await contar('semente');

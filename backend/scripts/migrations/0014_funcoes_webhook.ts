@@ -21,15 +21,15 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
 //   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem INSERT e UPDATE.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. A app continua sem INSERT e UPDATE.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
-CREATE POLICY webhook_evento_tarefas_leitura ON public.webhook_evento FOR SELECT TO "owner"
+CREATE POLICY webhook_evento_tarefas_leitura ON public.webhook_evento FOR SELECT TO "evolucao_owner"
   USING (current_setting('app.tarefa_webhook', true) = 'on');
-CREATE POLICY webhook_evento_tarefas_inclusao ON public.webhook_evento FOR INSERT TO "owner"
+CREATE POLICY webhook_evento_tarefas_inclusao ON public.webhook_evento FOR INSERT TO "evolucao_owner"
   WITH CHECK (current_setting('app.tarefa_webhook', true) = 'on');
-CREATE POLICY webhook_evento_tarefas_mudanca ON public.webhook_evento FOR UPDATE TO "owner"
+CREATE POLICY webhook_evento_tarefas_mudanca ON public.webhook_evento FOR UPDATE TO "evolucao_owner"
   USING (current_setting('app.tarefa_webhook', true) = 'on')
   WITH CHECK (current_setting('app.tarefa_webhook', true) = 'on');
 
@@ -57,9 +57,9 @@ BEGIN
   PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
   RETURN CASE WHEN v_novo THEN 'novo' ELSE 'repetido' END;
 END $$;
-ALTER FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) OWNER TO "owner";
+ALTER FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.gravar_webhook_evento(text, text, jsonb) TO evolucao_app;
 
 CREATE FUNCTION tarefas.marcar_webhook_processado(
   p_event_id text,
@@ -91,9 +91,9 @@ BEGIN
   PERFORM set_config('app.tarefa_webhook', v_ant_tarefa, true);
   RETURN 'marcado';
 END $$;
-ALTER FUNCTION tarefas.marcar_webhook_processado(text, uuid) OWNER TO "owner";
+ALTER FUNCTION tarefas.marcar_webhook_processado(text, uuid) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.marcar_webhook_processado(text, uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.marcar_webhook_processado(text, uuid) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.marcar_webhook_processado(text, uuid) TO evolucao_app;
 `);
 };
 

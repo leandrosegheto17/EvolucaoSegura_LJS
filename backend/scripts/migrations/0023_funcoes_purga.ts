@@ -26,7 +26,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   UPDATE e TRUNCATE seguem barrados para qualquer role; DELETE fora da purga também. A app não
 //   tem DELETE nessas tabelas (o GRANT não muda), então só o owner chega ao trigger.
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa.
 
 const NEGAR_ALTERACAO_ORIGINAL = `
 CREATE OR REPLACE FUNCTION public.negar_alteracao() RETURNS trigger
@@ -149,9 +149,9 @@ BEGIN
   PERFORM set_config('app.tarefa_assinatura', v_ant_assinatura, true);
   RETURN v_total;
 END $$;
-ALTER FUNCTION tarefas.purgar_contas(timestamptz, integer) OWNER TO "owner";
+ALTER FUNCTION tarefas.purgar_contas(timestamptz, integer) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.purgar_contas(timestamptz, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.purgar_contas(timestamptz, integer) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.purgar_contas(timestamptz, integer) TO evolucao_app;
 `);
 };
 

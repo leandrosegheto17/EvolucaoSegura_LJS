@@ -9,7 +9,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 // PAYMENT_OVERDUE vira 'cobranca_vencida', com ref = id do pagamento. Um por (profissional, tipo,
 // pagamento), só de quem tem push ativo e ainda sem registro em notificacao_enviada. Devolve só
 // usuario_id, tipo e ref, até `limite`, pela ordem de processamento.
-// SECURITY DEFINER do owner, search_path fixo; a app executa, backup_ro e PUBLIC não; a leitura
+// SECURITY DEFINER do owner, search_path fixo; a app executa, evolucao_backup_ro e PUBLIC não; a leitura
 // liberada ao owner vale só dentro da função.
 
 const PARAMETRO_INVALIDO = '22023';
@@ -75,7 +75,7 @@ async function evento(
 type Linha = { usuario_id: string; tipo: string; ref: string };
 
 const listar = (desde: Date | null = DESDE, ate: Date | null = ATE, limite: number | null = 10) =>
-  comoRole(banco.cliente, 'app', () =>
+  comoRole(banco.cliente, 'evolucao_app', () =>
     consultar<Linha>('select * from tarefas.listar_eventos_cobranca_para_aviso($1, $2, $3)', [
       desde,
       ate,
@@ -170,19 +170,25 @@ describe('listar_eventos_cobranca_para_aviso (PUSH-04)', () => {
 });
 
 describe('segurança da função (ISO-03, ADR-005)', () => {
-  it('é SECURITY DEFINER do owner com search_path fixo; a app executa, backup_ro não', async () => {
+  it('é SECURITY DEFINER do owner com search_path fixo; a app executa, evolucao_backup_ro não', async () => {
     expect(
       await consultar(
         `select pg_get_userbyid(p.proowner) as dono, p.prosecdef as definer,
                 exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c
                         where c like 'search_path=%') as search_path_fixo,
-                has_function_privilege('app', p.oid, 'EXECUTE') as app,
-                has_function_privilege('backup_ro', p.oid, 'EXECUTE') as backup_ro
+                has_function_privilege('evolucao_app', p.oid, 'EXECUTE') as app,
+                has_function_privilege('evolucao_backup_ro', p.oid, 'EXECUTE') as evolucao_backup_ro
          from pg_proc p
          where p.oid = 'tarefas.listar_eventos_cobranca_para_aviso(timestamptz, timestamptz, integer)'::regprocedure`,
       ),
     ).toEqual([
-      { dono: 'owner', definer: true, search_path_fixo: true, app: true, backup_ro: false },
+      {
+        dono: 'evolucao_owner',
+        definer: true,
+        search_path_fixo: true,
+        app: true,
+        evolucao_backup_ro: false,
+      },
     ]);
   });
 
@@ -190,11 +196,11 @@ describe('segurança da função (ISO-03, ADR-005)', () => {
     await evento(a, 'PAYMENT_CREATED', 'pay_1');
     const ver = () => consultar(`select 1 from webhook_evento`);
     expect(
-      await comoRole(banco.cliente, 'app', async () => {
+      await comoRole(banco.cliente, 'evolucao_app', async () => {
         await banco.cliente.query("select set_config('app.tarefa_push', 'on', true)");
         return ver();
       }),
     ).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', ver)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', ver)).toEqual([]);
   });
 });

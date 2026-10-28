@@ -19,7 +19,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   (PG 18) o neondb_owner não é superusuário e o SET de parâmetro personalizado na definição
 //   falha com "permission denied to set parameter" (T197).
 // SECURITY DEFINER do owner, search_path fixo, parâmetros tipados, sem SQL dinâmico. EXECUTE só
-// para a app (REVOKE de PUBLIC); backup_ro não executa. A app continua sem UPDATE direto.
+// para a app (REVOKE de PUBLIC); evolucao_backup_ro não executa. A app continua sem UPDATE direto.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -60,9 +60,9 @@ BEGIN
     LIMIT p_limite;
   PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
 END $$;
-ALTER FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) OWNER TO "owner";
+ALTER FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.listar_assinaturas_vencidas(timestamptz, integer) TO evolucao_app;
 
 CREATE FUNCTION tarefas.desvincular_assinatura_asaas(p_usuario_id uuid) RETURNS text
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
@@ -94,9 +94,9 @@ BEGIN
   PERFORM set_config('app.tarefa_assinatura', v_ant_tarefa, true);
   RETURN 'desvinculada';
 END $$;
-ALTER FUNCTION tarefas.desvincular_assinatura_asaas(uuid) OWNER TO "owner";
+ALTER FUNCTION tarefas.desvincular_assinatura_asaas(uuid) OWNER TO "evolucao_owner";
 REVOKE ALL ON FUNCTION tarefas.desvincular_assinatura_asaas(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION tarefas.desvincular_assinatura_asaas(uuid) TO app;
+GRANT EXECUTE ON FUNCTION tarefas.desvincular_assinatura_asaas(uuid) TO evolucao_app;
 `);
 };
 

@@ -20,7 +20,7 @@ import type { MigrationBuilder } from 'node-pg-migrate';
 //   de psicologia: o conteúdo vai em `valores`.
 // - FKs compostas com usuario_id: nada referencia linha de outro profissional (ISO-02).
 // RLS forçada nas quatro: a app só lê e escreve o que é do usuário da transação, sem DELETE nem
-// TRUNCATE; backup_ro lê tudo.
+// TRUNCATE; evolucao_backup_ro lê tudo.
 
 export const up = (pgm: MigrationBuilder): void => {
   pgm.sql(`
@@ -36,7 +36,7 @@ CREATE TABLE public.modelo_anamnese (
   CONSTRAINT modelo_anamnese_especialidade_uq UNIQUE (usuario_id, especialidade),
   CONSTRAINT modelo_anamnese_id_usuario_uq UNIQUE (id, usuario_id)
 );
-ALTER TABLE public.modelo_anamnese OWNER TO "owner";
+ALTER TABLE public.modelo_anamnese OWNER TO "evolucao_owner";
 
 CREATE TABLE public.modelo_anamnese_item (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -55,7 +55,7 @@ CREATE TABLE public.modelo_anamnese_item (
   CONSTRAINT modelo_anamnese_item_especial_ck CHECK (NOT especial OR tipo = 'campo'),
   FOREIGN KEY (modelo_id, usuario_id) REFERENCES public.modelo_anamnese (id, usuario_id)
 );
-ALTER TABLE public.modelo_anamnese_item OWNER TO "owner";
+ALTER TABLE public.modelo_anamnese_item OWNER TO "evolucao_owner";
 CREATE UNIQUE INDEX modelo_anamnese_item_rotulo_uq
   ON public.modelo_anamnese_item (modelo_id, lower(rotulo)) WHERE NOT removido;
 CREATE UNIQUE INDEX modelo_anamnese_item_especial_uq
@@ -78,7 +78,7 @@ CREATE TABLE public.anamnese (
   FOREIGN KEY (paciente_id, usuario_id) REFERENCES public.paciente (id, usuario_id),
   FOREIGN KEY (modelo_id, usuario_id) REFERENCES public.modelo_anamnese (id, usuario_id)
 );
-ALTER TABLE public.anamnese OWNER TO "owner";
+ALTER TABLE public.anamnese OWNER TO "evolucao_owner";
 
 CREATE TABLE public.anamnese_retificacao (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -92,7 +92,7 @@ CREATE TABLE public.anamnese_retificacao (
   CONSTRAINT anamnese_retificacao_seq_uq UNIQUE (anamnese_id, seq),
   FOREIGN KEY (anamnese_id, usuario_id) REFERENCES public.anamnese (id, usuario_id)
 );
-ALTER TABLE public.anamnese_retificacao OWNER TO "owner";
+ALTER TABLE public.anamnese_retificacao OWNER TO "evolucao_owner";
 
 -- ANA-05: a anamnese só muda no dia do cadastro (America/Sao_Paulo, relógio do banco).
 CREATE FUNCTION public.anamnese_janela_do_dia() RETURNS trigger
@@ -105,7 +105,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
-ALTER FUNCTION public.anamnese_janela_do_dia() OWNER TO "owner";
+ALTER FUNCTION public.anamnese_janela_do_dia() OWNER TO "evolucao_owner";
 CREATE TRIGGER anamnese_janela BEFORE UPDATE ON public.anamnese
   FOR EACH ROW EXECUTE FUNCTION public.anamnese_janela_do_dia();
 
@@ -120,7 +120,7 @@ CREATE POLICY modelo_anamnese_usuario ON public.modelo_anamnese
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY modelo_anamnese_backup_ro ON public.modelo_anamnese FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.modelo_anamnese_item ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.modelo_anamnese_item FORCE ROW LEVEL SECURITY;
@@ -128,14 +128,14 @@ CREATE POLICY modelo_anamnese_item_usuario ON public.modelo_anamnese_item
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY modelo_anamnese_item_backup_ro ON public.modelo_anamnese_item FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.anamnese ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.anamnese FORCE ROW LEVEL SECURITY;
 CREATE POLICY anamnese_usuario ON public.anamnese
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
-CREATE POLICY anamnese_backup_ro ON public.anamnese FOR SELECT TO backup_ro USING (true);
+CREATE POLICY anamnese_backup_ro ON public.anamnese FOR SELECT TO evolucao_backup_ro USING (true);
 
 ALTER TABLE public.anamnese_retificacao ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.anamnese_retificacao FORCE ROW LEVEL SECURITY;
@@ -143,25 +143,25 @@ CREATE POLICY anamnese_retificacao_usuario ON public.anamnese_retificacao
   USING (usuario_id = public.app_usuario_id())
   WITH CHECK (usuario_id = public.app_usuario_id());
 CREATE POLICY anamnese_retificacao_backup_ro ON public.anamnese_retificacao FOR SELECT
-  TO backup_ro USING (true);
+  TO evolucao_backup_ro USING (true);
 
 REVOKE ALL ON public.modelo_anamnese, public.modelo_anamnese_item, public.anamnese,
-  public.anamnese_retificacao FROM PUBLIC, app;
+  public.anamnese_retificacao FROM PUBLIC, evolucao_app;
 GRANT SELECT ON public.modelo_anamnese, public.modelo_anamnese_item, public.anamnese,
-  public.anamnese_retificacao TO backup_ro;
+  public.anamnese_retificacao TO evolucao_backup_ro;
 GRANT SELECT ON public.modelo_anamnese, public.modelo_anamnese_item, public.anamnese,
-  public.anamnese_retificacao TO app;
-GRANT INSERT (usuario_id, especialidade) ON public.modelo_anamnese TO app;
-GRANT UPDATE (revisao, row_version, atualizado_em) ON public.modelo_anamnese TO app;
+  public.anamnese_retificacao TO evolucao_app;
+GRANT INSERT (usuario_id, especialidade) ON public.modelo_anamnese TO evolucao_app;
+GRANT UPDATE (revisao, row_version, atualizado_em) ON public.modelo_anamnese TO evolucao_app;
 GRANT INSERT (usuario_id, modelo_id, tipo, especial, rotulo, ordem, revisao_inclusao)
-  ON public.modelo_anamnese_item TO app;
+  ON public.modelo_anamnese_item TO evolucao_app;
 GRANT UPDATE (tipo, especial, rotulo, ordem, removido, row_version, atualizado_em)
-  ON public.modelo_anamnese_item TO app;
+  ON public.modelo_anamnese_item TO evolucao_app;
 GRANT INSERT (usuario_id, paciente_id, modelo_id, data_sessao, modelo_revisao, valores)
-  ON public.anamnese TO app;
-GRANT UPDATE (modelo_revisao, valores, row_version, atualizado_em) ON public.anamnese TO app;
+  ON public.anamnese TO evolucao_app;
+GRANT UPDATE (modelo_revisao, valores, row_version, atualizado_em) ON public.anamnese TO evolucao_app;
 GRANT INSERT (usuario_id, anamnese_id, seq, motivo, modelo_revisao, valores)
-  ON public.anamnese_retificacao TO app;
+  ON public.anamnese_retificacao TO evolucao_app;
 `);
 };
 

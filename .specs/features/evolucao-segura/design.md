@@ -10,20 +10,20 @@
 
 ## Architecture Overview
 
-Um único Worker serve o front (assets) e a API Hono em `/api/*`. Todo acesso ao banco passa pela API, numa transação por requisição com `SET LOCAL app.usuario_id`, e o RLS barra o resto. Tarefas agendadas (lembretes, plano, purga) rodam no mesmo Worker por um único Cron Trigger e só tocam o banco por funções `SECURITY DEFINER` estreitas, para que a role `app` continue sem DELETE e sujeita a RLS.
+Um único Worker serve o front (assets) e a API Hono em `/api/*`. Todo acesso ao banco passa pela API, numa transação por requisição com `SET LOCAL app.usuario_id`, e o RLS barra o resto. Tarefas agendadas (lembretes, plano, purga) rodam no mesmo Worker por um único Cron Trigger e só tocam o banco por funções `SECURITY DEFINER` estreitas, para que a role `evolucao_app` continue sem DELETE e sujeita a RLS.
 
 ```mermaid
 graph TD
     N[Navegador / PWA] -->|assets| W[Worker: assets + Hono]
     N -->|/api/*| W
-    W -->|Hyperdrive, role app| DB[(Neon Postgres sa-east-1)]
+    W -->|Hyperdrive, role evolucao_app| DB[(Neon Postgres sa-east-1)]
     W -->|fetch| R[Resend]
     W -->|fetch| A[Asaas API]
     A -->|webhook /api/webhooks/asaas| W
     W -->|Web Push VAPID| PS[Serviços de push]
     C[Cron */5 min] --> W
     W --> S[Sentry]
-    GH[GitHub Actions] -->|pg_dump backup_ro + age| ART[Artefato 30 dias]
+    GH[GitHub Actions] -->|pg_dump evolucao_backup_ro + age| ART[Artefato 30 dias]
     GH -->|migrar, role owner| DB
     GH -->|wrangler deploy| W
 ```
@@ -126,11 +126,11 @@ Legado em `C:\Leandro\Projetos\EvolucaoSeguraWeb` (somente leitura). Copiar o ar
 
 ## Data Models
 
-Base consolidada nova em `backend/scripts/migrations/`, uma migration por área. Toda tabela de negócio tem `usuario_id`, RLS com `FORCE`, `criado_em`; as editáveis têm `row_version`. Nenhuma tabela de negócio dá DELETE à role `app`.
+Base consolidada nova em `backend/scripts/migrations/`, uma migration por área. Toda tabela de negócio tem `usuario_id`, RLS com `FORCE`, `criado_em`; as editáveis têm `row_version`. Nenhuma tabela de negócio dá DELETE à role `evolucao_app`.
 
 | Área | Tabelas | Origem |
 | --- | --- | --- |
-| Base | roles `owner`, `app`, `backup_ro`; schema `tarefas`; helpers `app_usuario_id()`, triggers de `row_version` e de revisão | 0001, 0002, 0016 |
+| Base | roles `evolucao_owner`, `evolucao_app`, `evolucao_backup_ro`; schema `tarefas`; helpers `app_usuario_id()`, triggers de `row_version` e de revisão | 0001, 0002, 0016 |
 | Identidade (sem RLS, acesso por funções e grants mínimos) | `usuario` (e-mail, nome, `confirmado_em`, `bloqueado_exclusao_em`), `credencial_senha` (hash bcrypt), `sessao`, `desafio_2fa`, `token_email` (tipo: confirmacao, recuperacao, exclusao, desistencia), `tentativa_login`, `aceite_termos` | 0003 adaptada |
 | Limites | `limite_uso` (chave, janela, contagem) para exportações e, se preciso, o rate limit em tabela | novo |
 | Perfil | `perfil` (nome, contato, endereço, `atende_sabado`, `atende_domingo`, especialidade, nome da especialidade "outra", conselho, número, região), `configuracao_usuario` (`privacidade_agenda`) | 0005, 0014, 0026, 0027 (uma especialidade) |
@@ -192,7 +192,7 @@ interface Assinatura {
 | Artefatos do Actions: 500 MB no total | `backup.yml` | Backup para de gravar | Medir o dump no primeiro backup; registrar no runbook o tamanho e o limite |
 | Testes do legado não estão verdes | `backend/test/**` do legado | Trazer falha junto | Cada teste copiado roda verde aqui antes do commit; o que não fizer sentido no schema novo é reescrito a partir do critério da spec |
 | pdfmake no navegador: tamanho do bundle e acentuação não confirmados [P-6] | `frontend/web/src/export/` | Tela lenta ou PDF com caracteres trocados | Carregar sob demanda (chunk separado); teste com texto acentuado na etapa da exportação; fonte embutida |
-| Funções `SECURITY DEFINER` mal escritas | migrations `tarefas.*` | Escalada de privilégio | `search_path` fixo, parâmetros tipados, sem SQL dinâmico; teste que a role `app` não executa nada fora da lista |
+| Funções `SECURITY DEFINER` mal escritas | migrations `tarefas.*` | Escalada de privilégio | `search_path` fixo, parâmetros tipados, sem SQL dinâmico; teste que a role `evolucao_app` não executa nada fora da lista |
 
 ---
 
@@ -201,7 +201,7 @@ interface Assinatura {
 | Decision | Choice | Rationale |
 | --- | --- | --- |
 | Conexão ao banco | `pg.Client` por requisição via Hyperdrive, envolvido pelo Kysely; `client.end()` em `ctx.waitUntil` | Recomendação da Cloudflare [P-2] |
-| Tarefas e webhook fora da sessão | Funções `SECURITY DEFINER` no schema `tarefas`, executáveis pela role `app` | Mantém `app` sem DELETE e sem BYPASSRLS; um só Hyperdrive |
+| Tarefas e webhook fora da sessão | Funções `SECURITY DEFINER` no schema `tarefas`, executáveis pela role `evolucao_app` | Mantém `evolucao_app` sem DELETE e sem BYPASSRLS; um só Hyperdrive |
 | Cron | Um trigger `*/5 * * * *` com despachante | 5 crons por conta, divididos entre 3 apps |
 | Push | `@block65/webcrypto-web-push` com payload cifrado | Web Crypto (satisfaz "ES256 com crypto.subtle"); payload cifrado permite abrir a tela certa (PUSH-08) |
 | PDF | pdfmake no navegador, chunk sob demanda | Reaproveita a definição do documento do legado (`record-pdf.ts`) |

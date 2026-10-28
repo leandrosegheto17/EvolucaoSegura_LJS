@@ -17,11 +17,11 @@ Como ler este documento:
 
 ## Conexões
 
-| Para quê                                    | Role                                        | Onde está a URL                                   |
-| ------------------------------------------- | ------------------------------------------- | ------------------------------------------------- |
-| Funções `tarefas.*` e auditoria (operações) | `app`                                       | `NEON_URL_APP` (GitHub Secret do env. `producao`) |
-| Diagnóstico e ajustes como dono das tabelas | role de migração (`neondb_owner`) → `owner` | `NEON_URL_MIGRACAO`                               |
-| Leitura para backup                         | `backup_ro`                                 | `NEON_URL_BACKUP`                                 |
+| Para quê                                    | Role                                                 | Onde está a URL                                   |
+| ------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
+| Funções `tarefas.*` e auditoria (operações) | `evolucao_app`                                       | `NEON_URL_APP` (GitHub Secret do env. `producao`) |
+| Diagnóstico e ajustes como dono das tabelas | role de migração (`neondb_owner`) → `evolucao_owner` | `NEON_URL_MIGRACAO`                               |
+| Leitura para backup                         | `evolucao_backup_ro`                                 | `NEON_URL_BACKUP`                                 |
 
 ### Branches do Neon
 
@@ -43,10 +43,10 @@ aponte para o Neon.
 
 As URLs ficam no environment `producao` do GitHub e no console do Neon; nunca as cole em arquivo
 versionado nem em chamado. Exporte numa variável só na sua sessão do terminal, por exemplo
-`export URL_APP='<url da role app>'`, e feche o terminal ao terminar.
+`export URL_APP='<url da role evolucao_app>'`, e feche o terminal ao terminar.
 
-As tabelas do profissional têm RLS forçada, que vale também para a role `owner`. Para ler
-`webhook_evento` sem passar pela API, assuma `owner` e ligue o contexto das funções do webhook
+As tabelas do profissional têm RLS forçada, que vale também para a role `evolucao_owner`. Para ler
+`webhook_evento` sem passar pela API, assuma `evolucao_owner` e ligue o contexto das funções do webhook
 (`app.tarefa_webhook = 'on'`, policies da migration 0014) só dentro de uma transação desfeita no
 fim, como nos exemplos abaixo.
 
@@ -57,8 +57,8 @@ desenvolvimento):
 U=postgresql://postgres:postgres@localhost:5433
 psql -c "create database rb_demo" $U/postgres
 DATABASE_URL=$U/rb_demo pnpm migrar
-# Worker local apontando para ele (role app liberada como no passo 3b do README)
-CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=postgresql://app:app@localhost:5433/rb_demo \
+# Worker local apontando para ele (role evolucao_app liberada como no passo 3b do README)
+CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=postgresql://evolucao_app:evolucao_app@localhost:5433/rb_demo \
   pnpm --filter @es/api exec wrangler dev --config ../../wrangler.jsonc --port 8787
 # ao terminar: psql -c "drop database rb_demo with (force)" $U/postgres
 ```
@@ -97,7 +97,7 @@ seguinte encontra a assinatura.
 ```bash
 psql -X -v ON_ERROR_STOP=1 "$URL_MIGRACAO" <<'EOF'
 begin read only;
-set local role "owner";
+set local role "evolucao_owner";
 set local app.tarefa_webhook = 'on';
 select event_id, tipo, usuario_id, recebido_em, processado_em
 from public.webhook_evento order by recebido_em desc limit 20;
@@ -106,8 +106,8 @@ EOF
 ```
 
 Localmente, `URL_MIGRACAO=postgresql://postgres:postgres@localhost:5433/rb_demo`. Em produção é
-a URL da role de migração; o `set local role "owner"` funciona porque a migration 0001 concede
-`owner` a ela com SET. Contra o Neon: **não executado** (exige acesso ao Neon).
+a URL da role de migração; o `set local role "evolucao_owner"` funciona porque a migration 0001 concede
+`evolucao_owner` a ela com SET. Contra o Neon: **não executado** (exige acesso ao Neon).
 
 O evento com falha não aparece na lista. Um evento que aparece com `processado_em` preenchido já
 foi tratado; reenviá-lo responde `repetido` e não muda nada.
@@ -153,7 +153,7 @@ do Asaas).
 
 ### 2.1 Achar o profissional pelo id do Asaas
 
-Com a role `app` (executado no banco descartável):
+Com a role `evolucao_app` (executado no banco descartável):
 
 ```bash
 psql -X -c "select * from tarefas.localizar_assinatura_asaas('<id da assinatura no Asaas>', null)" "$URL_APP"
@@ -192,7 +192,7 @@ from tarefas.mudar_estado_assinatura(:'usuario'::uuid, 'ativa',
 \endif
 ```
 
-E rode com a role `app` (executado no banco descartável):
+E rode com a role `evolucao_app` (executado no banco descartável):
 
 ```bash
 psql -X -q -v usuario=<usuario_id da 2.1> -v vencimento=<nextDueDate AAAA-MM-DD> -f reprocessar.sql "$URL_APP"
@@ -232,13 +232,13 @@ profissional, se for o caso. Contra o Neon: **não executado** (exige acesso ao 
 
 Depois de 5 falhas em 15 minutos, o e-mail fica bloqueado por 15 minutos (AUTH-07,
 `regras-acesso.ts`); o bloqueio passa sozinho. Para liberar antes, com a role de migração
-assumindo `owner` (a `tentativa_login` guarda só o SHA-256 do e-mail, em minúsculas). Executado
+assumindo `evolucao_owner` (a `tentativa_login` guarda só o SHA-256 do e-mail, em minúsculas). Executado
 no banco descartável:
 
 ```bash
 psql -X -v ON_ERROR_STOP=1 -v email='<e-mail do profissional>' "$URL_MIGRACAO" <<'EOF'
 begin;
-set local role "owner";
+set local role "evolucao_owner";
 update public.tentativa_login
    set falhas = 0, janela_inicio = null, bloqueado_ate = null
  where tipo = 'email' and chave_hash = sha256(convert_to(lower(:'email'), 'UTF8'));
@@ -292,17 +292,17 @@ O `openssl rand` foi executado (64 caracteres, acima do mínimo de 32 do `ambien
 do `wrangler secret put` e do `gh secret set --env` foi conferida com `--help`; a gravação em si
 **não foi executada** (exige as contas de produção e mudaria segredos reais).
 
-| Segredo                                        | Onde fica                                           | Como trocar                                                                                                     | Efeito da troca                                                                                                                                             |
-| ---------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HMAC_2FA_SEGREDO`                             | Worker                                              | `openssl rand`, `wrangler secret put`                                                                           | Códigos de 2FA já enviados deixam de valer; quem estava no meio do login pede outro código.                                                                 |
-| `ASAAS_WEBHOOK_TOKEN`                          | Worker e Asaas                                      | `wrangler secret put` e, logo em seguida, o mesmo valor no painel do Asaas (Integrações > Webhooks)             | Entre os dois passos o webhook responde `401` e o Asaas reenvia; se a fila pausar, reative-a (seção 1).                                                     |
-| `ASAAS_API_KEY`                                | Worker                                              | Chave nova no painel do Asaas, `wrangler secret put`, depois revogar a antiga                                   | Nenhum, nessa ordem.                                                                                                                                        |
-| `RESEND_API_KEY`                               | Worker                                              | Chave nova no painel do Resend, `wrangler secret put`, depois revogar a antiga                                  | Nenhum, nessa ordem. Sem chave válida os e-mails param, inclusive o de 2FA.                                                                                 |
-| `VAPID_PRIVATE_KEY` e `VAPID_PUBLIC_KEY`       | Worker                                              | Gerar o par (abaixo), `wrangler secret put VAPID_PRIVATE_KEY` e a pública como var do Worker                    | PREMISSA: as inscrições de push existentes usam a chave pública antiga e deixam de receber; cada profissional ativa o push de novo. Troque só em vazamento. |
-| `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`         | GitHub (`producao`)                                 | Senha nova da role no console do Neon (Roles > Reset password), `gh secret set`                                 | Deploy e backup usam a URL nova na próxima execução.                                                                                                        |
-| `NEON_URL_APP`                                 | GitHub e Hyperdrive                                 | Senha nova da role `app` no Neon, `gh secret set NEON_URL_APP --env producao` e atualizar o Hyperdrive (abaixo) | O Worker perde o banco entre a troca da senha e a atualização do Hyperdrive: faça as duas em seguida, fora do horário de uso.                               |
-| `CLOUDFLARE_API_TOKEN`                         | GitHub (`producao`)                                 | Token novo no console da Cloudflare, `gh secret set`, depois revogar o antigo                                   | Nenhum, nessa ordem.                                                                                                                                        |
-| Par `age` (`AGE_PUBLIC_KEY` e a chave privada) | Pública no GitHub; privada fora de qualquer serviço | `age-keygen`, `gh secret set AGE_PUBLIC_KEY --env producao`                                                     | Backups novos só abrem com a privada nova. **Guarde a antiga por 30 dias** (retenção dos artefatos), senão os backups anteriores ficam ilegíveis.           |
+| Segredo                                        | Onde fica                                           | Como trocar                                                                                                              | Efeito da troca                                                                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HMAC_2FA_SEGREDO`                             | Worker                                              | `openssl rand`, `wrangler secret put`                                                                                    | Códigos de 2FA já enviados deixam de valer; quem estava no meio do login pede outro código.                                                                 |
+| `ASAAS_WEBHOOK_TOKEN`                          | Worker e Asaas                                      | `wrangler secret put` e, logo em seguida, o mesmo valor no painel do Asaas (Integrações > Webhooks)                      | Entre os dois passos o webhook responde `401` e o Asaas reenvia; se a fila pausar, reative-a (seção 1).                                                     |
+| `ASAAS_API_KEY`                                | Worker                                              | Chave nova no painel do Asaas, `wrangler secret put`, depois revogar a antiga                                            | Nenhum, nessa ordem.                                                                                                                                        |
+| `RESEND_API_KEY`                               | Worker                                              | Chave nova no painel do Resend, `wrangler secret put`, depois revogar a antiga                                           | Nenhum, nessa ordem. Sem chave válida os e-mails param, inclusive o de 2FA.                                                                                 |
+| `VAPID_PRIVATE_KEY` e `VAPID_PUBLIC_KEY`       | Worker                                              | Gerar o par (abaixo), `wrangler secret put VAPID_PRIVATE_KEY` e a pública como var do Worker                             | PREMISSA: as inscrições de push existentes usam a chave pública antiga e deixam de receber; cada profissional ativa o push de novo. Troque só em vazamento. |
+| `NEON_URL_MIGRACAO`, `NEON_URL_BACKUP`         | GitHub (`producao`)                                 | Senha nova da role no console do Neon (Roles > Reset password), `gh secret set`                                          | Deploy e backup usam a URL nova na próxima execução.                                                                                                        |
+| `NEON_URL_APP`                                 | GitHub e Hyperdrive                                 | Senha nova da role `evolucao_app` no Neon, `gh secret set NEON_URL_APP --env producao` e atualizar o Hyperdrive (abaixo) | O Worker perde o banco entre a troca da senha e a atualização do Hyperdrive: faça as duas em seguida, fora do horário de uso.                               |
+| `CLOUDFLARE_API_TOKEN`                         | GitHub (`producao`)                                 | Token novo no console da Cloudflare, `gh secret set`, depois revogar o antigo                                            | Nenhum, nessa ordem.                                                                                                                                        |
+| Par `age` (`AGE_PUBLIC_KEY` e a chave privada) | Pública no GitHub; privada fora de qualquer serviço | `age-keygen`, `gh secret set AGE_PUBLIC_KEY --env producao`                                                              | Backups novos só abrem com a privada nova. **Guarde a antiga por 30 dias** (retenção dos artefatos), senão os backups anteriores ficam ilegíveis.           |
 
 Par VAPID no formato do produto (pública P-256 crua de 65 bytes e privada como o `d` do JWK, em
 base64url; `backend/api/src/integracoes/push-vapid.ts`). Executado: gerou chaves de 65 e 32
@@ -320,7 +320,7 @@ age-keygen -o chave-backup-<AAAA-MM>.txt   # imprime a chave pública (age1...)
 age-keygen -y chave-backup-<AAAA-MM>.txt   # mostra a pública de novo, se precisar
 ```
 
-Hyperdrive depois de trocar a senha da role `app` (sintaxe conferida com `--help`; **não
+Hyperdrive depois de trocar a senha da role `evolucao_app` (sintaxe conferida com `--help`; **não
 executado**, exige a conta Cloudflare; o id fica em `wrangler.jsonc`, `hyperdrive[0].id`):
 
 ```bash
@@ -335,10 +335,10 @@ Depois de qualquer troca no Worker, confira `https://<domínio>/api/health` e um
 
 ### Onde estão as cópias
 
-| Cópia                               | Origem                                                                                                     | Retenção |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------- |
-| Artefato `backup-<run_id>`          | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias  |
-| Artefato `dump-pre-deploy-<run_id>` | `deploy.yml`, antes de cada migração                                                                       | 30 dias  |
+| Cópia                               | Origem                                                                                                              | Retenção |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------- |
+| Artefato `backup-<run_id>`          | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `evolucao_backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias  |
+| Artefato `dump-pre-deploy-<run_id>` | `deploy.yml`, antes de cada migração                                                                                | 30 dias  |
 
 Situação observada em 2026-10-28 (`gh run list --workflow backup.yml`): as execuções agendadas do
 `backup.yml` **falham** porque os secrets do environment `producao` ainda não existem (o `age`
@@ -394,7 +394,7 @@ psql -X -v ON_ERROR_STOP=1 "$DESTINO" <<'SQL'
 do $$
 begin
   execute format('revoke all on database %I from public', current_database());
-  execute format('grant connect on database %I to "owner", app, backup_ro', current_database());
+  execute format('grant connect on database %I to "evolucao_owner", evolucao_app, evolucao_backup_ro', current_database());
 end $$;
 SQL
 
@@ -402,8 +402,8 @@ SQL
 infra/comparar-contagens.sh "$ORIGEM_URL" "$DESTINO"
 ```
 
-Observado localmente: as 34 tabelas do app ficaram com dono `owner`, a RLS forçada se manteve, a
-role `app` conectou e leu a assinatura do usuário definido em `app.usuario_id`, e o
+Observado localmente: as 34 tabelas do app ficaram com dono `evolucao_owner`, a RLS forçada se manteve, a
+role `evolucao_app` conectou e leu a assinatura do usuário definido em `app.usuario_id`, e o
 `comparar-contagens.sh` deu `resultado=ok`.
 
 **Opção B: pelo histórico do Neon**, só para um problema dentro da janela de restauração do plano
@@ -411,7 +411,7 @@ role `app` conectou e leu a assinatura do usuário definido em `app.usuario_id`,
 problema. Se o Neon guardar o estado anterior numa branch extra, apague-a depois de conferir a
 restauração: o projeto fica só com `main` e `dev`. **Não executado** (exige a conta do Neon).
 
-Depois, aponte o Worker para o banco restaurado atualizando o Hyperdrive com a URL da role `app`
+Depois, aponte o Worker para o banco restaurado atualizando o Hyperdrive com a URL da role `evolucao_app`
 desse banco (comando da seção 4) e confira `/api/health` e um login. **Não executado** em
 produção. No Neon a restauração roda com `neondb_owner`, que não é superusuário: as funções do
 dump não podem ter `SET app.*` na definição (correção das migrations nas T197 e T198), senão o
@@ -544,17 +544,23 @@ boleto nem cartão como alternativa no código.
 
 ## 8. Primeiro deploy: roles do Neon e Hyperdrive
 
-As roles `owner`, `app` e `backup_ro` nascem `NOLOGIN` e sem senha na migration 0001 (ADR-005):
+As roles `evolucao_owner`, `evolucao_app` e `evolucao_backup_ro` nascem `NOLOGIN` e sem senha na migration 0001 (ADR-005):
 segredo nunca entra em migration. Login e senha são dados depois, à mão, por quem opera o Neon.
 Nada desta seção foi executado no Neon nem na Cloudflare (exige as contas); os comandos de banco
 foram executados no Postgres local, com uma role que simula o `neondb_owner` (`CREATEROLE` e
 `CREATEDB`, sem superusuário), como indicado em cada passo.
 
+Nomes padronizados (2026-10-28): `evolucao_owner`, `evolucao_app` e `evolucao_backup_ro`. Se o
+banco já tiver as roles antigas (`owner`, `app`, `backup_ro`) de uma migração anterior, a migration
+0024 as renomeia (a senha SCRAM e os privilégios continuam) e as URLs `NEON_URL_APP` e
+`NEON_URL_BACKUP` precisam ser regravadas com o usuário novo (8.4). Não crie as roles pelo console
+do Neon: as criadas por lá podem vir com `BYPASSRLS`, e a 0024 falha de propósito nesse caso.
+
 ### 8.1 Ordem
 
 O primeiro deploy tem uma dependência circular: o `wrangler deploy` precisa do id real do
 Hyperdrive no `wrangler.jsonc` (hoje é o placeholder `00000000000000000000000000000000`); o
-Hyperdrive só é criado com uma URL que conecta, a da role `app`; e a role `app` só existe depois
+Hyperdrive só é criado com uma URL que conecta, a da role `evolucao_app`; e a role `evolucao_app` só existe depois
 da migration 0001. Por isso o login das roles fica **entre a migração e o deploy do Worker**:
 
 1. **Antes de tudo**: os secrets que não dependem das roles no environment `producao`
@@ -581,14 +587,14 @@ da migration 0001. Por isso o login das roles fica **entre a migração e o depl
    está desligado" vem antes do dump e da migração e falha com o id placeholder do
    `wrangler.jsonc`.
 
-3. **Conferir as roles e o pgcrypto** (8.3) e **dar login e senha** a `app` e `backup_ro` (8.2).
+3. **Conferir as roles e o pgcrypto** (8.3) e **dar login e senha** a `evolucao_app` e `evolucao_backup_ro` (8.2).
 4. **Gravar as URLs** `NEON_URL_APP` e `NEON_URL_BACKUP` no environment `producao` (8.4).
-5. **Criar o Hyperdrive** com a URL da `app` e pôr o id no `wrangler.jsonc` (8.5); o commit vai
+5. **Criar o Hyperdrive** com a URL da `evolucao_app` e pôr o id no `wrangler.jsonc` (8.5); o commit vai
    para a `main` pelo fluxo normal (o id não é segredo).
 6. **Rodar o `deploy.yml`** (`gh workflow run deploy.yml --ref main`): a migração não tem nada
    novo e o Worker sobe.
 7. **Depois do deploy**: `https://<domínio>/api/health`, um login completo, o teste de fumaça do
-   isolamento (seção 9) e um backup à mão para provar a `backup_ro`:
+   isolamento (seção 9) e um backup à mão para provar a `evolucao_backup_ro`:
    `gh workflow run backup.yml` e, depois, `gh run list --workflow backup.yml --limit 1`.
 
 O roteiro (`roadmap.md`) diz "depois do primeiro deploy" para o provisionamento: leia como
@@ -604,7 +610,7 @@ de uma URL; com `/`, `@` ou `:` seria preciso codificar). Se o gerenciador não 
 Uma vez por role, com a role de migração (que criou as roles na 0001 e por isso pode alterá-las):
 
 ```bash
-ROLE=app     # depois, backup_ro
+ROLE=evolucao_app     # depois, evolucao_backup_ro
 read -rs SENHA_ROLE && export SENHA_ROLE     # cole a senha do gerenciador
 if [ "${#SENHA_ROLE}" -lt 32 ]; then
   echo "senha vazia ou curta: nada foi alterado"
@@ -623,12 +629,12 @@ linha de comando nem no texto do SQL. Executado no Postgres local: a role simula
 variável vazia, nada foi alterado. PREMISSA: o Neon exige senha com pelo menos 60 bits de
 entropia para role criada por SQL; os 64 caracteres hexadecimais atendem com folga.
 
-**`owner`**: nenhum fluxo de hoje conecta como `owner`. O deploy e os procedimentos deste runbook
-usam a role de migração e assumem `owner` com `SET ROLE` (seção "Conexões"). Dar login a ela é o
-mesmo comando com `ROLE=owner`, mas abre uma porta que nada usa.
-`[A ESCLARECER: dar LOGIN à owner ou mantê-la NOLOGIN (decisão do dono do produto)]`
+**`evolucao_owner`**: nenhum fluxo de hoje conecta como `evolucao_owner`. O deploy e os procedimentos deste runbook
+usam a role de migração e assumem `evolucao_owner` com `SET ROLE` (seção "Conexões"). Dar login a ela é o
+mesmo comando com `ROLE=evolucao_owner`, mas abre uma porta que nada usa.
+`[A ESCLARECER: dar LOGIN à evolucao_owner ou mantê-la NOLOGIN (decisão do dono do produto)]`
 
-Trocar a senha depois (rotação, seção 4) é o mesmo comando; para a `app`, atualize em seguida o
+Trocar a senha depois (rotação, seção 4) é o mesmo comando; para a `evolucao_app`, atualize em seguida o
 Hyperdrive.
 
 ### 8.3 Conferir as roles e o pgcrypto
@@ -638,15 +644,15 @@ Depois do passo 2 e de novo depois de 8.2 (executado no Postgres local):
 ```bash
 psql -X -v ON_ERROR_STOP=1 "$NEON_URL_MIGRACAO" <<'SQL'
 select rolname, rolcanlogin, rolsuper, rolcreaterole, rolcreatedb, rolbypassrls
-from pg_roles where rolname in ('owner', 'app', 'backup_ro') order by 1;
-select has_function_privilege('owner', 'public.crypt(text, text)', 'execute') as crypt,
-       has_function_privilege('owner', 'public.gen_salt(text, integer)', 'execute') as gen_salt;
+from pg_roles where rolname in ('evolucao_owner', 'evolucao_app', 'evolucao_backup_ro') order by 1;
+select has_function_privilege('evolucao_owner', 'public.crypt(text, text)', 'execute') as crypt,
+       has_function_privilege('evolucao_owner', 'public.gen_salt(text, integer)', 'execute') as gen_salt;
 SQL
 ```
 
 Esperado: as três com `rolsuper`, `rolcreaterole`, `rolcreatedb` e `rolbypassrls` em `f`;
 `rolcanlogin` em `t` só nas que receberam login; `crypt` e `gen_salt` em `t` (o hash de senha
-roda como `owner`, migration 0003). Se algo vier diferente, pare: o login do app falharia ou uma
+roda como `evolucao_owner`, migration 0003). Se algo vier diferente, pare: o login do app falharia ou uma
 role teria poder demais.
 
 ### 8.4 URLs no GitHub
@@ -657,10 +663,10 @@ As URLs são montadas na hora, a partir da conexão **direta** do console do Neo
 
 ```bash
 HOST='<host da conexão direta, ep-...neon.tech>'; BANCO=evolucao
-read -rs SENHA_ROLE   # senha da app
-printf '%s' "postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_APP --env producao
-read -rs SENHA_ROLE   # senha da backup_ro
-printf '%s' "postgresql://backup_ro:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_BACKUP --env producao
+read -rs SENHA_ROLE   # senha da evolucao_app
+printf '%s' "postgresql://evolucao_app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_APP --env producao
+read -rs SENHA_ROLE   # senha da evolucao_backup_ro
+printf '%s' "postgresql://evolucao_backup_ro:$SENHA_ROLE@$HOST/$BANCO?sslmode=require" | gh secret set NEON_URL_BACKUP --env producao
 unset SENHA_ROLE
 ```
 
@@ -673,8 +679,8 @@ condição (sintaxe conferida com `--help` no wrangler 4.152.0; **não executado
 Cloudflare):
 
 ```bash
-read -rs SENHA_ROLE   # senha da app
-export NEON_URL_APP="postgresql://app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require"
+read -rs SENHA_ROLE   # senha da evolucao_app
+export NEON_URL_APP="postgresql://evolucao_app:$SENHA_ROLE@$HOST/$BANCO?sslmode=require"
 unset SENHA_ROLE
 node backend/scripts/src/hyperdrive.ts   # valida NEON_URL_APP e imprime o comando abaixo
 pnpm --filter @es/api exec wrangler hyperdrive create evolucao-segura \

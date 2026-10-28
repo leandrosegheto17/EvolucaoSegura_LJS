@@ -9,7 +9,7 @@ import { type BancoDeTeste, codigoDoErro, comoRole, criarBancoMigrado } from './
 //   primeiro (AUTH-09; no instante exato do limite já está encerrada): encerrada_em = agora.
 // Registros válidos, usados, já invalidados ou já encerrados ficam intactos; reexecução não muda
 // nada. Devolve quantos tokens e sessões marcou. Tempo por parâmetro.
-// SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, backup_ro e
+// SECURITY DEFINER do owner, search_path fixo, parâmetros tipados; app executa, evolucao_backup_ro e
 // PUBLIC não.
 
 const PARAMETRO_INVALIDO = '22023';
@@ -66,7 +66,7 @@ async function sessao(campos: { criada: Date; uso: Date; encerrada?: Date }): Pr
 
 // Chamada como app, sem usuário na transação (o cron não tem sessão).
 const vencer = (agora: Date | null = AGORA) =>
-  comoRole(banco.cliente, 'app', async () => {
+  comoRole(banco.cliente, 'evolucao_app', async () => {
     const { rows } = await banco.cliente.query<{ tokens: number; sessoes: number }>(
       'select * from tarefas.vencer_tokens_e_sessoes($1)',
       [agora],
@@ -116,7 +116,7 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
     );
     expect(rows).toEqual([
       {
-        dono: 'owner',
+        dono: 'evolucao_owner',
         definer: true,
         search_path_fixo: true,
         argumentos: 'p_agora timestamp with time zone',
@@ -127,22 +127,22 @@ describe('catálogo: SECURITY DEFINER, search_path fixo, tipos e grants (ISO-03)
     ]);
   });
 
-  it('app executa; backup_ro e PUBLIC não', async () => {
+  it('app executa; evolucao_backup_ro e PUBLIC não', async () => {
     const { rows } = await banco.cliente.query(
-      `select has_function_privilege('app', $1::regprocedure, 'EXECUTE') as app,
-              has_function_privilege('backup_ro', $1::regprocedure, 'EXECUTE') as backup_ro,
+      `select has_function_privilege('evolucao_app', $1::regprocedure, 'EXECUTE') as app,
+              has_function_privilege('evolucao_backup_ro', $1::regprocedure, 'EXECUTE') as evolucao_backup_ro,
               exists (select 1 from aclexplode((select proacl from pg_proc
                                                 where oid = $1::regprocedure)) a
                       where a.grantee = 0) as public`,
       [ASSINATURA],
     );
-    expect(rows).toEqual([{ app: true, backup_ro: false, public: false }]);
+    expect(rows).toEqual([{ app: true, evolucao_backup_ro: false, public: false }]);
   });
 
   it('a app continua sem DELETE e TRUNCATE em token_email e sessao', async () => {
     const { rows } = await banco.cliente.query(
-      `select bool_or(has_table_privilege('app', t, 'DELETE')) as delete,
-              bool_or(has_table_privilege('app', t, 'TRUNCATE')) as truncate
+      `select bool_or(has_table_privilege('evolucao_app', t, 'DELETE')) as delete,
+              bool_or(has_table_privilege('evolucao_app', t, 'TRUNCATE')) as truncate
        from unnest(array['token_email', 'sessao']) t`,
     );
     expect(rows).toEqual([{ delete: false, truncate: false }]);

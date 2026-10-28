@@ -4,21 +4,21 @@
 
 ## 1. Visão geral
 
-Um único Worker serve o front (assets) e a API Hono em `/api/*`. Todo acesso ao banco passa pela API, numa transação por requisição com `SET LOCAL app.usuario_id`; o RLS barra o resto. Tarefas agendadas (lembretes, plano, purga) rodam no mesmo Worker por um único Cron Trigger e só tocam o banco por funções `SECURITY DEFINER` estreitas, para que a role `app` continue sem DELETE e sujeita a RLS.
+Um único Worker serve o front (assets) e a API Hono em `/api/*`. Todo acesso ao banco passa pela API, numa transação por requisição com `SET LOCAL app.usuario_id`; o RLS barra o resto. Tarefas agendadas (lembretes, plano, purga) rodam no mesmo Worker por um único Cron Trigger e só tocam o banco por funções `SECURITY DEFINER` estreitas, para que a role `evolucao_app` continue sem DELETE e sujeita a RLS.
 
 ```mermaid
 graph TD
     N[Navegador / PWA] -->|assets| W[Worker: assets + Hono]
     N -->|/api/*| W
-    W -->|Hyperdrive, role app| DB[(Neon Postgres sa-east-1)]
+    W -->|Hyperdrive, role evolucao_app| DB[(Neon Postgres sa-east-1)]
     W -->|fetch| R[Resend]
     W -->|fetch| A[Asaas API]
     A -->|webhook /api/webhooks/asaas| W
     W -->|Web Push VAPID| PS[Serviços de push]
     C[Cron */5 min] --> W
     W --> S[Sentry]
-    GH[GitHub Actions] -->|pg_dump backup_ro + age| ART[Artefato 30 dias]
-    GH -->|migrar, role owner| DB
+    GH[GitHub Actions] -->|pg_dump evolucao_backup_ro + age| ART[Artefato 30 dias]
+    GH -->|migrar, role evolucao_owner| DB
     GH -->|wrangler deploy| W
 ```
 
@@ -56,23 +56,23 @@ Um despachante chamado a cada 5 minutos roda, em ordem e com orçamento de CPU: 
 
 ## 4. Modelo de dados
 
-Toda tabela de negócio tem `usuario_id`, RLS com `FORCE` e `criado_em`; as editáveis têm `row_version`. A role `app` não tem DELETE em tabela de negócio.
+Toda tabela de negócio tem `usuario_id`, RLS com `FORCE` e `criado_em`; as editáveis têm `row_version`. A role `evolucao_app` não tem DELETE em tabela de negócio.
 
-| Área                                                      | Tabelas                                                                                                         |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Base                                                      | roles `owner`, `app`, `backup_ro`; schema `tarefas`; `app_usuario_id()`; triggers de `row_version` e de revisão |
-| Identidade (sem RLS, acesso por funções e grants mínimos) | `usuario`, `credencial_senha`, `sessao`, `desafio_2fa`, `token_email`, `tentativa_login`, `aceite_termos`       |
-| Limites                                                   | `limite_uso`                                                                                                    |
-| Perfil                                                    | `perfil`, `configuracao_usuario`                                                                                |
-| Anamnese                                                  | `modelo_anamnese`, `modelo_anamnese_item`, `anamnese`, `anamnese_retificacao`                                   |
-| Pacientes                                                 | `paciente`, `consentimento_tcle`                                                                                |
-| Agenda                                                    | `serie_recorrencia`, `sessao_atendimento`                                                                       |
-| Evolução                                                  | `evolucao`, `evolucao_retificacao`, `rascunho`, `modelo_texto`                                                  |
-| Financeiro                                                | `preco_paciente`, `preco_sessao`, `pagamento`                                                                   |
-| Auditoria                                                 | `audit_log` (só inclusão)                                                                                       |
-| Cobrança                                                  | `assinatura`, `webhook_evento`                                                                                  |
-| Push                                                      | `push_subscription`, `notificacao_enviada`                                                                      |
-| Exclusão                                                  | `conta_excluida`                                                                                                |
+| Área                                                      | Tabelas                                                                                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Base                                                      | roles `evolucao_owner`, `evolucao_app`, `evolucao_backup_ro`; schema `tarefas`; `app_usuario_id()`; triggers de `row_version` e de revisão |
+| Identidade (sem RLS, acesso por funções e grants mínimos) | `usuario`, `credencial_senha`, `sessao`, `desafio_2fa`, `token_email`, `tentativa_login`, `aceite_termos`                                  |
+| Limites                                                   | `limite_uso`                                                                                                                               |
+| Perfil                                                    | `perfil`, `configuracao_usuario`                                                                                                           |
+| Anamnese                                                  | `modelo_anamnese`, `modelo_anamnese_item`, `anamnese`, `anamnese_retificacao`                                                              |
+| Pacientes                                                 | `paciente`, `consentimento_tcle`                                                                                                           |
+| Agenda                                                    | `serie_recorrencia`, `sessao_atendimento`                                                                                                  |
+| Evolução                                                  | `evolucao`, `evolucao_retificacao`, `rascunho`, `modelo_texto`                                                                             |
+| Financeiro                                                | `preco_paciente`, `preco_sessao`, `pagamento`                                                                                              |
+| Auditoria                                                 | `audit_log` (só inclusão)                                                                                                                  |
+| Cobrança                                                  | `assinatura`, `webhook_evento`                                                                                                             |
+| Push                                                      | `push_subscription`, `notificacao_enviada`                                                                                                 |
+| Exclusão                                                  | `conta_excluida`                                                                                                                           |
 
 Estados da assinatura: `trial`, `ativa`, `atrasada`, `cancelada`, `free`. O campo `plano` é `pro` ou `free`; `pro` cobre trial, ativa, atrasada e cancelada até `periodo_fim`.
 
@@ -96,7 +96,7 @@ Estados da assinatura: `trial`, `ativa`, `atrasada`, `cancelada`, `free`. O camp
 | Decisão                          | Escolha                                                                                             |
 | -------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Conexão ao banco                 | `pg.Client` por requisição via Hyperdrive, envolvido pelo Kysely; `client.end()` em `ctx.waitUntil` |
-| Tarefas e webhook fora da sessão | Funções `SECURITY DEFINER` no schema `tarefas`, executáveis pela role `app`                         |
+| Tarefas e webhook fora da sessão | Funções `SECURITY DEFINER` no schema `tarefas`, executáveis pela role `evolucao_app`                |
 | Cron                             | Um trigger `*/5 * * * *` com despachante (5 crons por conta, divididos entre 3 apps)                |
 | Push                             | `@block65/webcrypto-web-push` com payload cifrado                                                   |
 | PDF e zip                        | pdfmake e `fflate` no navegador, em chunk sob demanda                                               |

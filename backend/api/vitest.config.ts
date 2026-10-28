@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 import { aliasPg } from './vitest.alias-pg.ts';
 import { urlBancoAdmin, urlBancoApp } from './vitest.urls.ts';
 
-// HYPERDRIVE conecta como a role app, como em produção (RLS valendo). HYPERDRIVE_ADMIN existe só
+// HYPERDRIVE conecta como a role evolucao_app, como em produção (RLS valendo). HYPERDRIVE_ADMIN existe só
 // nos testes: superusuário para semear e conferir dados que o RLS esconde da app.
 export default defineConfig({
   plugins: [

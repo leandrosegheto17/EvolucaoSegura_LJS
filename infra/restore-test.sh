@@ -57,7 +57,7 @@ START=$(date +%s)
 log "etapa=inicio bytes=$(wc -c < "$DUMP" | tr -d ' ')"
 admin -c "CREATE DATABASE \"$DB\"" >/dev/null || die "criar_banco_descartavel"
 # roles citadas nos GRANTs do dump (pg_dump de um banco so nao leva roles)
-for r in owner app backup_ro; do
+for r in evolucao_owner evolucao_app evolucao_backup_ro; do
   admin -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='$r') THEN CREATE ROLE \"$r\" NOLOGIN; END IF; END \$\$" >/dev/null || die "criar_role"
 done
 

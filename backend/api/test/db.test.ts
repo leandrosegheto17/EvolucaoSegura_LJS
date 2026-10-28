@@ -7,7 +7,7 @@ import { comTransacao, TEMPO_LIMITE_CONEXAO_MS } from '../src/db.ts';
 // T32 / ISO-01: uma transação por requisição, com o usuário definido por
 // set_config('app.usuario_id', $1, true) (spike set-local-hyperdrive). O contexto não vaza para a
 // requisição seguinte, erro faz ROLLBACK e, sem usuário, nada de tabela com RLS fica visível.
-// HYPERDRIVE conecta como a role app (vitest.config.ts); HYPERDRIVE_ADMIN é o superusuário de teste.
+// HYPERDRIVE conecta como a role evolucao_app (vitest.config.ts); HYPERDRIVE_ADMIN é o superusuário de teste.
 
 const admin = (env as unknown as { HYPERDRIVE_ADMIN: Hyperdrive }).HYPERDRIVE_ADMIN;
 
@@ -43,12 +43,12 @@ async function registrarEvento(usuarioId: string, alvoId: string): Promise<void>
 }
 
 describe('comTransacao', () => {
-  it('conecta como a role app, sujeita ao RLS', async () => {
+  it('conecta como a role evolucao_app, sujeita ao RLS', async () => {
     const papel = await comTransacao(env, null, async (trx) => {
       const { rows } = await sql<{ papel: string }>`select current_user as papel`.execute(trx);
       return rows[0]?.papel;
     });
-    expect(papel).toBe('app');
+    expect(papel).toBe('evolucao_app');
   });
 
   it('define app.usuario_id dentro da transação', async () => {

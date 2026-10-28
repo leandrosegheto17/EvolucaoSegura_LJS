@@ -32,8 +32,8 @@
 
 - Toda tabela de negócio tem `usuario_id`, RLS com `FORCE ROW LEVEL SECURITY` e `criado_em`. As editáveis têm `row_version`.
 - A API abre uma transação por requisição com `SET LOCAL app.usuario_id`. Nada acessa o banco fora de `comTransacao`.
-- A role `app` não tem DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria. DDL só pela role `owner`, nas migrations.
-- Funções `SECURITY DEFINER` do schema `tarefas`: `search_path` fixo, parâmetros tipados, sem SQL dinâmico; a `app` executa só as listadas.
+- A role `evolucao_app` não tem DELETE nem TRUNCATE nas tabelas de dado clínico, financeiro e de auditoria. DDL só pela role `evolucao_owner`, nas migrations.
+- Funções `SECURITY DEFINER` do schema `tarefas`: `search_path` fixo, parâmetros tipados, sem SQL dinâmico; a `evolucao_app` executa só as listadas.
 - Uma migration por mudança, sempre em transação, aplicada do zero no CI.
 - Hash de senha só no Postgres (`crypt()` com `gen_salt('bf', 12)`), com a senha como parâmetro. O Worker não calcula hash nem gera PDF (OPS-14). Nenhuma biblioteca de hash de senha ou de PDF em `backend/api`.
 - Auditoria só de inclusão, na mesma transação, sem conteúdo clínico.

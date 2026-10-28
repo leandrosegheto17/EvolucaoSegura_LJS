@@ -174,7 +174,7 @@ describe('evolucao: edição só no dia do cadastro (EVO-04)', () => {
       ]);
       await banco.cliente.query('set local session_replication_role = origin');
       await banco.cliente.query("select set_config('app.usuario_id', $1, true)", [A]);
-      await banco.cliente.query('set local role app');
+      await banco.cliente.query('set local role evolucao_app');
       return codigoDoErro(() =>
         banco.cliente.query(
           `update evolucao set texto = 'Outro texto', row_version = row_version + 1,
@@ -201,12 +201,12 @@ describe('evolucao: edição só no dia do cadastro (EVO-04)', () => {
 
   it('a app só altera o texto (paciente, sessão, dono e data fixos)', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'evolucao', 'texto', 'UPDATE') as texto,
-              has_column_privilege('app', 'evolucao', 'paciente_id', 'UPDATE') as paciente,
-              has_column_privilege('app', 'evolucao', 'sessao_id', 'UPDATE') as sessao,
-              has_column_privilege('app', 'evolucao', 'usuario_id', 'UPDATE') as dono,
-              has_column_privilege('app', 'evolucao', 'criado_em', 'UPDATE') as criado,
-              has_column_privilege('app', 'evolucao', 'criado_em', 'INSERT') as criado_insert`,
+      `select has_column_privilege('evolucao_app', 'evolucao', 'texto', 'UPDATE') as texto,
+              has_column_privilege('evolucao_app', 'evolucao', 'paciente_id', 'UPDATE') as paciente,
+              has_column_privilege('evolucao_app', 'evolucao', 'sessao_id', 'UPDATE') as sessao,
+              has_column_privilege('evolucao_app', 'evolucao', 'usuario_id', 'UPDATE') as dono,
+              has_column_privilege('evolucao_app', 'evolucao', 'criado_em', 'UPDATE') as criado,
+              has_column_privilege('evolucao_app', 'evolucao', 'criado_em', 'INSERT') as criado_insert`,
     );
     expect(privilegios).toEqual({
       texto: true,
@@ -250,7 +250,7 @@ describe('evolucao_retificacao: texto novo e motivo, só de inclusão (EVO-05)',
     ['DELETE', 'delete from evolucao_retificacao'],
     ['TRUNCATE', 'truncate evolucao_retificacao'],
   ])('%s é barrado pelo trigger mesmo para owner e superusuário', async (_rotulo, comando) => {
-    for (const role of [null, 'owner']) {
+    for (const role of [null, 'evolucao_owner']) {
       const codigo = await comoRole(
         banco.cliente,
         role,
@@ -263,9 +263,9 @@ describe('evolucao_retificacao: texto novo e motivo, só de inclusão (EVO-05)',
 
   it('a original fica intacta: a app só tem SELECT e INSERT na retificação', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', 'evolucao_retificacao', 'SELECT') as select,
-              has_any_column_privilege('app', 'evolucao_retificacao', 'INSERT') as insert,
-              has_any_column_privilege('app', 'evolucao_retificacao', 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_app', 'evolucao_retificacao', 'SELECT') as select,
+              has_any_column_privilege('evolucao_app', 'evolucao_retificacao', 'INSERT') as insert,
+              has_any_column_privilege('evolucao_app', 'evolucao_retificacao', 'UPDATE') as update`,
     );
     expect(privilegios).toEqual({ select: true, insert: true, update: false });
   });
@@ -292,11 +292,11 @@ describe('rascunho: um por (profissional, tipo, ref) (RAS-01)', () => {
 
   it('upsert substitui o payload: a app só troca payload e versão', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'rascunho', 'payload', 'UPDATE') as payload,
-              has_column_privilege('app', 'rascunho', 'row_version', 'UPDATE') as versao,
-              has_column_privilege('app', 'rascunho', 'tipo', 'UPDATE') as tipo,
-              has_column_privilege('app', 'rascunho', 'ref', 'UPDATE') as ref,
-              has_column_privilege('app', 'rascunho', 'usuario_id', 'UPDATE') as dono`,
+      `select has_column_privilege('evolucao_app', 'rascunho', 'payload', 'UPDATE') as payload,
+              has_column_privilege('evolucao_app', 'rascunho', 'row_version', 'UPDATE') as versao,
+              has_column_privilege('evolucao_app', 'rascunho', 'tipo', 'UPDATE') as tipo,
+              has_column_privilege('evolucao_app', 'rascunho', 'ref', 'UPDATE') as ref,
+              has_column_privilege('evolucao_app', 'rascunho', 'usuario_id', 'UPDATE') as dono`,
     );
     expect(privilegios).toEqual({
       payload: true,
@@ -332,11 +332,11 @@ describe('modelo_texto (RAS-03)', () => {
 
   it('arquivar é preencher arquivado_em (a app troca nome, corpo e arquivado_em)', async () => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_column_privilege('app', 'modelo_texto', 'arquivado_em', 'UPDATE') as arquivado,
-              has_column_privilege('app', 'modelo_texto', 'nome', 'UPDATE') as nome,
-              has_column_privilege('app', 'modelo_texto', 'corpo', 'UPDATE') as corpo,
-              has_column_privilege('app', 'modelo_texto', 'tipo', 'UPDATE') as tipo,
-              has_column_privilege('app', 'modelo_texto', 'usuario_id', 'UPDATE') as dono`,
+      `select has_column_privilege('evolucao_app', 'modelo_texto', 'arquivado_em', 'UPDATE') as arquivado,
+              has_column_privilege('evolucao_app', 'modelo_texto', 'nome', 'UPDATE') as nome,
+              has_column_privilege('evolucao_app', 'modelo_texto', 'corpo', 'UPDATE') as corpo,
+              has_column_privilege('evolucao_app', 'modelo_texto', 'tipo', 'UPDATE') as tipo,
+              has_column_privilege('evolucao_app', 'modelo_texto', 'usuario_id', 'UPDATE') as dono`,
     );
     expect(privilegios).toEqual({
       arquivado: true,
@@ -351,8 +351,8 @@ describe('modelo_texto (RAS-03)', () => {
 describe('nada é apagado (EVO-07, ISO-03)', () => {
   it.each(TABELAS)('%s: a app não tem DELETE nem TRUNCATE', async (tabela) => {
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('app', $1, 'DELETE') as delete,
-              has_table_privilege('app', $1, 'TRUNCATE') as truncate`,
+      `select has_table_privilege('evolucao_app', $1, 'DELETE') as delete,
+              has_table_privilege('evolucao_app', $1, 'TRUNCATE') as truncate`,
       [tabela],
     );
     expect(privilegios).toEqual({ delete: false, truncate: false });
@@ -375,20 +375,26 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
   });
 
   it('o profissional só enxerga as próprias linhas', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, A))).toEqual(new Set([A]));
-    expect(new Set(await comoRole(banco.cliente, 'app', visiveis, B))).toEqual(new Set([B]));
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, A))).toEqual(
+      new Set([A]),
+    );
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_app', visiveis, B))).toEqual(
+      new Set([B]),
+    );
   });
 
   it('sem usuário na transação, nenhuma linha (nem para owner)', async () => {
-    expect(await comoRole(banco.cliente, 'app', visiveis)).toEqual([]);
-    expect(await comoRole(banco.cliente, 'owner', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_app', visiveis)).toEqual([]);
+    expect(await comoRole(banco.cliente, 'evolucao_owner', visiveis)).toEqual([]);
   });
 
-  it('backup_ro lê todas as linhas e não escreve', async () => {
-    expect(new Set(await comoRole(banco.cliente, 'backup_ro', visiveis))).toEqual(new Set([A, B]));
+  it('evolucao_backup_ro lê todas as linhas e não escreve', async () => {
+    expect(new Set(await comoRole(banco.cliente, 'evolucao_backup_ro', visiveis))).toEqual(
+      new Set([A, B]),
+    );
     const [privilegios] = await consultar<Record<string, boolean>>(
-      `select has_table_privilege('backup_ro', $1, 'INSERT') as insert,
-              has_table_privilege('backup_ro', $1, 'UPDATE') as update`,
+      `select has_table_privilege('evolucao_backup_ro', $1, 'INSERT') as insert,
+              has_table_privilege('evolucao_backup_ro', $1, 'UPDATE') as update`,
       [tabela],
     );
     expect(privilegios).toEqual({ insert: false, update: false });
@@ -417,7 +423,7 @@ describe.each(TABELAS)('%s: RLS forçada e isolamento (ISO-01)', (tabela) => {
     const [comando, parametros] = comandos[tabela];
     const codigo = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       () => codigoDoErro(() => banco.cliente.query(comando, parametros)),
       A,
     );
@@ -429,7 +435,7 @@ describe('a app registra a evolução do próprio paciente', () => {
   it('cria evolução, rascunho e modelo e edita a evolução no dia', async () => {
     const resultado = await comoRole(
       banco.cliente,
-      'app',
+      'evolucao_app',
       async () => {
         const { rows } = await banco.cliente.query<{ id: string }>(
           `insert into evolucao (usuario_id, paciente_id, sessao_id, texto)
