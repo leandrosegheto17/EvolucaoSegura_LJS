@@ -1,5 +1,6 @@
 import { RESPOSTA_LOGIN_RECUSADO } from '@es/contrato/identidade';
 import { env } from 'cloudflare:workers';
+import pg from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 import { criarApp } from '../../src/app.ts';
 import { ErroEnvioEmail } from '../../src/integracoes/resend.ts';
@@ -247,5 +248,70 @@ describe('falha do e-mail do código (AUTH-08)', LENTO, () => {
       ['email', await sha256(conta.email), 'ip', await sha256(ip)],
     );
     expect(tentativas).toEqual([]);
+  });
+});
+
+// T212 / AUTH-02: o hash é calculado também no caminho de e-mail inexistente, provado sem
+// cronômetro. Na mesma transação, com track_functions = 'all' só nela, chama conferir_senha como a
+// role da app (a mesma consulta da rota) e lê em pg_stat_xact_user_functions quantas vezes o
+// bcrypt (crypt) e o gerador de salt (gen_salt) rodaram.
+async function chamadasNoLogin(email: string, senha: string) {
+  const url = (env as unknown as { HYPERDRIVE_ADMIN: Hyperdrive }).HYPERDRIVE_ADMIN;
+  const cliente = new pg.Client({ connectionString: url.connectionString });
+  cliente.on('error', () => {});
+  await cliente.connect();
+  try {
+    await cliente.query('begin');
+    await cliente.query("set local track_functions = 'all'");
+    await cliente.query('set local role evolucao_app');
+    const { rows } = await cliente.query<{ id: string | null }>(
+      'select conferir_senha($1, $2) as id',
+      [email, senha],
+    );
+    const stats = await cliente.query<{ funcname: string; calls: string }>(
+      `select funcname, calls from pg_stat_xact_user_functions
+        where schemaname = 'public' and funcname in ('conferir_senha', 'crypt', 'gen_salt')`,
+    );
+    await cliente.query('rollback');
+    const calls = Object.fromEntries(stats.rows.map((r) => [r.funcname, Number(r.calls)]));
+    return {
+      id: rows[0]!.id,
+      conferir: calls['conferir_senha'] ?? 0,
+      crypt: calls['crypt'] ?? 0,
+      genSalt: calls['gen_salt'] ?? 0,
+    };
+  } finally {
+    await cliente.end();
+  }
+}
+
+describe('hash também no e-mail inexistente, sem cronômetro (AUTH-02)', LENTO, () => {
+  it('e-mail inexistente: conferir_senha calcula um bcrypt com salt novo e devolve null', async () => {
+    const conta = await criarConta();
+    const inexistente = await chamadasNoLogin(emailUnico('ninguem'), conta.senha);
+    expect(inexistente).toEqual({ id: null, conferir: 1, crypt: 1, genSalt: 1 });
+  });
+
+  it('mesma quantidade de bcrypt que a senha errada de uma conta que existe', async () => {
+    const conta = await criarConta();
+    const senhaErrada = await chamadasNoLogin(conta.email, `${conta.senha}x`);
+    const inexistente = await chamadasNoLogin(emailUnico('ninguem'), conta.senha);
+    expect(senhaErrada).toEqual({ id: null, conferir: 1, crypt: 1, genSalt: 0 });
+    expect(inexistente.crypt).toBe(senhaErrada.crypt);
+  });
+
+  it('o salt do caminho inexistente tem o mesmo custo (12) do hash gravado', async () => {
+    const conta = await criarConta();
+    const [gravado] = await comoAdmin<{ hash: string }>(
+      'select hash from credencial_senha where usuario_id = $1',
+      [conta.id],
+    );
+    const [fonte] = await comoAdmin<{ src: string }>(
+      `select prosrc as src from pg_proc where proname = 'conferir_senha'`,
+    );
+    expect(gravado!.hash).toMatch(/^\$2[abxy]\$12\$/);
+    expect(fonte!.src).toMatch(
+      /IF v_hash IS NULL THEN\s+PERFORM public\.crypt\(p_senha, public\.gen_salt\('bf', 12\)\);/,
+    );
   });
 });

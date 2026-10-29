@@ -4257,8 +4257,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: o código já calculava o hash, então não houve correção de código. 3 testes novos em `auth-entrar.test.ts` ("hash também no e-mail inexistente, sem cronômetro") contam, na própria transação e com `track_functions = 'all'`, as chamadas de `conferir_senha`, `crypt` e `gen_salt` como a role da app: e-mail inexistente = 1 `crypt` e 1 `gen_salt`, igual em `crypt` à senha errada de conta existente; salt de custo 12 igual ao do hash gravado. Mutante descartável (função recriada sem o `PERFORM crypt`, dentro de transação desfeita): o teste falha com `crypt: 0, genSalt: 0`)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test --maxWorkers=6`: 212 arquivos, 3362 testes (+3), 0 falhas; lint e typecheck verdes)
 
 **Tests**: unit/integração
 **Gate**: full
