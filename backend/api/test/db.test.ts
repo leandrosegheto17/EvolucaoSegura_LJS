@@ -133,6 +133,45 @@ describe('comTransacao', () => {
   });
 });
 
+// T202 / ISO-01: em produção o Hyperdrive reaproveita a mesma sessão do Postgres entre
+// requisições. Aqui as duas chamadas de comTransacao recebem a MESMA conexão (o pg.Client é
+// trocado por um embrulho que não abre nem fecha de novo): só o escopo de transação do
+// set_config (o "SET LOCAL") impede que o usuário da primeira apareça na segunda.
+describe('comTransacao: conexão compartilhada entre requisições', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('o usuário da primeira transação não vaza para a seguinte na mesma conexão', async () => {
+    const compartilhada = new pg.Client({ connectionString: env.HYPERDRIVE.connectionString });
+    compartilhada.on('error', () => {});
+    await compartilhada.connect();
+    const embrulho = {
+      on: () => embrulho,
+      connect: async () => {},
+      end: async () => {},
+      query: compartilhada.query.bind(compartilhada),
+    };
+    const criar = vi.spyOn(pg, 'Client').mockImplementation(function () {
+      return embrulho as unknown as pg.Client;
+    } as never);
+    try {
+      const usuario = novoId();
+      expect(await usuarioDaTransacao(usuario)).toBe(usuario);
+      expect(await usuarioDaTransacao(null)).toBeNull();
+      expect(criar).toHaveBeenCalledTimes(2);
+      // Fora de qualquer transação, a sessão compartilhada também não guardou o usuário.
+      const { rows } = await compartilhada.query<{ valor: string | null }>(
+        "select nullif(current_setting('app.usuario_id', true), '') as valor",
+      );
+      expect(rows[0]?.valor).toBeNull();
+    } finally {
+      vi.restoreAllMocks();
+      await compartilhada.end();
+    }
+  });
+});
+
 // Padrão Neon, item 5: a conexão tem tempo limite de 8 s e não há nova tentativa.
 describe('comTransacao: tempo limite da conexão', () => {
   afterEach(() => {

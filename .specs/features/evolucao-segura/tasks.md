@@ -4071,8 +4071,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: com o mutante M10, `set_config(..., false)`, `db.test.ts:161` falha recebendo o usuário da transação anterior; com `true`, passa)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 210 arquivos, 3317 testes, 0 falhas)
 
 **Tests**: unit/integração
 **Gate**: full
