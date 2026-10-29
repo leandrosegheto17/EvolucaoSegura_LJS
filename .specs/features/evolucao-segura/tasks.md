@@ -191,7 +191,7 @@ T158 -> T185 -> T159 -> T186 -> T160 -> T187
 ### Phase 23: Etapa 15, parte 2: Fechamento (comparação visual, restauração, README e runbook)
 
 ```
-T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T197 -> T198 -> T199 -> T195 -> T165
+T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T197 -> T198 -> T199 -> T195 -> T200 -> T201 -> T165
 ```
 
 ---
@@ -3995,12 +3995,53 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
+### T200: Backup lê tudo: migration 0025 e `--enable-row-security`
+
+**What**: Corrigir as três causas da falha do backup: migration 0025 concede SELECT em `pgmigrations` e nas sequences à `evolucao_backup_ro` (e privilégio padrão para sequences futuras); `backup.yml` passa `--enable-row-security` ao `pg_dump`. `evolucao_owner` continua `NOLOGIN`.
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `backend/scripts/migrations/0025_backup_leitura.ts`, `.github/workflows/backup.yml`, teste de migration
+**Depends on**: T195
+**Requirement**: OPS-01, OPS-02
+
+**Done when**:
+
+- [ ] Migration 0025 concede SELECT em `pgmigrations` e em todas as sequences à `evolucao_backup_ro`, e `ALTER DEFAULT PRIVILEGES` para sequences futuras
+- [ ] Teste roda `pg_dump -Fc --enable-row-security` como `evolucao_backup_ro` num banco migrado e o dump traz linhas de tabelas com RLS
+- [ ] `backup.yml` usa `--enable-row-security` (teste do workflow)
+- [ ] Teste confirma `evolucao_backup_ro` sem INSERT/UPDATE/DELETE e `evolucao_owner` sem LOGIN
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T201: Dump antes do deploy pela `evolucao_backup_ro`
+
+**What**: `deploy.yml` passa a fazer o dump pré-deploy com `NEON_URL_BACKUP` e `--enable-row-security`, sem depender de BYPASSRLS da role de migração.
+**Estimativa**: 1h
+**Risco**: alto
+**Where**: `.github/workflows/deploy.yml`, `backend/scripts/test/deploy-workflow.test.ts`
+**Depends on**: T200
+**Requirement**: OPS-01, OPS-11
+
+**Done when**:
+
+- [ ] Passo do dump pré-deploy usa `NEON_URL_BACKUP` validada por `validarUrlNeon` e `--enable-row-security`
+- [ ] Teste do workflow falha se o dump voltar a usar `NEON_URL_MIGRACAO`
+- [ ] Ordem fixa do deploy preservada (dump antes da migração)
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
 ### T165: Restauração executada e registrada
 
 **What**: Executar o backup, restaurar numa cópia limpa e registrar data, tamanho do dump e contagens no runbook.
 **Estimativa**: 1,5h
 **Where**: `docs/runbook.md`
-**Depends on**: T195
+**Depends on**: T201
 **Requirement**: OPS-02, OPS-01
 
 **Done when**:
