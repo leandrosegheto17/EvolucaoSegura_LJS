@@ -57,12 +57,21 @@ jobs:
         # validarUrlNeon: host *.neon.tech, conexão direta (sem -pooler) e sslmode exigindo TLS.
         run: node backend/scripts/src/neon/validar-url.ts NEON_URL_MIGRACAO
 
+      - name: Validar a URL do Neon do backup
+        env:
+          NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
+        # validarUrlNeon: host *.neon.tech, conexão direta (sem -pooler) e sslmode exigindo TLS.
+        run: node backend/scripts/src/neon/validar-url.ts NEON_URL_BACKUP
+
       - name: Dump cifrado antes da migração
         env:
-          NEON_URL_MIGRACAO: ${{ secrets.NEON_URL_MIGRACAO }}
+          NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
           AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+        # Pela evolucao_backup_ro, como o backup diário (OPS-01): a role de migração não precisa de
+        # BYPASSRLS. --enable-row-security: as tabelas com RLS são lidas pelas policies da
+        # evolucao_backup_ro; sem a opção o pg_dump falha nelas.
         run: |
-          pg_dump -Fc "$NEON_URL_MIGRACAO" | age -r "$AGE_PUBLIC_KEY" -o dump-pre-deploy.dump.age
+          pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o dump-pre-deploy.dump.age
       - name: Guardar o dump cifrado
         uses: actions/upload-artifact@v7
         with:

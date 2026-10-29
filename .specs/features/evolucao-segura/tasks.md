@@ -4027,9 +4027,9 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Passo do dump pré-deploy usa `NEON_URL_BACKUP` validada por `validarUrlNeon` e `--enable-row-security`
-- [ ] Teste do workflow falha se o dump voltar a usar `NEON_URL_MIGRACAO`
-- [ ] Ordem fixa do deploy preservada (dump antes da migração)
+- [x] Passo do dump pré-deploy usa `NEON_URL_BACKUP` validada por `validarUrlNeon` e `--enable-row-security`
+- [x] Teste do workflow falha se o dump voltar a usar `NEON_URL_MIGRACAO`
+- [x] Ordem fixa do deploy preservada (dump antes da migração)
 
 **Tests**: unit
 **Gate**: quick

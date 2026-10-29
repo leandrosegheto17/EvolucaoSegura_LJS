@@ -120,6 +120,44 @@ describe('deploy.yml (OPS-03)', () => {
     expect(validar).toBeLessThan(indice(executa('pnpm migrar')));
   });
 
+  // T201 (OPS-01, OPS-11): o dump antes do deploy é feito pela evolucao_backup_ro, como o backup
+  // diário, e não pela role de migração: não depende de BYPASSRLS de quem migra.
+  it('faz o dump pré-deploy com a NEON_URL_BACKUP e --enable-row-security', () => {
+    const dump = passos[indice(executa('pg_dump'))];
+
+    expect(dump?.run).toMatch(/pg_dump -Fc --enable-row-security "\$NEON_URL_BACKUP" \| age -r /);
+    expect(dump?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
+  });
+
+  it('o dump pré-deploy não usa a NEON_URL_MIGRACAO', () => {
+    const dumps = passos.filter((passo) => /pg_dump\s+-/.test(passo.run ?? ''));
+
+    expect(dumps).toHaveLength(1);
+    expect(dumps[0]?.run).not.toContain('NEON_URL_MIGRACAO');
+    expect(Object.keys(dumps[0]?.env ?? {})).not.toContain('NEON_URL_MIGRACAO');
+  });
+
+  it('valida a NEON_URL_BACKUP (validarUrlNeon) depois do checkout e antes do dump', () => {
+    const validar = indice(executa('src/neon/validar-url.ts NEON_URL_BACKUP'));
+
+    expect(validar).toBeGreaterThan(indice(usa('actions/checkout')));
+    expect(passos[validar]?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
+    expect(validar).toBeLessThan(indice(executa('pg_dump')));
+  });
+
+  it('ordem fixa: valida, faz o dump, guarda o artefato e só então migra', () => {
+    const ordem = [
+      indice(executa('src/neon/validar-url.ts NEON_URL_BACKUP')),
+      indice(executa('pg_dump')),
+      indice(usa('actions/upload-artifact')),
+      indice(executa('pnpm migrar')),
+    ];
+
+    expect(ordem.every((posicao) => posicao >= 0)).toBe(true);
+    expect(ordem).toEqual([...ordem].sort((a, b) => a - b));
+    expect(new Set(ordem).size).toBe(ordem.length);
+  });
+
   it('confere o cache do Hyperdrive desligado antes do dump, da migração e do deploy', () => {
     const cache = indice(executa('cache-hyperdrive'));
 
