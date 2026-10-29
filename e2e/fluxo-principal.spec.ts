@@ -22,7 +22,7 @@ test('sessão criada e evolução registrada: a sessão vira realizada', async (
   const sessao = page.getByRole('listitem').filter({ hasText: nome });
   await expect(sessao).not.toContainText('Realizada');
 
-  await registrarEvolucao(page, pacienteId, sessaoId);
+  await registrarEvolucao(page, nome, data, pacienteId, sessaoId);
 
   await page.goto(`/app/agenda?semana=${data}`);
   await expect(sessao).toContainText('Realizada');

@@ -4147,8 +4147,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: `registrarEvolucao` abre a agenda, clica em "Evolução" na linha do paciente e afirma a URL `/app/pacientes/<id>/evolucao?sessao=<id>`; `pnpm e2e fluxo-principal fluxo-pagamento`: 2 passed; com o link sem `sessao` (mutante temporário em `urlEvolucaoDaSessao`), os 2 falham em `toHaveURL` recebendo a URL sem `?sessao=`. Rodado com `127.0.0.1` e porta do Worker 8788 alterados só na cópia de trabalho, sem commit: `localhost` trava no Windows (T207) e um `wrangler dev` órfão de 28/10 ocupa a 8787)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (lint e typecheck do `@es/e2e` verdes; os 2 specs clínicos seguem com 1 teste cada)
 
 **Tests**: unit
 **Gate**: quick

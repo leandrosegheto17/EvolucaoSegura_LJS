@@ -41,7 +41,8 @@ export async function agendarSessao(
   );
 }
 
-// Id da sessão do paciente, lido da API (a tela da agenda não o mostra).
+// Id da sessão do paciente, lido da API (a tela da agenda não o mostra); serve para conferir o
+// ?sessao= que o link da agenda gera.
 export async function idDaSessao(page: Page, pacienteId: string, data: string): Promise<string> {
   const de = new Date(`${data}T00:00:00Z`);
   de.setUTCDate(de.getUTCDate() - 1);
@@ -57,13 +58,24 @@ export async function idDaSessao(page: Page, pacienteId: string, data: string): 
   return sessao.id;
 }
 
-// EVO-01, EVO-03: registra a evolução ligada à sessão (a tela recebe a sessão em ?sessao=).
+// EVO-01, EVO-03: registra a evolução ligada à sessão pelos cliques, como a pessoa faz: abre a
+// agenda da semana da sessão, clica em "Evolução" na linha do paciente e confere que a tela da
+// evolução recebeu a sessão em ?sessao=<id> (T206; antes o e2e navegava direto para a URL com
+// ?sessao=, o que escondia a falta do link na interface).
 export async function registrarEvolucao(
   page: Page,
+  nomePaciente: string,
+  data: string,
   pacienteId: string,
   sessaoId: string,
 ): Promise<void> {
-  await page.goto(`/app/pacientes/${pacienteId}/evolucao?sessao=${sessaoId}`);
+  await page.goto(`/app/agenda?semana=${data}`);
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: nomePaciente })
+    .getByRole('link', { name: 'Evolução' })
+    .click();
+  await expect(page).toHaveURL(`/app/pacientes/${pacienteId}/evolucao?sessao=${sessaoId}`);
   await page
     .getByLabel('Texto da evolução')
     .fill('Paciente colaborativo; relatou melhora do sono.');

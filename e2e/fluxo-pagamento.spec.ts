@@ -20,7 +20,7 @@ test('pagamento registrado: o débito do paciente some', async ({ page, request 
   await definirPrecoDoPaciente(page, pacienteId, '150,00');
   await agendarSessao(page, nome, data, '14:00');
   const sessaoId = await idDaSessao(page, pacienteId, data);
-  await registrarEvolucao(page, pacienteId, sessaoId);
+  await registrarEvolucao(page, nome, data, pacienteId, sessaoId);
 
   // A sessão realizada e cobrável aparece como débito.
   await page.goto('/app/financeiro');
