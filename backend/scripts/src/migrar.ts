@@ -49,7 +49,7 @@ export async function migrar({
 }
 
 // URL local padrão: o Postgres do docker-compose.
-export const URL_LOCAL_PADRAO = 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
+export const URL_LOCAL_PADRAO = 'postgres://postgres:postgres@127.0.0.1:5433/evolucao_segura';
 
 // Variável da URL da role de migração em cada branch do Neon.
 export const VARIAVEL_DO_ALVO: Record<Alvo, string> = {

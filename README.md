@@ -124,6 +124,11 @@ pnpm e2e             # Playwright: sobe coletor de e-mail e Worker local, banco 
 
 O gate do projeto (`.specs/projeto/testes.json`) é `pnpm lint && pnpm typecheck && pnpm test`.
 
+Sem `DATABASE_URL`, os testes, o e2e e o `pnpm migrar` local usam `127.0.0.1:5433` (não
+`localhost`: no Windows ele resolve primeiro para IPv6 e a conexão expira sem mensagem). Outra
+porta: `PG_PORTA` (testes da API e e2e). O teste do backup (`migration-0025`) precisa do
+`pg_dump` 18: aponte `PG_BIN` para a pasta dele se o do PATH for mais antigo.
+
 Os testes não escrevem no banco de `DATABASE_URL`: ela só indica o servidor (sempre local: o
 globalSetup da API e o `migrar()` recusam host remoto). Os testes da API criam um banco temporário por execução
 (`es_api_<instante>_<aleatório>`, em `backend/api/test/preparar-banco.ts`) e o apagam no fim; os

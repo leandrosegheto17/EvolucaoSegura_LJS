@@ -7,7 +7,7 @@ import { migrar } from '../src/migrar.ts';
 // então os testes as assumem com SET ROLE a partir da conexão de superusuário.
 
 const urlBase =
-  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
+  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@127.0.0.1:5433/evolucao_segura';
 const semLog = { info: () => {}, warn: () => {}, error: () => {} };
 export const pastaMigrations = resolve(import.meta.dirname, '../migrations');
 

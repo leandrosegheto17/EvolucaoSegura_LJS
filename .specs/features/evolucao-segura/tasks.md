@@ -4160,14 +4160,14 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 **What**: `backend/api/vitest.urls.ts` e `e2e/apoio/config.ts` passam a usar `127.0.0.1` (e a porta configurável por variável), evitando o travamento por IPv6 no Windows; teste de unidade da leitura da URL.
 **Estimativa**: 1h
 **Risco**: baixo
-**Where**: `backend/api/vitest.urls.ts`, `e2e/apoio/config.ts`
+**Where**: `backend/api/vitest.urls.ts`, `e2e/apoio/config.ts` (e os demais padrões `postgres:postgres@localhost:5433` dos testes de `backend/scripts` e o `URL_LOCAL_PADRAO` do `pnpm migrar`, que travavam do mesmo jeito)
 **Depends on**: T206
 **Requirement**: OPS-05
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: `backend/scripts/test/urls-banco-teste.test.ts` (17 testes: padrão `127.0.0.1:5433`, `PG_PORTA`, precedência de `DATABASE_URL`, porta inválida recusada, varredura sem `postgres:postgres@localhost`) falha sem a correção (`urlServidorDe`/`urlsBancoE2e` inexistentes; varredura acha 6 arquivos) e passa com ela. `pnpm test` **sem** `DATABASE_URL`: antes, 30 arquivos de `@es/scripts` estouravam o tempo; depois, 211 arquivos e 3343 testes verdes)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test` sem `DATABASE_URL`: 211 arquivos, 3343 testes (+17), 0 falhas; lint e typecheck verdes. Neste Windows o `pg_dump` do PATH é o 16 e a `migration-0025` exige o 18: rodado com `PG_BIN` apontando o 18, como no CI; a falha sem `PG_BIN` acontece igual no commit anterior)
 
 **Tests**: unit
 **Gate**: quick

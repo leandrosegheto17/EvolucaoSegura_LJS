@@ -1,9 +1,24 @@
-// URLs do Postgres dos testes da API. Local: docker-compose (5433 no host). CI: DATABASE_URL
+// URLs do Postgres dos testes da API. Local: docker-compose (5433 no host, ou PG_PORTA). CI: DATABASE_URL
 // aponta para o serviço (5432). DATABASE_URL só diz qual servidor usar: os testes rodam num banco
 // TEMPORÁRIO, criado pelo globalSetup (test/preparar-banco.ts) e apagado no fim da execução.
 // A URL da role evolucao_app troca só usuário e senha (ver test/preparar-banco.ts).
-export const urlServidorTeste =
-  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
+// O padrão usa 127.0.0.1, não localhost: no Windows o localhost resolve primeiro para IPv6 e a
+// conexão ao Postgres do docker-compose expira sem mensagem (T207). PG_PORTA troca só a porta.
+export function portaPg(env: Record<string, string | undefined>): string {
+  const porta = env['PG_PORTA'] || '5433';
+  const n = Number(porta);
+  if (!/^\d+$/.test(porta) || n < 1 || n > 65535)
+    throw new Error(`PG_PORTA inválida: ${JSON.stringify(porta)} (use um número de 1 a 65535)`);
+  return porta;
+}
+
+export function urlServidorDe(env: Record<string, string | undefined>): string {
+  return (
+    env['DATABASE_URL'] ?? `postgres://postgres:postgres@127.0.0.1:${portaPg(env)}/evolucao_segura`
+  );
+}
+
+export const urlServidorTeste = urlServidorDe(process.env);
 
 // Um nome por execução. O config do Vitest e o globalSetup rodam no mesmo processo, mas cada um
 // pode carregar este módulo de novo: o nome fica no process.env para os dois verem o mesmo.

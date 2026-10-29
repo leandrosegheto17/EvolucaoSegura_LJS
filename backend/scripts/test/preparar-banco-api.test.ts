@@ -12,7 +12,7 @@ import { HostRecusado } from '../src/seguranca/trava-host.ts';
 // fim, em vez do banco de DATABASE_URL.
 
 const urlServidor =
-  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
+  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@127.0.0.1:5433/evolucao_segura';
 const manutencao = new URL(urlServidor);
 manutencao.pathname = '/postgres';
 const admin = new pg.Client({ connectionString: manutencao.toString() });

@@ -12,7 +12,7 @@ import { migrar } from '../src/migrar.ts';
 // banco criado e apagado por teste, no Postgres local (docker compose up -d) ou do CI.
 
 const urlBase =
-  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@localhost:5433/evolucao_segura';
+  process.env['DATABASE_URL'] ?? 'postgres://postgres:postgres@127.0.0.1:5433/evolucao_segura';
 const semLog = { info: () => {}, warn: () => {}, error: () => {} };
 const executar = promisify(execFile);
 
