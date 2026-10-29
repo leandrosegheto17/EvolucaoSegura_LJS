@@ -128,6 +128,41 @@ describe('Agenda da semana (AGE-03)', () => {
     await screen.findByText('09:00–09:50');
     expect((await axe(container)).violations).toEqual([]);
   });
+
+  // T205 / EVO-03: a evolução só fica ligada à sessão quando a tela recebe ?sessao=<id>. Cada
+  // sessão da agenda ganha o link "Evolução" com o id dela, salvo cancelada e remarcada (o mesmo
+  // critério da lista de hoje do Início).
+  it('"Evolução" de cada sessão leva à evolução do paciente com ?sessao=<id dela> (EVO-03)', async () => {
+    mock([
+      sessao('s1', new Date(2026, 9, 27, 9, 0), 50, 'agendada'),
+      sessao('s2', new Date(2026, 9, 27, 11, 0), 50, 'realizada'),
+      sessao('s3', new Date(2026, 9, 28, 15, 0), 50, 'faltou'),
+    ]);
+    setup();
+    const linha = async (h: string) => (await screen.findByText(h)).closest('li')!;
+    const href = async (h: string) =>
+      within(await linha(h))
+        .getByRole('link', { name: 'Evolução' })
+        .getAttribute('href');
+    expect(await href('09:00–09:50')).toBe('/app/pacientes/p1/evolucao?sessao=s1');
+    expect(await href('11:00–11:50')).toBe('/app/pacientes/p1/evolucao?sessao=s2');
+    expect(await href('15:00–15:50')).toBe('/app/pacientes/p1/evolucao?sessao=s3');
+    fireEvent.click(within(await linha('11:00–11:50')).getByRole('link', { name: 'Evolução' }));
+    expect(screen.getByTestId('loc').textContent).toBe('/app/pacientes/p1/evolucao?sessao=s2');
+  });
+
+  it('sessão cancelada ou remarcada não tem o link "Evolução" (EVO-03)', async () => {
+    mock([
+      sessao('s1', new Date(2026, 9, 27, 9, 0), 50, 'cancelada'),
+      sessao('s2', new Date(2026, 9, 27, 11, 0), 50, 'remarcada'),
+      sessao('s3', new Date(2026, 9, 27, 14, 0), 50, 'agendada'),
+    ]);
+    setup();
+    const linha = async (h: string) => (await screen.findByText(h)).closest('li')!;
+    expect(within(await linha('09:00–09:50')).queryByRole('link', { name: 'Evolução' })).toBeNull();
+    expect(within(await linha('11:00–11:50')).queryByRole('link', { name: 'Evolução' })).toBeNull();
+    expect(within(await linha('14:00–14:50')).getByRole('link', { name: 'Evolução' })).toBeTruthy();
+  });
 });
 
 describe('Nova sessão (AGE-01, AGE-02, AGE-04, AGE-06, AGE-12)', () => {

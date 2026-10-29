@@ -4,6 +4,7 @@ import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { ehErroApi } from '../../lib/api.ts';
 import { Alert, Badge, Button, Empty, Field, Input, Select, Skeleton, Spinner } from '../../ui';
+import { urlEvolucaoDaSessao } from '../evolucao/api.ts';
 import { listarPacientes } from '../pacientes/api.ts';
 import { criarSessao, listarSessoes } from './api.ts';
 
@@ -45,6 +46,10 @@ const ROTULO_STATUS: Record<Sessao['status'], string> = {
   cancelada: 'Cancelada',
   remarcada: 'Remarcada',
 };
+// EVO-03: a evolução pode ser ligada a toda sessão que não saiu da agenda (o mesmo critério da
+// lista de hoje do Início, que omite canceladas e remarcadas).
+const SEM_EVOLUCAO: ReadonlySet<Sessao['status']> = new Set(['cancelada', 'remarcada']);
+
 const TOM_STATUS: Record<Sessao['status'], 'ok' | 'warn' | 'err'> = {
   agendada: 'warn',
   realizada: 'ok',
@@ -178,6 +183,14 @@ export function AgendaPage({ acoes }: { acoes?: (sessao: Sessao) => ReactNode })
                       </span>
                       <span>{nomes.data?.get(s.paciente_id) ?? 'Paciente'}</span>
                       <Badge tone={TOM_STATUS[s.status]}>{ROTULO_STATUS[s.status]}</Badge>
+                      {!SEM_EVOLUCAO.has(s.status) && (
+                        <Link
+                          to={urlEvolucaoDaSessao(s.paciente_id, s.id)}
+                          className={LINK_SECUNDARIO}
+                        >
+                          Evolução
+                        </Link>
+                      )}
                       {acoes?.(s)}
                     </li>
                   ))}

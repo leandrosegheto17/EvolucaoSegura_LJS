@@ -4117,19 +4117,19 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 ---
 
-### T205: Agenda e ficha: links levam à evolução com `?sessao=<id>`
+### T205: Agenda: link "Evolução" de cada sessão leva à evolução com `?sessao=<id>`
 
-**What**: Mesmo ajuste nos links da agenda e da ficha do paciente (`pacientes/ficha.tsx:62`), com teste de tela.
+**What**: A agenda ganha, em cada sessão, um link "Evolução" para `/app/pacientes/<id>/evolucao?sessao=<id da sessão>`, em todas as situações exceto cancelada e remarcada (mesmo critério da lista de hoje do Início), com teste de tela. A ficha do paciente (`pacientes/ficha.tsx:62`) continua com o link "Abrir evolução" **sem** `sessao` (não parte de uma sessão; decisão do usuário em 2026-10-29), e `ficha.test.tsx:86` não muda.
 **Estimativa**: 1,5h
 **Risco**: alto
-**Where**: `frontend/web/src/app/agenda/agenda.tsx`, `frontend/web/src/app/pacientes/ficha.tsx`, testes
+**Where**: `frontend/web/src/app/agenda/agenda.tsx`, `frontend/web/src/app/agenda/agenda.test.tsx`
 **Depends on**: T204
 **Requirement**: EVO-03
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: sem a correção, os 2 testes novos de `agenda.test.tsx` (link "Evolução" com `?sessao=<id>` em agendada, realizada e faltou; ausente em cancelada e remarcada) falham por não achar o link; com ela, 17/17)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 210 arquivos, 3326 testes (+2), 0 falhas; lint e typecheck verdes; `checar-tokens.py` OK. Uma execução anterior teve 2 falhas transitórias "connection attempt failed" em `limpeza.test.ts` e `plano-assinar.test.ts`, sem relação com a mudança; os dois arquivos passaram isolados e a suíte inteira passou na repetição)
 
 **Tests**: unit/integração
 **Gate**: full
