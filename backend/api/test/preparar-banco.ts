@@ -18,7 +18,7 @@ const NOME_VALIDO = /^es_api_[a-z0-9_]+$/;
 // not a function") quando o jiti, que o node-pg-migrate usa para carregar as migrations .ts, formata
 // uma pilha. Sem cache do jiti (todo CI novo) a migração morria e o Vitest mostrava "No test files
 // found" em todos os projetos. Durante a migração o gancho fica desligado e volta ao original no fim.
-async function semGanchoDePilha<T>(trabalho: () => Promise<T>): Promise<T> {
+export async function semGanchoDePilha<T>(trabalho: () => Promise<T>): Promise<T> {
   const original = Error.prepareStackTrace;
   // @ts-expect-error o Node aceita undefined (volta à formatação padrão); os tipos não.
   Error.prepareStackTrace = undefined;

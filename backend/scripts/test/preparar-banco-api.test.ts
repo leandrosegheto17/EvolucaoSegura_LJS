@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { prepararBancoEm } from '../../api/test/preparar-banco.ts';
+import { prepararBancoEm, semGanchoDePilha } from '../../api/test/preparar-banco.ts';
 import { HostRecusado } from '../src/seguranca/trava-host.ts';
 
 // globalSetup dos testes da API. Padrão Neon, item 4: troca a senha da role do app e por isso só
@@ -97,4 +97,38 @@ ${resultado.stderr}`;
     expect(saida).toMatch(/Tests\s+1 passed/);
     expect(resultado.status).toBe(0);
   }, 120_000);
+});
+
+describe('preparar-banco da API: semGanchoDePilha', () => {
+  const gancho = (): string => 'gancho';
+
+  it('desliga o gancho durante o trabalho e o devolve ao terminar', async () => {
+    const original = Error.prepareStackTrace;
+    Error.prepareStackTrace = gancho;
+    try {
+      let durante: unknown = 'não rodou';
+      await semGanchoDePilha(async () => {
+        durante = Error.prepareStackTrace;
+      });
+      expect(durante).toBeUndefined();
+      expect(Error.prepareStackTrace).toBe(gancho);
+    } finally {
+      Error.prepareStackTrace = original;
+    }
+  });
+
+  it('devolve o gancho também quando o trabalho lança', async () => {
+    const original = Error.prepareStackTrace;
+    Error.prepareStackTrace = gancho;
+    try {
+      await expect(
+        semGanchoDePilha(async () => {
+          throw new Error('falhou');
+        }),
+      ).rejects.toThrow('falhou');
+      expect(Error.prepareStackTrace).toBe(gancho);
+    } finally {
+      Error.prepareStackTrace = original;
+    }
+  });
 });
