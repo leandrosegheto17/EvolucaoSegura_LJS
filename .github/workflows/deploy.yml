@@ -70,8 +70,12 @@ jobs:
         # Pela evolucao_backup_ro, como o backup diário (OPS-01): a role de migração não precisa de
         # BYPASSRLS. --enable-row-security: as tabelas com RLS são lidas pelas policies da
         # evolucao_backup_ro; sem a opção o pg_dump falha nelas.
+        # pg_dump 18 pelo caminho absoluto: o PATH do runner tem o 16, que recusa o servidor 18 do Neon.
+        # shell: bash liga o pipefail; sem ele a falha do pg_dump some atrás do `| age` e o passo
+        # fica verde com um arquivo vazio.
+        shell: bash
         run: |
-          pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o dump-pre-deploy.dump.age
+          /usr/lib/postgresql/18/bin/pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o dump-pre-deploy.dump.age
       - name: Guardar o dump cifrado
         uses: actions/upload-artifact@v7
         with:

@@ -8,6 +8,7 @@ import { parse } from 'yaml';
 
 interface Passo {
   run?: string;
+  shell?: string;
   uses?: string;
   env?: Record<string, string>;
   with?: Record<string, unknown>;
@@ -80,5 +81,18 @@ describe('backup.yml (OPS-01)', () => {
     expect(passos.indexOf(passoDoArtefato as Passo)).toBeGreaterThan(
       passos.indexOf(passoDoDump as Passo),
     );
+  });
+});
+
+// Bug dump-silencioso: o runner traz um pg_dump 16 no PATH, que recusa o servidor 18 do Neon, e o passo
+// rodava `pg_dump | age` com o shell padrão do Actions (sem pipefail). O pg_dump falhava, o age ainda
+// gravava um arquivo de 367 bytes e o passo ficava verde: backup vazio guardado como se fosse bom.
+describe('backup.yml: o dump não pode falhar em silêncio', () => {
+  it('usa o pg_dump 18 pelo caminho absoluto, não o do PATH', () => {
+    expect(passoDoDump?.run).toContain('/usr/lib/postgresql/18/bin/pg_dump -Fc');
+  });
+
+  it('roda com shell bash, que liga o pipefail, para a falha do pg_dump derrubar o passo', () => {
+    expect(passoDoDump?.shell).toBe('bash');
   });
 });

@@ -50,8 +50,12 @@ jobs:
           AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
         # --enable-row-security: a evolucao_backup_ro (NOBYPASSRLS) lê as tabelas com RLS pelas
         # policies de leitura dela; sem a opção o pg_dump desliga o RLS e falha nessas tabelas.
+        # pg_dump 18 pelo caminho absoluto: o PATH do runner tem o 16, que recusa o servidor 18 do Neon.
+        # shell: bash liga o pipefail; sem ele a falha do pg_dump some atrás do `| age` e o passo
+        # fica verde com um arquivo vazio.
+        shell: bash
         run: |
-          pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o backup.dump.age
+          /usr/lib/postgresql/18/bin/pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o backup.dump.age
 
       - name: Guardar o backup cifrado
         uses: actions/upload-artifact@v7

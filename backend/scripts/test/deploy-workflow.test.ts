@@ -13,6 +13,7 @@ interface Passo {
   id?: string;
   name?: string;
   run?: string;
+  shell?: string;
   uses?: string;
   if?: string;
   env?: Record<string, string>;
@@ -185,5 +186,19 @@ describe('deploy.yml (OPS-03)', () => {
 
     expect(build?.env?.['VITE_SENTRY_RELEASE']).toBe('${{ github.sha }}');
     expect(deploy?.run).toContain('SENTRY_RELEASE:${{ github.sha }}');
+  });
+});
+
+// Bug dump-silencioso (ver backup-workflow.test.ts): o dump antes da migração é o ponto de volta do
+// deploy. Com o pg_dump 16 do PATH e sem pipefail, o passo gravava um arquivo vazio e seguia para migrar.
+describe('deploy.yml: o dump antes da migração não pode falhar em silêncio', () => {
+  const dump = passos.find((passo) => /pg_dump\s+-/.test(passo.run ?? ''));
+
+  it('usa o pg_dump 18 pelo caminho absoluto, não o do PATH', () => {
+    expect(dump?.run).toContain('/usr/lib/postgresql/18/bin/pg_dump -Fc');
+  });
+
+  it('roda com shell bash, que liga o pipefail, para a falha do pg_dump derrubar o passo', () => {
+    expect(dump?.shell).toBe('bash');
   });
 });
