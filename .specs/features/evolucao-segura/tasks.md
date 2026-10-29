@@ -194,6 +194,12 @@ T158 -> T185 -> T159 -> T186 -> T160 -> T187
 T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> T194 -> T197 -> T198 -> T199 -> T195 -> T200 -> T201 -> T165
 ```
 
+### Phase 24: Correções da validação (fase 7)
+
+```
+T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> T212
+```
+
 ---
 
 ## Task Breakdown
@@ -4054,10 +4060,219 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 ---
 
+### T202: Teste que prova o escopo local do `set_config` do isolamento
+
+**What**: Acrescentar teste que roda `comTransacao` duas vezes sobre uma única conexão compartilhada e prova que `app.usuario_id` não vaza para a segunda (mata o mutante `is_local` true→false em `db.ts:345`).
+**Estimativa**: 1h
+**Risco**: alto
+**Where**: `backend/api/test/db.test.ts`
+**Depends on**: T165
+**Requirement**: ISO-01
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T203: Service worker: não guardar nem devolver resposta redirecionada
+
+**What**: Em `offline.ts`, não guardar no cache a resposta `redirected` do shell e não devolvê-la a navegações (reconstruir a resposta ou buscar `/`), com teste que reproduz o 307 do Worker em `/index.html`.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `frontend/web/src/pwa/offline.ts`, `frontend/web/src/pwa/offline.test.ts`
+**Depends on**: T202
+**Requirement**: PUB-03
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T204: Início: links da lista de hoje levam à evolução com `?sessao=<id>`
+
+**What**: Os links da lista de hoje do Início passam a gerar a URL da evolução com o parâmetro `sessao`, com teste de tela que clica e confere o destino.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `frontend/web/src/app/inicio/inicio.tsx`, teste do Início
+**Depends on**: T203
+**Requirement**: EVO-03
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T205: Agenda e ficha: links levam à evolução com `?sessao=<id>`
+
+**What**: Mesmo ajuste nos links da agenda e da ficha do paciente (`pacientes/ficha.tsx:62`), com teste de tela.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `frontend/web/src/app/agenda/agenda.tsx`, `frontend/web/src/app/pacientes/ficha.tsx`, testes
+**Depends on**: T204
+**Requirement**: EVO-03
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T206: e2e: agenda → evolução → pagamento por cliques
+
+**What**: Trocar a navegação direta com `?sessao=` em `e2e/apoio/clinico.ts:66` por cliques a partir do Início ou da agenda.
+**Estimativa**: 1h
+**Risco**: baixo
+**Where**: `e2e/apoio/clinico.ts`, spec do e2e clínico
+**Depends on**: T205
+**Requirement**: EVO-03
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### T207: Padrões de banco usam 127.0.0.1 em vez de localhost
+
+**What**: `backend/api/vitest.urls.ts` e `e2e/apoio/config.ts` passam a usar `127.0.0.1` (e a porta configurável por variável), evitando o travamento por IPv6 no Windows; teste de unidade da leitura da URL.
+**Estimativa**: 1h
+**Risco**: baixo
+**Where**: `backend/api/vitest.urls.ts`, `e2e/apoio/config.ts`
+**Depends on**: T206
+**Requirement**: OPS-05
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
+### T208: e2e roda no CI
+
+**What**: Job do `ci.yml` que sobe o Postgres, instala o Chromium do Playwright e roda `pnpm e2e`, com `ASAAS_API_KEY` do sandbox como segredo do repositório; registrar em `testes.json` se o e2e entra na trava. (O segredo é pendência do usuário.)
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `.github/workflows/ci.yml`, `.specs/projeto/testes.json`, teste do workflow
+**Depends on**: T207
+**Requirement**: OPS-05
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T209: Teste intermitente de `buscarQrPix`
+
+**What**: Em `plano.test.ts:234`, afirmar o status das duas respostas e achar a causa de a segunda chamada ao Asaas às vezes não ocorrer; corrigir a causa (teste ou código) com motivo registrado.
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `backend/api/test/rotas/plano.test.ts`, código do plano se for a causa
+**Depends on**: T208
+**Requirement**: PLANO-14
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T210: Privacidade da agenda: iniciais na agenda
+
+**What**: Com `privacidade_agenda` ligada, a agenda mostra iniciais no lugar do nome (`PrivacyName` em modo estrito, sem atributo com o nome completo); enquanto carrega ou em erro, iniciais; o Início continua mostrando o nome, como no legado.
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `frontend/web/src/app/agenda/agenda.tsx`, teste da agenda
+**Depends on**: T209
+**Requirement**: PERF-08
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T211: Privacidade da agenda: iniciais no detalhe da sessão
+
+**What**: Mesmo efeito no detalhe da sessão, onde o `aria-label` mantém o nome completo, como no legado.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `frontend/web/src/app/agenda/` (detalhe), teste
+**Depends on**: T210
+**Requirement**: PERF-08
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T212: Login calcula o hash também para e-mail inexistente
+
+**What**: Teste no login que prova o cálculo do hash no caminho de e-mail inexistente (spy ou `crypt`), sem cronômetro; corrige o código se faltar.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `backend/api/test/rotas/auth-entrar.test.ts`, `backend/api/src/rotas/auth-entrar.ts`
+**Depends on**: T211
+**Requirement**: AUTH-02
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23
+Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23 -> Phase 24
 ```
 
 Passagem entre fases (a primeira tarefa de cada fase depende da última da anterior):
@@ -4085,6 +4300,7 @@ T175 -> T148
 T153 -> T154
 T157 -> T158
 T187 -> T161
+T165 -> T202
 ```
 
 Execução estritamente sequencial; uma tarefa por vez, em ordem, com um commit atômico cada.

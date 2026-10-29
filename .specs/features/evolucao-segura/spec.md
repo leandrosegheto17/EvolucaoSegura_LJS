@@ -161,7 +161,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 5. [PERF-05] IF a troca de especialidade é pedida e já existe anamnese registrada THEN a API SHALL responder 409 `SPECIALTY_HAS_ANAMNESIS`.
 6. [PERF-06] IF desligar sábado ou domingo é pedido sem `confirmar: true` e existem sessões futuras não canceladas nesse dia THEN a API SHALL responder 409 `WEEKEND_DAY_HAS_SESSIONS` com a quantidade, sem salvar.
 7. [PERF-07] WHEN desligar sábado ou domingo é pedido com `confirmar: true` THEN a API SHALL salvar e manter as sessões existentes nesse dia.
-8. The configurações SHALL conter `privacidade_agenda` (padrão falso, comportamento do legado) e a ativação de push por dispositivo, sem opção de inatividade. [PERF-08]
+8. The configurações SHALL conter `privacidade_agenda` (padrão falso; ligada, a agenda e o detalhe da sessão mostram as iniciais dos pacientes no lugar do nome, como no legado; o Início e o financeiro continuam com o nome) e a ativação de push por dispositivo, sem opção de inatividade. [PERF-08]
 9. [PERF-09] WHEN perfil ou configuração mudam de fato THEN a API SHALL auditar `perfil.editado` ou `configuracao.alterada` só com nomes de campo; sem mudança, nada é gravado.
 
 **Independent Test**: conta nova cai no perfil; escolher psicologia cria o modelo com 7 campos e 4 alertas.
@@ -230,7 +230,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 5. [ANA-05] WHILE é o dia do cadastro da anamnese (até a meia-noite de America/Sao_Paulo, pelo relógio do banco) a API SHALL permitir editá-la.
 6. [ANA-06] WHEN a retificação é pedida depois do dia do cadastro com motivo de 1 a 5.000 caracteres THEN a API SHALL criar uma nova versão e preservar a original.
 7. [ANA-07] IF a retificação é pedida no dia do cadastro THEN a API SHALL responder 409 `EDIT_WINDOW_OPEN`.
-8. [ANA-08] IF a retificação não traz conteúdo novo THEN a API SHALL responder 400.
+8. [ANA-08] IF a retificação não traz conteúdo novo THEN a API SHALL responder 400; IF o motivo da retificação é inválido THEN a API SHALL responder 422 (validação).
 9. The app SHALL mostrar o selo "Editável hoje" ou "Registrada" e o alerta clínico marcado na versão vigente. [ANA-09]
 
 **Independent Test**: registrar anamnese, tentar retificar no mesmo dia (409), avançar o relógio e retificar.
@@ -402,7 +402,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 4. [OPS-04] IF `wrangler deploy` aparece em outro arquivo do repositório THEN um teste da suíte SHALL falhar.
 5. [OPS-05] WHEN há push ou PR THEN o `ci.yml` SHALL rodar lint, typecheck, testes, gitleaks, build do web, migrations do zero num Postgres de serviço e o teste de isolamento.
 6. [OPS-06] WHEN `GET /api/health` é chamado THEN a API SHALL responder 200 sem tocar no banco.
-7. [OPS-07] IF um mesmo IP passa de 10 requisições por minuto nas rotas de entrar, 2FA, cadastro e recuperação, de 60 por minuto nas demais rotas públicas, ou do limite do webhook THEN a API SHALL responder 429.
+7. [OPS-07] IF um mesmo IP passa de 10 requisições por minuto nas rotas de entrar, 2FA, cadastro e recuperação, de 60 por minuto nas demais rotas públicas, ou do limite do webhook THEN a API SHALL responder 429 (o contador é o binding de rate limit do Cloudflare, com tolerância de 1 requisição na fronteira).
 8. The Sentry SHALL receber erros do Worker e do app com release = SHA do commit e sem corpo de requisição, cookie ou e-mail. [OPS-08]
 9. The respostas SHALL ter CSP sem origens externas além das necessárias (Sentry, Asaas só onde preciso), HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` e `frame-ancestors 'none'`. [OPS-09]
 10. The código e o banco SHALL não conter URL absoluta do app; a única fonte é `URL_PUBLICA`. [OPS-10]
@@ -453,7 +453,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 
 ## Edge Cases
 
-- IF o banco Neon está em autosuspend THEN a primeira requisição SHALL esperar o cold start e responder normalmente (sem erro), dentro do timeout do Worker.
+- IF o banco Neon está em autosuspend THEN a primeira requisição SHALL esperar o cold start e responder normalmente (sem erro), dentro do timeout de conexão de 8 s configurado na API.
 - IF o Resend recusa por limite diário (100 e-mails) THEN o login SHALL responder 503 `mail_unavailable` e o erro SHALL ir ao Sentry com alerta.
 - IF duas abas editam a mesma sessão ou evolução THEN a segunda gravação SHALL receber 409 por `row_version`.
 - IF o webhook do Asaas chega antes da resposta da criação da assinatura THEN o processamento SHALL ser idempotente e chegar ao mesmo estado final.
