@@ -340,10 +340,11 @@ Depois de qualquer troca no Worker, confira `https://<domínio>/api/health` e um
 | Artefato `backup-<run_id>`          | `backup.yml`: todo dia às 04:00 de Brasília (07:00 UTC), role `evolucao_backup_ro`, `pg_dump -Fc` cifrado com `age` | 30 dias  |
 | Artefato `dump-pre-deploy-<run_id>` | `deploy.yml`, antes de cada migração                                                                                | 30 dias  |
 
-Situação observada em 2026-10-28 (`gh run list --workflow backup.yml`): as execuções agendadas do
-`backup.yml` **falham** porque os secrets do environment `producao` ainda não existem (o `age`
-recebe a chave pública vazia e o `pg_dump` fica sem URL). Não há backup de produção até eles
-serem configurados.
+Situação observada em 2026-10-29: o backup de produção **funciona**. O run `40910306123` do
+`backup.yml` gerou o artefato `backup-40910306123` de 233.615 bytes (233.396 do arquivo `.age`),
+restaurado e conferido na seção 5.2. Antes disso o workflow guardava arquivo vazio como se fosse
+backup (bug `dump-silencioso`: `pg_dump` 16 do PATH recusava o servidor 18 e, sem `pipefail`, a falha
+sumia atrás do `| age`; o dump pré-deploy do run `40906410233` tem só 367 bytes e **não serve**).
 
 ### 5.1 Baixar um backup
 
@@ -352,8 +353,7 @@ gh run list --workflow backup.yml --status success --limit 5
 gh run download <run_id> -n backup-<run_id>      # grava backup.dump.age na pasta atual
 ```
 
-`gh run list` executado (só leitura). `gh run download` **não executado**: ainda não há execução
-com sucesso.
+`gh run list` e `gh run download` executados em 2026-10-29 (run `40910306123`).
 
 ### 5.2 Testar o backup antes de usar
 
@@ -369,6 +369,43 @@ RESTORE_AGE_IDENTITY=chave-backup-<AAAA-MM>.txt RESTORE_SOURCE_URL=<url da orige
 
 Sem `RESTORE_SOURCE_URL` ele só conta. Só aceita `localhost` e `127.0.0.1`: nunca aponte
 `RESTORE_ADMIN_URL` para produção.
+
+#### Restauração executada e registrada (T165, 2026-10-29)
+
+Backup real de produção (Neon `main`, banco `evolucao`, role `evolucao_backup_ro`), run `40910306123`,
+baixado com `gh run download` e restaurado numa cópia limpa com o `infra/restore-test.sh`.
+
+| Item                    | Resultado                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Data do backup          | 2026-10-29 (`workflow_dispatch`)                                                   |
+| Tamanho do dump cifrado | 233.396 bytes (artefato de 233.615 bytes no Actions)                               |
+| Onde foi restaurado     | `postgres:18` descartável (container), `pg_restore` 18.6, `age` 1.2.1              |
+| Resultado               | `status=ok`, 35 tabelas em `public`, 3 s                                           |
+| Contagem                | `pgmigrations` = 25; as outras 34 tabelas = 0 linhas (produção ainda sem usuários) |
+| Origem comparada        | não (só a contagem da cópia; a produção está vazia)                                |
+
+Tamanho comparado com o limite do Actions: o que pesa é a cota de armazenamento da conta, não o tamanho
+de um artefato. Em 2026-10-29 o repositório é **público** (`gh api repos/... -q .private` = `false`),
+caso em que o GitHub não cobra o armazenamento de artefatos; num repositório privado a cota é a do plano
+(500 MB no Free; **confira em Settings > Billing**). Com retenção de 30 dias e um dump por dia, o pior
+caso hoje é 30 × 0,23 MB ≈ 7 MB, cerca de 1,4% de 500 MB. O dump cresce com os dados: refaça a conta
+quando passar de ~10 MB por arquivo.
+
+**Atenção, repositório público:** artefatos de repositório público podem ser baixados por qualquer
+pessoa logada no GitHub. O dump só é ilegível sem a chave privada `age`: guarde-a fora do GitHub e do
+repositório, em dois lugares, e trate a perda dela como perda dos backups.
+
+Dois achados que a execução real expôs e que ficaram corrigidos:
+
+- **O `pg_dump` 16 do PATH do runner** recusa o servidor 18. `backup.yml` e `deploy.yml` chamam
+  `/usr/lib/postgresql/18/bin/pg_dump` e usam `shell: bash` (pipefail), para a falha derrubar o passo.
+- **O `restore-test.sh`** reprovava uma restauração boa: o dump do Neon cita `neondb_owner`,
+  `neon_superuser` e `cloud_admin` em `ALTER DEFAULT PRIVILEGES`. O script agora cria essas roles
+  (NOLOGIN) no banco descartável.
+
+No Windows, o `pg_restore` instalado (16) não abre um dump do `pg_dump` 18: rode o script dentro de
+um container `postgres:18` com `age` (`apt-get install age`), montando a pasta `infra`, o dump e a
+chave privada somente leitura.
 
 ### 5.3 Restaurar produção
 

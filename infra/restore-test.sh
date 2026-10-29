@@ -56,8 +56,9 @@ trap cleanup EXIT INT TERM
 START=$(date +%s)
 log "etapa=inicio bytes=$(wc -c < "$DUMP" | tr -d ' ')"
 admin -c "CREATE DATABASE \"$DB\"" >/dev/null || die "criar_banco_descartavel"
-# roles citadas nos GRANTs do dump (pg_dump de um banco so nao leva roles)
-for r in evolucao_owner evolucao_app evolucao_backup_ro; do
+# roles citadas nos GRANTs do dump (pg_dump de um banco so nao leva roles). As tres do Neon aparecem
+# em ALTER DEFAULT PRIVILEGES de um dump do Neon real; sem elas o pg_restore sai com erro (T165).
+for r in evolucao_owner evolucao_app evolucao_backup_ro neondb_owner neon_superuser cloud_admin; do
   admin -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='$r') THEN CREATE ROLE \"$r\" NOLOGIN; END IF; END \$\$" >/dev/null || die "criar_role"
 done
 

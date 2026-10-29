@@ -4046,8 +4046,8 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Registro com data, tamanho e contagem por tabela
-- [ ] Tamanho do dump comparado com o limite de artefatos do Actions
+- [x] Registro com data, tamanho e contagem por tabela
+- [x] Tamanho do dump comparado com o limite de artefatos do Actions
 
 **Tests**: none
 **Gate**: build
