@@ -26,8 +26,8 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // PLACEHOLDER: o id real vem do `wrangler hyperdrive create` (T34), na decisão do primeiro deploy.
-      "id": "00000000000000000000000000000000",
+      // Hyperdrive de produção, sem cache, criado em 2026-10-29 com a URL da evolucao_app (runbook 8.5).
+      "id": "06341cd44e5e4a4b9c51c3b5f13615b7",
       // Postgres local do docker-compose (porta 5433 no host). Em CI, a variável
       // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE substitui este valor.
       "localConnectionString": "postgres://postgres:postgres@localhost:5433/evolucao_segura",
