@@ -4090,8 +4090,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: os 4 testes novos de `offline.test.ts` ("resposta redirecionada (307 do Worker)") falham com "expected true to be false" sem a correção e passam com ela; a verificação no Chrome segue como checagem do usuário)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 210 arquivos, 3321 testes (+4), 0 falhas)
 
 **Tests**: unit/integração
 **Gate**: full

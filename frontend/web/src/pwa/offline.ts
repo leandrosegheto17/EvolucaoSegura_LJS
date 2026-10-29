@@ -42,6 +42,19 @@ export interface EventoBuscar {
   respondWith(resposta: Promise<Response>): void;
 }
 
+// T203: o Worker responde /index.html e /offline.html com 307 para a URL sem ".html", e o fetch
+// devolve a resposta final com redirected = true. O navegador recusa resposta redirecionada para
+// atender navegação; por isso a resposta é refeita (mesmo corpo, status e cabeçalhos) antes de ir
+// para o cache e antes de atender uma navegação (cobre também cache de versão anterior).
+async function semRedirecionamento(r: Response): Promise<Response> {
+  if (!r.redirected) return r;
+  return new Response(await r.arrayBuffer(), {
+    status: r.status,
+    statusText: r.statusText,
+    headers: r.headers,
+  });
+}
+
 // O manifest do build traz URLs relativas ("index.html"); o cache usa caminhos absolutos.
 const caminho = (url: string) => `/${(url.split('?')[0] ?? url).replace(/^\//, '')}`;
 
@@ -55,7 +68,7 @@ export function aoInstalar(sw: EscopoOffline, manifest: EntradaPrecache[], event
           new Request(new URL(url, sw.location.origin), { cache: 'reload' }),
         );
         if (!resposta.ok) throw new Error(`precache falhou em ${url}: ${resposta.status}`);
-        await cache.put(url, resposta);
+        await cache.put(url, await semRedirecionamento(resposta));
       }
       await sw.skipWaiting();
     })(),
@@ -80,7 +93,8 @@ async function daRedeOuOffline(sw: EscopoOffline, req: Request): Promise<Respons
     return await sw.fetch(req);
   } catch {
     const cache = await sw.caches.open(NOME_CACHE);
-    return (await cache.match(PAGINA_OFFLINE)) ?? Response.error();
+    const offline = await cache.match(PAGINA_OFFLINE);
+    return offline ? semRedirecionamento(offline) : Response.error();
   }
 }
 
@@ -98,7 +112,7 @@ export function aoBuscar(sw: EscopoOffline, manifest: EntradaPrecache[], evento:
         if (doApp) {
           const cache = await sw.caches.open(NOME_CACHE);
           const shell = await cache.match(SHELL);
-          if (shell) return shell;
+          if (shell) return semRedirecionamento(shell);
         }
         return daRedeOuOffline(sw, req);
       })(),

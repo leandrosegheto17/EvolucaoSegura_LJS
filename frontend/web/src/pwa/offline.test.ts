@@ -33,7 +33,13 @@ function cacheEmMemoria() {
     put: vi.fn(async (req: string | Request, r: Response) => {
       dados.set(chaveDe(req), r);
     }),
-    match: vi.fn(async (req: string | Request) => dados.get(chaveDe(req))?.clone()),
+    // O Cache API real devolve a resposta com o mesmo "redirected" com que ela foi guardada.
+    match: vi.fn(async (req: string | Request) => {
+      const guardada = dados.get(chaveDe(req));
+      if (!guardada) return undefined;
+      const copia = guardada.clone();
+      return guardada.redirected ? redirecionada(copia) : copia;
+    }),
     keys: vi.fn(async () => [...dados.keys()].map((u) => new Request(`https://app.test${u}`))),
     delete: vi.fn(async (req: string | Request) => dados.delete(chaveDe(req))),
   };
@@ -53,6 +59,11 @@ function escopo(rede: (url: string) => Promise<Response>) {
 }
 
 const ok = (corpo: string) => new Response(corpo, { status: 200 });
+// Resposta que seguiu um redirecionamento (o fetch do navegador marca redirected = true).
+function redirecionada(r: Response): Response {
+  Object.defineProperty(r, 'redirected', { value: true });
+  return r;
+}
 const redeNormal = async (url: string) => ok(`rede:${url}`);
 const semRede = async (): Promise<Response> => {
   throw new TypeError('Failed to fetch');
@@ -204,5 +215,60 @@ describe('registro do service worker no app', () => {
 
   it('sem suporte a service worker não faz nada nem falha', async () => {
     await expect(registrarSwNoApp(undefined)).resolves.toBeUndefined();
+  });
+});
+
+// T203 / PUB-03: o Worker responde /index.html (e /offline.html) com 307 para a URL sem
+// ".html"; o fetch segue e devolve uma resposta com redirected = true. O navegador recusa uma
+// resposta redirecionada para atender navegação, o que quebraria a abertura direta de /app/*.
+describe('resposta redirecionada (307 do Worker)', () => {
+  const redeComRedirecionamento = async (url: string) =>
+    url.endsWith('.html')
+      ? redirecionada(
+          new Response(`rede:${url}`, { status: 200, headers: { 'content-type': 'text/html' } }),
+        )
+      : ok(`rede:${url}`);
+
+  it('no install, o shell e a página offline entram no cache sem a marca de redirecionada', async () => {
+    const { cache } = await instalado(redeComRedirecionamento);
+    const shell = cache.dados.get('/index.html');
+    const offline = cache.dados.get(PAGINA_OFFLINE);
+    expect(shell?.redirected).toBe(false);
+    expect(await shell?.clone().text()).toBe('rede:/index.html');
+    expect(shell?.status).toBe(200);
+    expect(offline?.redirected).toBe(false);
+    expect(await offline?.clone().text()).toBe('rede:/offline.html');
+  });
+
+  it('navegação para /app/... com o shell instalado sobre o 307 devolve resposta não redirecionada', async () => {
+    const { sw } = await instalado(redeComRedirecionamento);
+    const { evento, resposta } = eventoBuscar('/app/pacientes/1/evolucao', true);
+    aoBuscar(sw, MANIFEST, evento);
+    const r = await resposta();
+    expect(r?.redirected).toBe(false);
+    expect(r?.status).toBe(200);
+    expect(r?.headers.get('content-type')).toBe('text/html');
+    expect(await r?.text()).toBe('rede:/index.html');
+  });
+
+  it('shell redirecionado já no cache (versão anterior do service worker) não é devolvido como está', async () => {
+    const { sw, cache } = await instalado();
+    cache.dados.set('/index.html', redirecionada(ok('SHELL-ANTIGO')));
+    const { evento, resposta } = eventoBuscar('/app', true);
+    aoBuscar(sw, MANIFEST, evento);
+    const r = await resposta();
+    expect(r?.redirected).toBe(false);
+    expect(await r?.text()).toBe('SHELL-ANTIGO');
+  });
+
+  it('página offline redirecionada no cache é devolvida sem a marca, com a rede caída', async () => {
+    const { sw, cache } = await instalado();
+    cache.dados.set(PAGINA_OFFLINE, redirecionada(ok('OFFLINE-ANTIGA')));
+    vi.mocked(sw.fetch).mockImplementation(semRede);
+    const { evento, resposta } = eventoBuscar('/termos', true);
+    aoBuscar(sw, MANIFEST, evento);
+    const r = await resposta();
+    expect(r?.redirected).toBe(false);
+    expect(await r?.text()).toBe('OFFLINE-ANTIGA');
   });
 });
