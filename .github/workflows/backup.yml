@@ -48,8 +48,10 @@ jobs:
         env:
           NEON_URL_BACKUP: ${{ secrets.NEON_URL_BACKUP }}
           AGE_PUBLIC_KEY: ${{ secrets.AGE_PUBLIC_KEY }}
+        # --enable-row-security: a evolucao_backup_ro (NOBYPASSRLS) lê as tabelas com RLS pelas
+        # policies de leitura dela; sem a opção o pg_dump desliga o RLS e falha nessas tabelas.
         run: |
-          pg_dump -Fc "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o backup.dump.age
+          pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP" | age -r "$AGE_PUBLIC_KEY" -o backup.dump.age
 
       - name: Guardar o backup cifrado
         uses: actions/upload-artifact@v7

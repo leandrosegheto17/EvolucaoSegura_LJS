@@ -4006,10 +4006,10 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 
 **Done when**:
 
-- [ ] Migration 0025 concede SELECT em `pgmigrations` e em todas as sequences à `evolucao_backup_ro`, e `ALTER DEFAULT PRIVILEGES` para sequences futuras
-- [ ] Teste roda `pg_dump -Fc --enable-row-security` como `evolucao_backup_ro` num banco migrado e o dump traz linhas de tabelas com RLS
-- [ ] `backup.yml` usa `--enable-row-security` (teste do workflow)
-- [ ] Teste confirma `evolucao_backup_ro` sem INSERT/UPDATE/DELETE e `evolucao_owner` sem LOGIN
+- [x] Migration 0025 concede SELECT em `pgmigrations` e em todas as sequences à `evolucao_backup_ro`, e `ALTER DEFAULT PRIVILEGES` para sequences futuras
+- [x] Teste roda `pg_dump -Fc --enable-row-security` como `evolucao_backup_ro` num banco migrado e o dump traz linhas de tabelas com RLS
+- [x] `backup.yml` usa `--enable-row-security` (teste do workflow)
+- [x] Teste confirma `evolucao_backup_ro` sem INSERT/UPDATE/DELETE e `evolucao_owner` sem LOGIN
 
 **Tests**: integration
 **Gate**: full

@@ -35,8 +35,10 @@ describe('backup.yml (OPS-01)', () => {
     expect(workflow.on).toHaveProperty('workflow_dispatch');
   });
 
-  it('faz pg_dump -Fc com a conexão da role evolucao_backup_ro (NEON_URL_BACKUP)', () => {
-    expect(passoDoDump?.run).toContain('pg_dump -Fc "$NEON_URL_BACKUP"');
+  // T200: a asserção passou a exigir --enable-row-security (antes, 'pg_dump -Fc "$NEON_URL_BACKUP"').
+  // A evolucao_backup_ro é NOBYPASSRLS: sem a opção o pg_dump falha nas tabelas com RLS.
+  it('faz pg_dump -Fc --enable-row-security com a conexão da role evolucao_backup_ro (NEON_URL_BACKUP)', () => {
+    expect(passoDoDump?.run).toContain('pg_dump -Fc --enable-row-security "$NEON_URL_BACKUP"');
     expect(passoDoDump?.env?.['NEON_URL_BACKUP']).toBe('${{ secrets.NEON_URL_BACKUP }}');
   });
 
@@ -66,6 +68,12 @@ describe('backup.yml (OPS-01)', () => {
     const checkout = passos.findIndex((passo) => (passo.uses ?? '').startsWith('actions/checkout'));
     expect(checkout).toBeGreaterThanOrEqual(0);
     expect(checkout).toBeLessThan(passos.indexOf(validar as Passo));
+  });
+
+  it('todo pg_dump do workflow usa --enable-row-security (T200)', () => {
+    const dumps = passos.filter((passo) => /pg_dump\s+-/.test(passo.run ?? ''));
+    expect(dumps).toHaveLength(1);
+    for (const dump of dumps) expect(dump.run).toMatch(/pg_dump -Fc --enable-row-security /);
   });
 
   it('o artefato só é guardado depois do dump', () => {

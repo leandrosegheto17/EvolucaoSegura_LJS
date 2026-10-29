@@ -26,6 +26,8 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/evolucao_segura
+      # pg_dump e pg_restore 18 do teste da migration 0025 (o do runner é mais antigo que o servidor).
+      PG_BIN: /usr/lib/postgresql/18/bin
     steps:
       - uses: actions/checkout@v7
         with:
@@ -37,6 +39,12 @@ jobs:
           cache: pnpm
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
+      - name: Instalar pg_dump 18
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-18
       - name: Lint
         run: pnpm lint
       - name: Typecheck
