@@ -14,6 +14,21 @@ import { nomeBancoTemporario, urlComBanco, urlServidorTeste } from '../vitest.ur
 
 const NOME_VALIDO = /^es_api_[a-z0-9_]+$/;
 
+// No processo do globalSetup o Vite instala um Error.prepareStackTrace que lança ("code.charCodeAt is
+// not a function") quando o jiti, que o node-pg-migrate usa para carregar as migrations .ts, formata
+// uma pilha. Sem cache do jiti (todo CI novo) a migração morria e o Vitest mostrava "No test files
+// found" em todos os projetos. Durante a migração o gancho fica desligado e volta ao original no fim.
+async function semGanchoDePilha<T>(trabalho: () => Promise<T>): Promise<T> {
+  const original = Error.prepareStackTrace;
+  // @ts-expect-error o Node aceita undefined (volta à formatação padrão); os tipos não.
+  Error.prepareStackTrace = undefined;
+  try {
+    return await trabalho();
+  } finally {
+    Error.prepareStackTrace = original;
+  }
+}
+
 // Cria o banco `nome` no servidor de `urlServidor`, migra e devolve a função que o apaga.
 export async function prepararBancoEm(
   urlServidor: string,
@@ -42,11 +57,13 @@ export async function prepararBancoEm(
   };
 
   try {
-    await migrar({
-      urlBanco,
-      pasta: resolve(import.meta.dirname, '../../scripts/migrations'),
-      logger: { info: () => {}, warn: () => {}, error: () => {} },
-    });
+    await semGanchoDePilha(() =>
+      migrar({
+        urlBanco,
+        pasta: resolve(import.meta.dirname, '../../scripts/migrations'),
+        logger: { info: () => {}, warn: () => {}, error: () => {} },
+      }),
+    );
     const admin = new pg.Client({ connectionString: urlBanco });
     await admin.connect();
     try {
