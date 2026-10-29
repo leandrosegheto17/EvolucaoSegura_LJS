@@ -73,7 +73,7 @@ afterAll(async () => {
     await admin.query(`drop database if exists ${banco} with (force)`);
   await admin.end();
   for (const pasta of pastas) rmSync(pasta, { recursive: true, force: true });
-});
+}, 60_000);
 
 describe('migrar', () => {
   it('aplica do zero num banco vazio, uma migration por arquivo, na ordem', async () => {
