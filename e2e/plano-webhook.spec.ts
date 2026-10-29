@@ -10,7 +10,8 @@ import { assinarPro, criarContaLogada } from './apoio/conta.ts';
 
 test('o webhook de pagamento deixa o plano como Pro ativo', async ({ page, request }) => {
   test.setTimeout(120_000);
-  expect(process.env['ASAAS_API_KEY'], 'defina ASAAS_API_KEY (sandbox) no ambiente').toBeTruthy();
+  // Sem a chave do sandbox, pulado de forma explícita (T208); o teste do token errado roda sempre.
+  test.skip(!process.env['ASAAS_API_KEY'], 'ASAAS_API_KEY ausente: sem o sandbox do Asaas');
   const conta = await criarContaLogada(page, request, 'webhook');
   await assinarPro(page, conta);
   await expect(page.getByText('Período de teste do Pro')).toBeVisible();

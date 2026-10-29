@@ -4179,14 +4179,14 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 **What**: Job do `ci.yml` que sobe o Postgres, instala o Chromium do Playwright e roda `pnpm e2e`, com `ASAAS_API_KEY` do sandbox como segredo do repositório; registrar em `testes.json` se o e2e entra na trava. (O segredo é pendência do usuário.)
 **Estimativa**: 2h
 **Risco**: alto
-**Where**: `.github/workflows/ci.yml`, `.specs/projeto/testes.json`, teste do workflow
+**Where**: `.github/workflows/e2e.yml` (SPEC_DEVIATION: workflow próprio em vez de job no `ci.yml`, porque `migration-0025-backup-leitura.test.ts:311` fixa que o `ci.yml` tem um job só; o efeito é o mesmo: job separado em push e PR), `.specs/projeto/testes.json`, `e2e/plano.spec.ts`, `e2e/plano-webhook.spec.ts`, `backend/scripts/test/ci-e2e.test.ts`
 **Depends on**: T207
 **Requirement**: OPS-05
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: `ci-e2e.test.ts` (8 testes) falha sem o `e2e.yml` (ENOENT) e passa com ele. Sem `ASAAS_API_KEY`, `pnpm e2e` local: 6 passed, 2 skipped (`plano.spec.ts` e o teste do sandbox de `plano-webhook.spec.ts`, pulados com o motivo "ASAAS_API_KEY ausente"); rodado com a porta do Worker 8788 só na cópia de trabalho, por causa do `wrangler dev` órfão na 8787. O job em si só roda no GitHub: não confirmado até o primeiro push)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 212 arquivos, 3353 testes (+10: 8 do `ci-e2e.test.ts` e 2 a mais na contagem do teste de `variaveis-banco` por workflow), 0 falhas; lint e typecheck verdes)
 
 **Tests**: unit/integração
 **Gate**: full

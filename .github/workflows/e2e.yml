@@ -1,0 +1,41 @@
+name: E2E
+
+# OPS-05 (T208): o e2e (Playwright) roda no CI num job próprio, em push e PR, fora da trava local de
+# testes (.specs/projeto/testes.json). Sobe o Postgres do docker-compose (o mesmo do ambiente local,
+# porta 5433), instala o Chromium e roda `pnpm e2e`, que gera o front, sobe o Worker local
+# (wrangler dev) e o coletor de e-mail.
+# SPEC_DEVIATION: a T208 pedia um job no ci.yml; ficou num workflow próprio porque o teste da
+# migration 0025 fixa que o ci.yml tem um job só (com PG_BIN), e mudá-lo exigiria aprovação. O
+# efeito é o mesmo: job separado, nos mesmos gatilhos, sem tocar o job principal.
+# A chave do sandbox do Asaas vem do segredo do repositório ASAAS_API_KEY. Sem o segredo (ainda não
+# cadastrado, ou PR de fork), os dois testes que dependem do sandbox são pulados de forma explícita
+# e aparecem como "skipped" no relatório; os demais rodam.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+      - name: Instalar o Chromium do Playwright
+        run: pnpm --filter @es/e2e exec playwright install --with-deps chromium
+      - name: Subir o Postgres
+        run: docker compose up -d --wait postgres
+      - name: E2E
+        env:
+          ASAAS_API_KEY: ${{ secrets.ASAAS_API_KEY }}
+        run: pnpm e2e

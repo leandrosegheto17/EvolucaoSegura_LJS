@@ -6,8 +6,10 @@ import { CPF_DE_TESTE, criarContaLogada } from './apoio/conta.ts';
 
 test('assina o Pro no sandbox e vê o Pix e o QR code', async ({ page, request }) => {
   test.setTimeout(120_000);
-  // Sem a chave do sandbox o teste falha de propósito (não é pulado): o Pix não pode ser provado.
-  expect(process.env['ASAAS_API_KEY'], 'defina ASAAS_API_KEY (sandbox) no ambiente').toBeTruthy();
+  // Sem a chave do sandbox (ausente ou vazia, como o Actions entrega um segredo não cadastrado), o
+  // teste é pulado de forma explícita e aparece como "skipped" no relatório (T208, decisão do
+  // usuário em 2026-10-29): o Pix não pode ser provado sem o sandbox.
+  test.skip(!process.env['ASAAS_API_KEY'], 'ASAAS_API_KEY ausente: sem o sandbox do Asaas');
   const conta = await criarContaLogada(page, request, 'plano');
 
   await page.goto('/app/plano');
