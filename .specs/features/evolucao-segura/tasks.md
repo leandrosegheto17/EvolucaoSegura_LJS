@@ -4239,14 +4239,10 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 **Where**: `frontend/web/src/app/agenda/` (detalhe), teste
 **Depends on**: T210
 **Requirement**: PERF-08
+**Status**: Cancelada em 2026-10-29, sem execução (o `progresso.py` não tem o estado cancelada e a conta como concluída). Motivo: o app novo não tem tela de detalhe da sessão; por decisão do usuário, o PERF-08 passa a valer só para a agenda (`spec.md`, PERF-08), e as iniciais na agenda são cobertas pela T210. Tarefa mantida no arquivo para o histórico.
 
-**Done when**:
-
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
-
-**Tests**: unit/integração
-**Gate**: full
+**Tests**: none
+**Gate**: none
 
 ---
 

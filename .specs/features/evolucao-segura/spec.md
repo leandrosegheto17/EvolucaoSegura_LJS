@@ -161,7 +161,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 5. [PERF-05] IF a troca de especialidade é pedida e já existe anamnese registrada THEN a API SHALL responder 409 `SPECIALTY_HAS_ANAMNESIS`.
 6. [PERF-06] IF desligar sábado ou domingo é pedido sem `confirmar: true` e existem sessões futuras não canceladas nesse dia THEN a API SHALL responder 409 `WEEKEND_DAY_HAS_SESSIONS` com a quantidade, sem salvar.
 7. [PERF-07] WHEN desligar sábado ou domingo é pedido com `confirmar: true` THEN a API SHALL salvar e manter as sessões existentes nesse dia.
-8. The configurações SHALL conter `privacidade_agenda` (padrão falso; ligada, a agenda e o detalhe da sessão mostram as iniciais dos pacientes no lugar do nome, como no legado; o Início e o financeiro continuam com o nome) e a ativação de push por dispositivo, sem opção de inatividade. [PERF-08]
+8. The configurações SHALL conter `privacidade_agenda` (padrão falso; ligada, a agenda mostra as iniciais dos pacientes no lugar do nome, como no legado, inclusive enquanto as configurações carregam ou se a leitura falha; o Início e o financeiro continuam com o nome; o app novo não tem tela de detalhe da sessão, decisão do usuário em 2026-10-29) e a ativação de push por dispositivo, sem opção de inatividade. [PERF-08]
 9. [PERF-09] WHEN perfil ou configuração mudam de fato THEN a API SHALL auditar `perfil.editado` ou `configuracao.alterada` só com nomes de campo; sem mudança, nada é gravado.
 
 **Independent Test**: conta nova cai no perfil; escolher psicologia cria o modelo com 7 campos e 4 alertas.
