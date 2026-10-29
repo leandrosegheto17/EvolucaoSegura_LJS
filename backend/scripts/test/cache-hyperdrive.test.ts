@@ -48,9 +48,11 @@ describe('idDoHyperdrive', () => {
     expect(() => idDoHyperdrive(texto)).toThrow(CacheRecusado);
   });
 
-  it('o wrangler.jsonc do repositório ainda tem o placeholder, e o passo falha por isso', () => {
+  it('o wrangler.jsonc do repositório tem o id real do Hyperdrive, e não o placeholder', () => {
     const texto = readFileSync(resolve(import.meta.dirname, '../../../wrangler.jsonc'), 'utf8');
-    expect(() => idDoHyperdrive(texto)).toThrow(/placeholder/);
+    const id = idDoHyperdrive(texto);
+    expect(id).toMatch(/^[0-9a-f]{32}$/);
+    expect(id).not.toMatch(/^0+$/);
   });
 });
 

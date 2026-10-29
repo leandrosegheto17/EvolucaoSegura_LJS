@@ -559,7 +559,7 @@ do Neon: as criadas por lá podem vir com `BYPASSRLS`, e a 0024 falha de propós
 ### 8.1 Ordem
 
 O primeiro deploy tem uma dependência circular: o `wrangler deploy` precisa do id real do
-Hyperdrive no `wrangler.jsonc` (hoje é o placeholder `00000000000000000000000000000000`); o
+Hyperdrive no `wrangler.jsonc` (já gravado em 2026-10-29; antes era o placeholder só de zeros); o
 Hyperdrive só é criado com uma URL que conecta, a da role `evolucao_app`; e a role `evolucao_app` só existe depois
 da migration 0001. Por isso o login das roles fica **entre a migração e o deploy do Worker**:
 
