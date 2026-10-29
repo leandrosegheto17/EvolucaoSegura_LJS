@@ -294,3 +294,92 @@ describe('Nova sessão (AGE-01, AGE-02, AGE-04, AGE-06, AGE-12)', () => {
     expect((await axe(container)).violations).toEqual([]);
   });
 });
+
+// T210 / PERF-08: com privacidade_agenda ligada, a agenda mostra as iniciais do paciente no lugar
+// do nome (PrivacyName em modo estrito: nenhum atributo com o nome completo). Enquanto as
+// configurações carregam ou se a leitura falha, iniciais (na dúvida, o nome não aparece). Ausente
+// no corpo, vale o padrão da spec (falso): nome completo.
+describe('Privacidade da agenda (PERF-08)', () => {
+  const zeca = { ...P, id: 'p9', nome: 'Zeferino Sentinela Xavier', ativo: true };
+  const daZeca = (id: string, inicio: Date) => ({ ...sessao(id, inicio, 50), paciente_id: 'p9' });
+  function mock(config: unknown) {
+    const f = vi.fn(async (url: string) => {
+      if (url.startsWith('/api/sessoes'))
+        return json({
+          items: [
+            sessao('s1', new Date(2026, 9, 27, 9, 0), 50),
+            daZeca('s2', new Date(2026, 9, 27, 11, 0)),
+          ],
+          proximo_cursor: null,
+        });
+      if (url.startsWith('/api/configuracoes')) {
+        if (config === 'pendente') return new Promise<Response>(() => {});
+        if (config === 'erro') return json({ codigo: 'erro_interno' }, 500);
+        return json(config);
+      }
+      return json({ items: [ana, zeca], limit: 100, offset: 0 });
+    });
+    vi.stubGlobal('fetch', f);
+    return f;
+  }
+  const setup = () =>
+    render(
+      <QueryClientProvider client={cliente()}>
+        <MemoryRouter initialEntries={['/app/agenda?semana=2026-10-26']}>
+          <AgendaPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  const semNomeCompleto = (container: HTMLElement) => {
+    for (const parte of ['Ana Souza', 'Souza', 'Zeferino', 'Sentinela', 'Xavier'])
+      expect(container.outerHTML).not.toContain(parte);
+  };
+
+  it('ligada: cada sessão mostra as iniciais, e nenhum atributo leva o nome completo', async () => {
+    const f = mock({ privacidade_agenda: true });
+    const { container } = setup();
+    expect(await screen.findByText('Z. S. X.')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'A. S.' }).getAttribute('title')).toBe('A. S.');
+    expect(screen.getByRole('img', { name: 'Z. S. X.' })).toBeTruthy();
+    semNomeCompleto(container);
+    expect(f.mock.calls.some((c) => String(c[0]).startsWith('/api/configuracoes'))).toBe(true);
+  });
+
+  it('desligada: nome completo, sem iniciais', async () => {
+    mock({ privacidade_agenda: false });
+    setup();
+    expect(await screen.findByText('Zeferino Sentinela Xavier')).toBeTruthy();
+    expect(screen.getByText('Ana Souza')).toBeTruthy();
+    expect(screen.queryByText('A. S.')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Z. S. X.' })).toBeNull();
+  });
+
+  it('configurações ainda carregando: iniciais', async () => {
+    mock('pendente');
+    const { container } = setup();
+    expect(await screen.findByText('Z. S. X.')).toBeTruthy();
+    expect(screen.getByText('A. S.')).toBeTruthy();
+    semNomeCompleto(container);
+  });
+
+  it('erro ao ler as configurações: iniciais', async () => {
+    mock('erro');
+    const { container } = setup();
+    expect(await screen.findByText('Z. S. X.')).toBeTruthy();
+    // Espera a leitura falhar (sem nova tentativa) e confere de novo.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByText('A. S.')).toBeTruthy();
+    semNomeCompleto(container);
+  });
+
+  it('a privacidade não esconde a situação, o horário nem o link da evolução', async () => {
+    mock({ privacidade_agenda: true });
+    setup();
+    const linha = (await screen.findByText('Z. S. X.')).closest('li')!;
+    expect(within(linha).getByText('11:00–11:50')).toBeTruthy();
+    expect(within(linha).getByText('Agendada')).toBeTruthy();
+    expect(within(linha).getByRole('link', { name: 'Evolução' }).getAttribute('href')).toBe(
+      '/app/pacientes/p9/evolucao?sessao=s2',
+    );
+  });
+});

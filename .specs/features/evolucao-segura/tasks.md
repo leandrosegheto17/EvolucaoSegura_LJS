@@ -4223,8 +4223,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: 5 testes novos em `agenda.test.tsx` ("Privacidade da agenda (PERF-08)": ligada, desligada, carregando, erro, situação/horário/link preservados) e 1 em `inicio.test.tsx` (Início com o nome); sem a correção, 4 dos 5 da agenda falham (a agenda mostrava o nome completo); com ela, 37/37 e 6 execuções seguidas da pasta da agenda verdes. Campo ausente no corpo vale o padrão da spec (falso): nome completo)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test --maxWorkers=6`: 212 arquivos, 3359 testes (+6), 0 falhas; lint, typecheck e `checar-tokens.py` verdes. As duas execuções com o paralelismo padrão tiveram 1 falha transitória cada, "connection attempt failed", em `db.test.ts` e `perfil.test.ts`, não tocados)
 
 **Tests**: unit/integração
 **Gate**: full

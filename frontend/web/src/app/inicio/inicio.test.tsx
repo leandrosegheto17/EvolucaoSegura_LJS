@@ -301,3 +301,18 @@ describe('Início: links da evolução levam a sessão (EVO-03)', () => {
     expect((await screen.findByTestId('destino')).textContent).toBe('paciente=p1;sessao=a&b=c d');
   });
 });
+
+// T210 / PERF-08: a privacidade da agenda vale só para a agenda; o Início continua com o nome.
+describe('Início com a privacidade da agenda ligada (PERF-08)', () => {
+  it('mostra o nome completo do paciente', async () => {
+    const f = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) => {
+      if (url.startsWith('/api/perfil')) return json({ nome: 'Maria Lima' });
+      if (url.startsWith('/api/configuracoes')) return json({ privacidade_agenda: true });
+      return json(resumo({ hoje: [sessao(1)], hoje_total: 1 }));
+    });
+    vi.stubGlobal('fetch', f);
+    const { container } = setup();
+    expect(await screen.findByText('Paciente 1')).toBeTruthy();
+    expect(container.textContent).not.toContain('P. 1.');
+  });
+});

@@ -4,8 +4,10 @@ import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { ehErroApi } from '../../lib/api.ts';
 import { Alert, Badge, Button, Empty, Field, Input, Select, Skeleton, Spinner } from '../../ui';
+import { PrivacyName } from '../../ui/new';
 import { urlEvolucaoDaSessao } from '../evolucao/api.ts';
 import { listarPacientes } from '../pacientes/api.ts';
+import { CHAVE_CONFIGURACOES, lerConfiguracoes } from '../perfil/api.ts';
 import { criarSessao, listarSessoes } from './api.ts';
 
 // AGE-01, AGE-02, AGE-03: agenda da semana e nova sessão, portadas de
@@ -89,7 +91,19 @@ export function usarNomes() {
   });
 }
 
+// PERF-08 (T210): com privacidade_agenda ligada, a agenda mostra as iniciais no lugar do nome, em
+// modo estrito (nenhum atributo leva o nome completo). Enquanto as configurações carregam ou se a
+// leitura falha, iniciais: na dúvida, o nome não aparece. Campo ausente vale o padrão (falso).
+function usarPrivacidadeAgenda(): boolean {
+  const config = useQuery({
+    queryKey: CHAVE_CONFIGURACOES,
+    queryFn: ({ signal }) => lerConfiguracoes(signal),
+  });
+  return !config.isSuccess || config.data.privacidade_agenda === true;
+}
+
 export function AgendaPage({ acoes }: { acoes?: (sessao: Sessao) => ReactNode }) {
+  const privado = usarPrivacidadeAgenda();
   const [params, setParams] = useSearchParams();
   const segunda = segundaDe(lerChave(params.get('semana')) ?? new Date());
   const fim = somarDias(segunda, 7);
@@ -181,7 +195,7 @@ export function AgendaPage({ acoes }: { acoes?: (sessao: Sessao) => ReactNode })
                       <span className="font-semibold">
                         {hora(s.inicio)}–{hora(s.fim)}
                       </span>
-                      <span>{nomes.data?.get(s.paciente_id) ?? 'Paciente'}</span>
+                      <NomeNaAgenda nome={nomes.data?.get(s.paciente_id)} privado={privado} />
                       <Badge tone={TOM_STATUS[s.status]}>{ROTULO_STATUS[s.status]}</Badge>
                       {!SEM_EVOLUCAO.has(s.status) && (
                         <Link
@@ -201,6 +215,11 @@ export function AgendaPage({ acoes }: { acoes?: (sessao: Sessao) => ReactNode })
         })}
     </div>
   );
+}
+
+function NomeNaAgenda({ nome, privado }: { nome: string | undefined; privado: boolean }) {
+  if (nome === undefined) return <span>Paciente</span>;
+  return <PrivacyName nome={nome} privado={privado} nomeAcessivel="exibido" />;
 }
 
 export interface ValoresSessao {
