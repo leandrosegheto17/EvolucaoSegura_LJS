@@ -91,8 +91,9 @@ describe('preparar-banco da API: dentro do globalSetup do Vitest', () => {
       env: { ...process.env, DATABASE_URL: urlServidor, JITI_FS_CACHE: 'false', NO_COLOR: '1' },
       timeout: 110_000,
     });
-    const saida = `${resultado.stdout}
-${resultado.stderr}`;
+    expect(resultado.error).toBeUndefined();
+    const saida = [resultado.stdout, resultado.stderr].join('
+');
     expect(saida).not.toMatch(/No test files found|Startup Error|charCodeAt/);
     expect(saida).toMatch(/Tests\s+1 passed/);
     expect(resultado.status).toBe(0);
