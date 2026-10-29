@@ -19,6 +19,11 @@ export const chaveEvolucoes = (pacienteId: string) => ['evolucoes', pacienteId] 
 export const CHAVE_MODELOS_TEXTO = ['modelos-texto'] as const;
 
 const id = (v: string) => encodeURIComponent(v);
+
+// EVO-03: a tela de evolução só liga a evolução à sessão (e a API muda a sessão para realizada)
+// quando recebe ?sessao=<id>. Os links que partem de uma sessão (Início, agenda) usam esta URL.
+export const urlEvolucaoDaSessao = (pacienteId: string, sessaoId: string) =>
+  `/app/pacientes/${id(pacienteId)}/evolucao?${new URLSearchParams({ sessao: sessaoId }).toString()}`;
 const comSinal = (sinal?: AbortSignal) => (sinal !== undefined ? { sinal } : {});
 
 export const listarEvolucoes = (pacienteId: string, offset: number, sinal?: AbortSignal) =>

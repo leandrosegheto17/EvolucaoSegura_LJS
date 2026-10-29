@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import { definirCsrf } from '../../lib/api.ts';
@@ -137,7 +137,7 @@ describe('Início: lista de hoje (INI-02, INI-03)', () => {
     expect(within(linha(3)).getByText('Pago')).toBeTruthy();
     expect(within(linha(4)).getByText('Registrada')).toBeTruthy();
     const link = within(linha(1)).getByRole('link', { name: /Evolução/ });
-    expect(link.getAttribute('href')).toBe('/app/pacientes/p1/evolucao');
+    expect(link.getAttribute('href')).toBe('/app/pacientes/p1/evolucao?sessao=s1');
   });
 
   it('mostra as 6 sessões recebidas e "Ver todas (8)" quando hoje_total é 8', async () => {
@@ -176,7 +176,7 @@ describe('Início: alerta de evolução editável sem texto (INI-03)', () => {
       '[role=status]',
     ) as HTMLElement;
     const abrir = within(alerta).getByRole('link', { name: 'Abrir' });
-    expect(abrir.getAttribute('href')).toBe('/app/pacientes/p2/evolucao');
+    expect(abrir.getAttribute('href')).toBe('/app/pacientes/p2/evolucao?sessao=s2');
   });
 
   it('com contagem 1 usa o singular', async () => {
@@ -228,5 +228,76 @@ describe('Início: atalho Pagamento (FIN-09)', () => {
     expect(atalho.getAttribute('href')).toBe('/app/financeiro/pagamento/s1');
     expect(within(linha(2)).queryByRole('link', { name: 'Pagamento' })).toBeNull();
     expect(within(linha(3)).queryByRole('link', { name: 'Pagamento' })).toBeNull();
+  });
+});
+
+// T204 / EVO-03: a evolução só fica ligada à sessão (e a sessão vira realizada) quando a tela de
+// evolução recebe ?sessao=<id>. Os links do Início precisam levar a sessão; o teste clica e confere
+// o destino que a rota da evolução recebe.
+function DestinoEvolucao() {
+  const { id } = useParams();
+  const { search } = useLocation();
+  return (
+    <p data-testid="destino">
+      paciente={id};sessao={new URLSearchParams(search).get('sessao') ?? '(nenhuma)'}
+    </p>
+  );
+}
+const setupComRotas = () =>
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <MemoryRouter initialEntries={['/app']}>
+        <Routes>
+          <Route path="/app" element={<Inicio />} />
+          <Route path="/app/pacientes/:id/evolucao" element={<DestinoEvolucao />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+describe('Início: links da evolução levam a sessão (EVO-03)', () => {
+  it('clicar em "Evolução" de uma sessão abre a evolução do paciente com ?sessao=<id dela>', async () => {
+    mock(
+      resumo({
+        hoje: [sessao(1), sessao(2, { id: 'sessao-b', paciente: { id: 'pac-b', nome: 'Bia' } })],
+        hoje_total: 2,
+      }),
+    );
+    setupComRotas();
+    const linha = (await screen.findByText('Bia')).closest('li')!;
+    fireEvent.click(within(linha).getByRole('link', { name: 'Evolução' }));
+    expect((await screen.findByTestId('destino')).textContent).toBe(
+      'paciente=pac-b;sessao=sessao-b',
+    );
+  });
+
+  it('clicar em "Abrir" do alerta abre a evolução da primeira sessão sem texto com ?sessao=<id dela>', async () => {
+    mock(
+      resumo({
+        hoje: [
+          sessao(1),
+          sessao(2, { evolucao: 'editavel_hoje_sem_texto' }),
+          sessao(3, { evolucao: 'editavel_hoje_sem_texto' }),
+        ],
+        hoje_total: 3,
+        alerta: { editavel_hoje_sem_texto: 2 },
+      }),
+    );
+    setupComRotas();
+    const alerta = (await screen.findByText(/2 evoluções editáveis hoje ainda sem texto/)).closest(
+      '[role=status]',
+    ) as HTMLElement;
+    fireEvent.click(within(alerta).getByRole('link', { name: 'Abrir' }));
+    expect((await screen.findByTestId('destino')).textContent).toBe('paciente=p2;sessao=s2');
+  });
+
+  it('id de sessão com caractere reservado vai codificado e chega íntegro', async () => {
+    mock(resumo({ hoje: [sessao(1, { id: 'a&b=c d' })], hoje_total: 1 }));
+    setupComRotas();
+    const linha = (await screen.findByText('Paciente 1')).closest('li')!;
+    fireEvent.click(within(linha).getByRole('link', { name: 'Evolução' }));
+    expect((await screen.findByTestId('destino')).textContent).toBe('paciente=p1;sessao=a&b=c d');
   });
 });

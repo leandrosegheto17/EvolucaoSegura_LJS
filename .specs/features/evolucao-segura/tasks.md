@@ -4109,8 +4109,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: sem a correção, os 3 testes novos de `inicio.test.tsx` ("links da evolução levam a sessão") falham recebendo `sessao=(nenhuma)`, e as 2 asserções antigas de `href` (`:140` e `:179`, mudança aprovada pelo usuário em 2026-10-29) falham; com ela, 14/14)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 210 arquivos, 3324 testes (+3), 0 falhas; lint e typecheck verdes)
 
 **Tests**: unit/integração
 **Gate**: full

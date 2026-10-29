@@ -9,6 +9,7 @@ import { Alert, Badge, Empty } from '../../ui';
 import { EditWindowBadge, StatCard } from '../../ui/new';
 import { PlusIcon } from '../../ui/new/icons';
 import { QueryFetchState } from '../../ui/new/QueryFetchState';
+import { urlEvolucaoDaSessao } from '../evolucao/api.ts';
 import { useProfileName } from '../perfil/api.ts';
 import { lerResumoInicio } from './api.ts';
 
@@ -79,7 +80,7 @@ function ListaDeHoje({ sessoes, total }: { sessoes: SessaoDeHoje[]; total: numbe
               <span>{s.paciente.nome}</span>
               <SeloEvolucao estado={s.evolucao} />
               <SeloPagamento estado={s.pagamento} />
-              <Link to={`/app/pacientes/${s.paciente.id}/evolucao`} className={LINK_SESSAO}>
+              <Link to={urlEvolucaoDaSessao(s.paciente.id, s.id)} className={LINK_SESSAO}>
                 Evolução
               </Link>
               {s.pagamento === 'pendente' && (
@@ -154,7 +155,7 @@ export function Inicio() {
             Depois das 23:59, só retificação.{' '}
             {primeira && (
               <Link
-                to={`/app/pacientes/${primeira.paciente.id}/evolucao`}
+                to={urlEvolucaoDaSessao(primeira.paciente.id, primeira.id)}
                 className="font-semibold underline"
               >
                 Abrir
