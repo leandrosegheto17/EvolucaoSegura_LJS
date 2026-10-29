@@ -224,13 +224,20 @@ describe('Pix e QR só com cobrança pendente (PLANO-05)', () => {
     ]);
   });
 
+  // T209: as duas aberturas precisam dar certo antes de contar as chamadas. Sem afirmar o status,
+  // uma resposta que falhou antes da rota (sessão, banco sob carga na suíte inteira) aparecia como
+  // "buscarQrPix chamado 1 vez", como se a rota tivesse guardado o QR.
   it('o QR é buscado a cada abertura (nunca guardado)', async () => {
     const { sessao, asaas, app } = await cenario('free', {
       comAsaas: true,
       cobrancas: [cobranca()],
     });
-    await lerPlano(app, sessao);
-    await lerPlano(app, sessao);
+    const primeira = await lerPlano(app, sessao);
+    expect(primeira.status).toBe(200);
+    expect(((await primeira.json()) as RespostaPlano).pix?.copia_e_cola).toBe(QR.copiaECola);
+    const segunda = await lerPlano(app, sessao);
+    expect(segunda.status).toBe(200);
+    expect(((await segunda.json()) as RespostaPlano).pix?.copia_e_cola).toBe(QR.copiaECola);
     expect(asaas.chamadas.filter((c) => c.operacao === 'buscarQrPix')).toHaveLength(2);
   });
 

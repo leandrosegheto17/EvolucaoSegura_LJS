@@ -4204,8 +4204,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção e passa com ela (evidência registrada)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção e passa com ela (evidência registrada: causa achada: a rota é determinística (lista as cobranças e busca o QR a cada abertura); a segunda chamada ao Asaas só falta quando a segunda requisição falha antes da rota. Experimento descartável: expirando a sessão entre as duas aberturas, o teste antigo falha com a mesma mensagem da validação ("expected [ … ] to have a length of 2 but got 1") e o novo com "expected 401 to be 200". Na suíte inteira, a falha antes da rota vem do banco local sob carga: nesta sessão houve 4 falhas transitórias "connection attempt failed" em outros arquivos da API (`limpeza`, `plano-assinar`, `debitos`, e uma resposta sem corpo em `anamnese-retificar`), todas verdes quando rodadas sozinhas. Correção no teste: afirma o status 200 e o Pix das duas respostas antes de contar as chamadas; 5 execuções seguidas verdes)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test`: 212 arquivos, 3353 testes, 0 falhas na terceira execução; as duas anteriores tiveram 1 falha transitória cada, de conexão com o banco, em arquivos não tocados)
 
 **Tests**: unit/integração
 **Gate**: full
