@@ -13,3 +13,11 @@ paths = ['''(^|/)\.env\.example$''']
 description = "Manifesto de hashes dos fluxos (.claude/.instalacao.json)"
 targetRules = ["generic-api-key"]
 paths = ['''^\.claude/\.instalacao\.json$''']
+
+# Falso positivo: chaves de exemplo do Web Push (RFC 8291) usadas nas fixtures dos testes de push.
+# Liberadas pelo valor exato, só nos arquivos de teste, para um segredo real ainda ser pego.
+[[allowlists]]
+description = "Chaves de exemplo do Web Push nos testes de push"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)push[^/]*\.test\.tsx?$''']
+regexes = ['''tBHItJI5svbpez7K''', '''BNcRdreALRFX[A-Za-z0-9_-]*''']
