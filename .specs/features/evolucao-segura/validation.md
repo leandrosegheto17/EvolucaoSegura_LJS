@@ -1,6 +1,58 @@
 # Evolução Segura: validação independente (ciclo 3 de 3; ciclos 2 e 1 abaixo)
 
-## Validation (validação): evolucao-segura, ciclo 3 (Phase 25, T214 a T220) - FAIL ❌
+## Validation (validação): evolucao-segura, ciclo 3 (Phase 25, T214 a T220; reverificação da Phase 26, T221 e T222) - PASS ✅ (com ressalvas que não bloqueiam)
+
+### Reverificação focada (Phase 26: T221 e T222)
+
+**Data**: 2026-10-30
+**Commit verificado**: `2700084` (main; árvore limpa antes e depois, salvo este arquivo). Diff verificado: `191aa74` (T221) e `2700084` (T222); fora de `.specs/`, só 2 arquivos de teste mudaram (+31/-2).
+**Verificador**: sub-agente independente.
+**Escopo**: só o que o relatório do ciclo 3 apontou (M9) e as duas tarefas feitas depois. Não repeti os outros 20 mutantes nem a suíte completa (a trava `trava-testes.py --rodar` foi rodada pela sessão principal, verde, no `2700084`).
+
+**Veredito da reverificação: PASS ✅ (com ressalvas que não bloqueiam)**. M9 agora morre (6 de 6 execuções) e o teste passa com a trava (5 de 5); nada novo quebrou (backend/api: 86 arquivos, 1281 testes verdes; `perfil.test.tsx`: 21 de 21 em 3 execuções). As ressalvas abertas do ciclo 3 (N2 a N5) e as 8 do ciclo 2 seguem como estavam e não bloqueiam.
+
+**Isolamento**: `git archive HEAD` do `2700084` extraído em `%TEMP%\esv5` + `pnpm install --frozen-lockfile --offline`; sem `git worktree` nem `git stash`. Ambiente: `PG_BIN=C:/Users/leand/scoop/apps/postgresql/current/bin`, `NODE_OPTIONS=--stack-trace-limit=0`, `DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5433/evolucao_segura`. Depois: cópia apagada; `git status --porcelain` da árvore real vazio (igual ao baseline); `git worktree list` igual (árvore real e `orca/.../elkhorn`, que não é meu).
+
+#### Critérios de pronto (`tasks.md`, Phase 26) com a asserção
+
+| Tarefa e critério | Resultado esperado | `arquivo:linha` + asserção | Resultado |
+| --- | --- | --- | --- |
+| T221-1: com 1.990 rascunhos, 20 PUTs simultâneos de rascunhos novos dão 10 × 200, 10 × 409 `DRAFT_QUOTA` e `count(*) = 2000` | exatamente 10 e 10, banco no teto | `backend/api/test/rotas/rascunhos.test.ts:341-359` (o `it` começa em `:341`): `expect(status).toEqual([...Array(10).fill(200), ...Array(10).fill(409)])`; `esperarProblema(resposta, 409, PROBLEMA_COTA_RASCUNHO)` em cada 409; `expect(total).toBe(RASCUNHOS_MAXIMO_POR_PROFISSIONAL)` (teto 2000; `encher(..., MAXIMO - 10)` semeia 1.990) | ✅ PASS. O `.sort()` sem comparador ordena como texto, mas 200 < 409 também em texto, então a ordem esperada está certa |
+| T221-2: o teste falha sem o `pg_advisory_xact_lock` | falha | mutação M9 abaixo (6 de 6 falharam) | ✅ PASS |
+| T221-3: teste novo, nenhum teste existente alterado | só linhas acrescentadas | `git show 191aa74 -- backend/api/test/rotas/rascunhos.test.ts`: 26 inserções, **0 remoções**, um bloco novo antes do teste "a conferência de versão vem antes da cota" | ✅ PASS |
+| T222-1: a asserção do valor do campo espera o valor (`waitFor`), mesma asserção `toHaveProperty('value', 'Dra. Exemplo')` | mesma asserção e mesmo valor, dentro de `waitFor` | `frontend/web/src/app/perfil/perfil.test.tsx:79`: `await waitFor(() => expect(nome).toHaveProperty('value', 'Dra. Exemplo'))` | ✅ PASS |
+| T222-2: nenhum outro teste tocado | só a linha aprovada (mais o `import` de `waitFor` e um comentário) | `git show 2700084`: 1 linha removida (a asserção com `findByLabelText`), 4 acrescentadas (2 de comentário, `findByLabelText` guardado em `nome`, o `waitFor`) e o `import` ganhou `waitFor`; a linha seguinte (`container.textContent ... not.toMatch`) e o resto do arquivo intactos | ✅ PASS: asserção e valor `'Dra. Exemplo'` são os mesmos |
+
+#### Sensor (reverificação, só na cópia isolada)
+
+| # | Arquivo:linha | Mutação | Resultado |
+| --- | --- | --- | --- |
+| **M9** | `backend/api/src/rotas/rascunhos.ts:113` | remove o `await sql` com `pg_advisory_xact_lock(...)` da cota | ✅ **MORTA**: o teste novo falhou em **6 de 6** execuções (`AssertionError: expected [200, 200, ...] to deeply equal [...]`; sem a trava passam mais de 10). Determinístico nas 6 |
+| controle | o mesmo arquivo restaurado do `HEAD` (`diff --strip-trailing-cr` vazio) | com a trava | ✅ o teste novo passou em **5 de 5** execuções e o arquivo inteiro deu 38 de 38 |
+| M9b | `rascunhos.ts:113` | a chave da trava passa a incluir `chave.ref` (uma trava por rascunho, sem exclusão mútua entre pedidos do mesmo profissional) | ✅ MORTA: falhou em 3 de 3 |
+| M22 | `perfil.test.tsx:79` (na cópia) | valor esperado `'Dra. Exemplo'` vira `'Dra. Outra'` | ✅ MORTA: `expected <input> to have property "value" with value 'Dra. Outra'`; o `waitFor` não esconde a diferença de valor |
+
+**Sensor**: 3 mutações novas no código e no teste do perfil (M9 refeita, M9b, M22), **todas mortas, 0 sobreviveram**; M9, a única que sobrevivia no ciclo 3, agora morre.
+
+#### Gate da reverificação (cópia isolada do `2700084`)
+
+- `backend/api`: `pnpm test` = **86 arquivos, 1281 testes, 0 falhas** (272 s; mensagem `kj/async-io ... read end of pipe was aborted` do workerd ao encerrar, sem efeito no resultado).
+- `frontend/web`: `perfil.test.tsx` = **21 de 21**, em 3 execuções seguidas.
+- Trava `trava-testes.py --rodar` no `2700084`: verde, informado pela sessão principal (não repeti: o pedido eram só estes dois alvos).
+
+#### Ressalvas desta reverificação (não bloqueiam)
+
+- **R1 (baixa)**: o teste novo repete 5 rodadas porque uma só passava sem a trava em 3 de 13 execuções (registrado no comentário do próprio teste, `rascunhos.test.ts:336-340`). Medi 6 de 6 falhas sem a trava; em teoria ainda há chance de passar sem a trava em máquina menos concorrente, mas é baixa. Com a trava o teste nunca deu falso alarme (5 de 5 e 38 de 38).
+- **R2 (baixa)**: não há teste de concorrência para o **teto de bytes**, só para a quantidade; o código usa a mesma trava, então M9 cobre as duas, mas uma corrida só de bytes não é provada. A Fix 1 original marcava isso como opcional.
+- **R3**: a mudança do teste existente do perfil tem motivo e data da aprovação do usuário (2026-10-30) no comentário e em `tasks.md`, como a regra exige.
+- Lacunas de precisão da spec em RAS-05 (tetos e status de recusa fora do `spec.md`) e as ressalvas N2 a N5 e 1 a 8 do ciclo 2 seguem abertas; nada mudou com a Phase 26.
+
+**Overall da reverificação**: ✅ Pronto. O ciclo 3 de 3 fecha com PASS com ressalvas.
+
+---
+
+### Relatório original do ciclo 3 (reprovado em `e346d96`, mantido como histórico)
+
 
 **Data**: 2026-10-30
 **Spec**: `.specs/features/evolucao-segura/spec.md` (RAS-05 e OPS-05/07/08/09 conforme a spec de 2026-10-30)
@@ -8,7 +60,7 @@
 **Diff range**: `7f126b4..cfa0784` (7 commits de código, T214 a T220: 24 arquivos, +1136/-58)
 **Verificador**: sub-agente independente (autor diferente do verificador). Ciclo anterior: PASS com ressalvas em `2f8dc41` (relatório em `718124e`).
 
-**Veredito: FAIL ❌, por um único motivo**: 1 mutante sobreviveu (M9, o `pg_advisory_xact_lock` da cota de rascunhos, T218/T219). A trava existe para que dois pedidos simultâneos não passem juntos do teto (RAS-05), e **nenhum teste falha sem ela**. Provei que o defeito é real (sonda abaixo: sem a trava, 20 PUTs simultâneos com 1.990 rascunhos deixaram passar 11 em vez de 10) e que um teste consegue pegá-lo. O conserto é um teste (tarefa pequena, T221). Todo o resto está em ordem: os critérios das tarefas têm asserção localizada e igual ao resultado esperado, 20 de 21 mutantes mortos, gate completo verde.
+**Veredito original (superado pela reverificação acima): reprovado, por um único motivo**: 1 mutante sobreviveu (M9, o `pg_advisory_xact_lock` da cota de rascunhos, T218/T219). A trava existe para que dois pedidos simultâneos não passem juntos do teto (RAS-05), e **nenhum teste falha sem ela**. Provei que o defeito é real (sonda abaixo: sem a trava, 20 PUTs simultâneos com 1.990 rascunhos deixaram passar 11 em vez de 10) e que um teste consegue pegá-lo. O conserto é um teste (tarefa pequena, T221). Todo o resto está em ordem: os critérios das tarefas têm asserção localizada e igual ao resultado esperado, 20 de 21 mutantes mortos, gate completo verde.
 
 **Resumo por eixo**:
 
@@ -97,7 +149,7 @@ Profundidade: **P0 manual** (≥ 5 mutações; segurança, isolamento por usuár
 | M6 | `frontend/web/src/sentry.ts:68` | remove `beforeBreadcrumb: limparBreadcrumb` | ✅ 2 falhas |
 | M7 | `backend/dominio/src/clinico/rascunho.ts:26` | remove a recusa de tipo desconhecido | ✅ 4 falhas |
 | M8 | `backend/api/src/rotas/rascunhos.ts:124` | `quantidade >= 2000` → `> 2000` (erro de um) | ✅ 2 falhas |
-| **M9** | `backend/api/src/rotas/rascunhos.ts:113` | **remove o `pg_advisory_xact_lock` da contagem da cota** | ❌ **SOBREVIVEU** (49 de 49 testes passam) |
+| **M9** | `backend/api/src/rotas/rascunhos.ts:113` | **remove o `pg_advisory_xact_lock` da contagem da cota** | ❌ **SOBREVIVEU em `e346d96`** (49 de 49 testes passam); **morta em `2700084`** após a T221 (6 de 6, ver reverificação) |
 | M10 | `backend/dominio/src/clinico/rascunho.ts:58` | `novos <= atuais` → `novos < atuais` | ✅ 1 falha |
 | M11 | `backend/dominio/src/clinico/rascunho.ts:59` | `total - (atuais ?? 0) + novos` → `total + novos` | ✅ 2 falhas |
 | M12 | `backend/api/src/rotas/rascunhos.ts:147` | o UPDATE deixa de gravar `bytes` | ✅ 1 falha |
@@ -111,7 +163,7 @@ Profundidade: **P0 manual** (≥ 5 mutações; segurança, isolamento por usuár
 | M20 | `backend/api/src/middleware/limite.ts:52` | `if (!includes('%')) return false` → `return true` (recusa tudo) | ✅ 17 falhas |
 | M21 | `backend/api/src/sentry.ts:11` | a regex deixa de casar URL absoluta com query | ✅ 4 falhas |
 
-**Sensor depth**: P0 manual (21 mutações). **Resultado**: 20 de 21 mortas, **1 sobrevivente (M9)** - FAIL ❌.
+**Sensor depth**: P0 manual (21 mutações). **Resultado em `e346d96`**: 20 de 21 mortas, **1 sobrevivente (M9)**; a T221 matou M9 (reverificação no topo).
 
 **Sonda do M9 (só na cópia isolada, descartada)**: teste temporário com 1.990 rascunhos do profissional e `Promise.all` de 20 PUTs de rascunhos novos (o teto deixa passar 10):
 
@@ -187,13 +239,13 @@ Não alterei `spec.md`.
 | CAD-01, CAD-02 (SEC-006) | Implementing | ✅ Verificado |
 | ISO-01, OPS-05 (T220) | Implementing / Pending | ✅ Verificado |
 | RAS-01 | Implementing | ✅ Verificado |
-| RAS-05 | Pending | ❌ Precisa de correção: cota sem teste de concorrência (M9) e spec sem os números |
+| RAS-05 | Pending | ✅ Verificado após a T221 (M9 morta); a spec segue sem os números (lacuna de precisão) |
 
 ---
 
 ## Summary (ciclo 3)
 
-**Overall**: ❌ Not Ready (1 correção pequena)
+**Overall (em `e346d96`)**: ❌ Not Ready (1 correção pequena); **após a Phase 26 (`2700084`): ✅ Ready, com ressalvas** (ver reverificação no topo)
 
 **Spec-anchored check**: todos os critérios de T214 a T220 com asserção igual ao esperado (2 só por alegação da tarefa, sem teste próprio); 2 lacunas de precisão da spec em RAS-05.
 **Sensor**: 20/21 mutações mortas; M9 sobreviveu.
