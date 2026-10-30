@@ -1,6 +1,213 @@
-# Evolução Segura: validação independente (ciclo 2 de 3)
+# Evolução Segura: validação independente (ciclo 3 de 3; ciclos 2 e 1 abaixo)
 
-## Validation (validação): evolucao-segura - PASS ✅ (com ressalvas que não bloqueiam)
+## Validation (validação): evolucao-segura, ciclo 3 (Phase 25, T214 a T220) - FAIL ❌
+
+**Data**: 2026-10-30
+**Spec**: `.specs/features/evolucao-segura/spec.md` (RAS-05 e OPS-05/07/08/09 conforme a spec de 2026-10-30)
+**Commit verificado**: `e346d96` (main; árvore limpa antes e depois do meu trabalho, salvo este arquivo)
+**Diff range**: `7f126b4..cfa0784` (7 commits de código, T214 a T220: 24 arquivos, +1136/-58)
+**Verificador**: sub-agente independente (autor diferente do verificador). Ciclo anterior: PASS com ressalvas em `2f8dc41` (relatório em `718124e`).
+
+**Veredito: FAIL ❌, por um único motivo**: 1 mutante sobreviveu (M9, o `pg_advisory_xact_lock` da cota de rascunhos, T218/T219). A trava existe para que dois pedidos simultâneos não passem juntos do teto (RAS-05), e **nenhum teste falha sem ela**. Provei que o defeito é real (sonda abaixo: sem a trava, 20 PUTs simultâneos com 1.990 rascunhos deixaram passar 11 em vez de 10) e que um teste consegue pegá-lo. O conserto é um teste (tarefa pequena, T221). Todo o resto está em ordem: os critérios das tarefas têm asserção localizada e igual ao resultado esperado, 20 de 21 mutantes mortos, gate completo verde.
+
+**Resumo por eixo**:
+
+- **Spec-anchored**: todos os critérios "Done when" de T214 a T220 com asserção localizada e igual ao resultado definido (2 deles só por alegação da tarefa, sem teste unitário próprio: marcados abaixo); 2 lacunas de precisão da spec (RAS-05: tetos numéricos e status de recusa não estão na `spec.md`).
+- **Gate** (numa cópia isolada do commit `e346d96`): `pnpm lint` 0, `pnpm typecheck` 0, `pnpm test` **215 arquivos / 3428 testes, 0 falhas, 0 pulados** (355 s, 1 execução), `pnpm --filter @es/web build` 0. Mais `pnpm test:isolamento`: 19 testes, da raiz e de `backend/api`.
+- **Sensor**: 21 mutações, **20 mortas, 1 sobreviveu (M9)**.
+
+### Ressalvas do ciclo 2: resolvidas pela Phase 25?
+
+A Phase 25 nasceu da auditoria de segurança (T214 a T220) e **não** trata as ressalvas do ciclo 2; conferi cada uma.
+
+| # | Ressalva do ciclo 2 | Situação agora |
+| --- | --- | --- |
+| 1 | `sentry.test.ts` sem tempo limite (intermitente) | **Aberta, sem mudança**: o `it` continua sem tempo limite próprio (`backend/api/test/sentry.test.ts:150-154`); a T216 só acrescentou testes puros ao arquivo. Nesta execução a suíte passou de primeira (com carga alta: a sessão principal rodava a trava ao mesmo tempo), então não reproduzi a falha. Baixa |
+| 2 | e2e com `ASAAS_API_KEY` esbarra no limite de 10/min por IP | **Aberta**: `git diff 718124e..HEAD -- e2e` vazio. Não rodei o e2e neste ciclo (T214 e T218 afirmam 8 de 8; não conferi) |
+| 3 | Service worker sem teste em navegador; comentário de `e2e/playwright.config.ts:15` desatualizado | **Aberta**, sem mudança. Agravante novo: a CSP do `_headers` passou a valer também para `/sw.js` e as páginas; **não provei em Chrome real** que o SW continua registrando e servindo o shell com a CSP nova (o e2e bloqueia o SW) |
+| 4 | PERF-08 "o financeiro continua com o nome" sem teste | Aberta (fora do escopo da fase) |
+| 5 | Restauração de produção registrada com banco vazio | Aberta (fora do escopo) |
+| 6 | `test.skip` no e2e sem chave | Sem mudança; registro |
+| 7, 8 | Tarefas > 2 h; lacunas de precisão; tabela de rastreabilidade de `spec.md` | Sem mudança. Tarefas da Phase 25: nenhuma acima de 2 h. A tabela de `spec.md` continua desatualizada para OPS-05, OPS-08, OPS-09 e RAS-05 (não alterei) |
+
+### Preparação e isolamento (ciclo 3)
+
+- Baseline antes: `git status --porcelain` vazio; `git worktree list` com a árvore real e `C:/Users/leand/orca/workspaces/EvolucaoSegura_LJS/elkhorn` (não é meu).
+- Cópia isolada: `git archive HEAD` extraído em `%TEMP%\esv4` + `pnpm install --frozen-lockfile --offline`. Sem `git worktree`, sem `git stash`. Cada mutação gravou o arquivo, rodou `vitest` nos testes que cobrem o trecho e restaurou o original no `finally`; depois conferi por `diff --strip-trailing-cr` todos os arquivos de `backend`, `frontend`, `e2e`, `.github` e `package.json` contra a árvore real (nenhuma diferença). Linha de base na cópia: 9 arquivos-alvo, 151 testes verdes.
+- Banco: cada execução da API cria um banco temporário (`es_api_<tempo>`) no servidor local, então a trava da sessão principal rodando em paralelo não colide com a minha.
+- Depois: cópia apagada; `git status --porcelain` da árvore real igual ao baseline (vazio); `git worktree list` igual. Única escrita na árvore real: este arquivo.
+
+### Task Completion (Phase 25)
+
+| Tarefa | Situação | Observações |
+| --- | --- | --- |
+| T214 | ✅ concluída | `_headers` + teste do Worker real |
+| T215 | ✅ concluída | limite por caminho roteado |
+| T216 | ✅ concluída | Sentry sem nome de paciente |
+| T217 | ✅ concluída | e-mail sem eco do nome |
+| T218 | ✅ concluída | tipo/ref e teto de quantidade; SPEC_DEVIATION registrada (400 para ref inválido; 422 só para tipo bem formado fora da lista), decisão do usuário de 2026-10-30 em `tasks.md:4386,4391` |
+| T219 | ✅ concluída | teto de bytes, migration 0026, runbook 7.3 |
+| T220 | ✅ concluída | `test:isolamento` roda de verdade |
+
+`tasks.md`: T214 a T220 com todas as caixas marcadas; todas as 220 tarefas concluídas.
+
+### Spec-Anchored Acceptance Criteria (Phase 25)
+
+Convenção: `B/` = `backend/api/test/`; `S/` = `backend/scripts/test/`; `W/` = `frontend/web/src/`; `D/` = `backend/dominio/src/`.
+
+| Tarefa e critério | Resultado esperado | `arquivo:linha` + asserção | Resultado |
+| --- | --- | --- | --- |
+| T214-1 `_headers` com os mesmos valores do middleware; diverge = teste falha | arquivo `/*` igual ao objeto `cabecalhosDeSeguranca` | `S/cabecalhos-assets.test.ts:73` `expect(regrasDoArquivo().get('/*')).toEqual(cabecalhosDeSeguranca)` (M15 morta) | ✅ PASS. O "publicado no build" eu conferi à mão: `pnpm --filter @es/web build` gera `dist/_headers` idêntico ao de `public/`. Nenhum teste automático cobre a cópia pelo Vite (o teste copia o arquivo com `copyFileSync`, `S/cabecalhos-assets.test.ts:44`); ver N2 |
+| T214-2 CSP, HSTS, nosniff, Referrer-Policy e frame-ancestors em `/`, `/app/inicio`, `/sw.js` | 200 e cada cabeçalho com o valor do middleware | `S/cabecalhos-assets.test.ts:91` `expect(resposta.status).toBe(200)`; `:93` `expect(resposta.headers.get(nome), nome).toBe(valor)`; `:95` `toContain("frame-ancestors 'none'")` (dentro de `describe.each(['/', '/app/inicio', '/sw.js', '/assets/app.js'])`, Worker real) | ✅ PASS (M15: 5 falhas) |
+| T214-3 CSP continua permitindo o que o app usa | e2e por cliques verde | sem teste unitário; alegação "8 de 8" na tarefa | ⚠️ não verificado por mim (e2e não rodado neste ciclo) |
+| T215-1 variantes codificadas recebem o mesmo 429; `%` inválido: 400 sem chamar o binding | `/api/auth/%65ntrar` e `/api/cadastr%6F` = 429 `muitas_tentativas`; `%zz` = 400 `caminho_invalido`, 0 chamadas | `B/limite.test.ts:201-203` `expect(respostaVariante.status).toBe(429)` + `toMatchObject({ codigo: 'muitas_tentativas' })`; `:242-245` `expect(resposta.status).toBe(400)` … `codigo: 'caminho_invalido'` … `expect(chamadas).toBe(0)`; app real `:260` `expect(resposta.status).toBe(429)` | ✅ PASS (M1: 6 falhas; M2: 4; M20: 17) |
+| T215-2 grupos e limites existentes inalterados | rota autenticada codificada sem limite; `%` válido não recusado; testes antigos intactos | `B/limite.test.ts:218` `expect((await pedirNegado('/api/p%61cientes')).status).toBe(200)`; `:250` `expect((await pedirNegado('/api/pacientes?q=Jo%C3%A3o')).status).toBe(200)`; sem linha removida em `limite.test.ts` | ✅ PASS |
+| T216-1 app: evento com `aria-label` de clique e `?q=Maria` sai sem "Maria" | nenhuma ocorrência de "Maria" | `W/sentry.test.ts:84` `expect(JSON.stringify(limparEvento(eventoComNomeDePaciente()))).not.toContain('Maria')`; `:90` `expect(categorias).toEqual(['fetch', 'xhr', 'navigation', 'console'])`; `:123-129` `beforeBreadcrumb` do clique `.toBeNull()` | ✅ PASS (M4: 4 falhas; M6: 2) |
+| T216-2 Worker: `request.url` e breadcrumbs sem query string | `request.url` = `https://app.exemplo.com.br/api/pacientes`, `query_string` indefinido | `B/sentry.test.ts:79-80` `toBe('https://app.exemplo.com.br/api/pacientes')` / `toBeUndefined()`; `:86-87` breadcrumbs sem `?`; `:91` `.not.toContain('Maria')` | ✅ PASS (M5: 2 falhas; M21: 4) |
+| T216-3 máscara de e-mail continua | `[e-mail removido]` | `W/sentry.test.ts:116` `toBe('falha para [e-mail removido] em /api/pacientes')`; testes antigos intactos (`git diff` só com acréscimos nos dois `sentry.test.ts`) | ✅ PASS |
+| T217 e-mail novo, pendente e "você já tem conta" não trazem o `nome` | `Olá.` na primeira linha; nem "golpe.exemplo", "Sua conta foi suspensa" nem "Regularize" na mensagem inteira; 202 `{status:'aceito'}` | `B/rotas/cadastro.test.ts:406` `expect(correio.enviadas[0]!.texto.split('\n')[0]).toBe('Olá.')`; `:394` `expect(tudo).not.toContain(trecho)` (nos três casos, `:397-440`); `:404` `toEqual({ status: 'aceito' })` | ✅ PASS (M3: 4 falhas) |
+| T218-1 `tipo` fora da lista: 422 `validacao` em `tipo` e nada gravado (SPEC_DEVIATION: ref inválido segue 400) | 422 `PROBLEMA_TIPO_RASCUNHO` (`campos: ['tipo']`); 400 `PROBLEMA_RASCUNHO_INVALIDO` para ref não UUID | `B/rotas/rascunhos.test.ts:268-274` `esperarProblema(…, 422, PROBLEMA_TIPO_RASCUNHO)` + `:274` `expect(await rascunhosDe(sessao.usuarioId)).toEqual([])`; `:246-259` `esperarProblema(…, 400, PROBLEMA_RASCUNHO_INVALIDO)`; domínio `D/clinico/rascunho.test.ts:32` `expect(lerChaveRascunho('nota', 'r9')).toBe('tipo_desconhecido')` | ✅ PASS (M7: 4 falhas; M18: 3). A spec não define o status: lacuna de precisão 2 |
+| T218-2 teto de quantidade: acima, 409 `DRAFT_QUOTA`; upsert existente com o teto cheio = 200; cota por profissional | 2.000 aceitos, o seguinte 409; atualizar = 200 `row_version: 2`; B não é afetado | `B/rotas/rascunhos.test.ts:296` `expect((await gravar(…'último'…)).status).toBe(200)` e `:297-301` `esperarProblema(…, 409, PROBLEMA_COTA_RASCUNHO)`; `:311` `expect(total).toBe(RASCUNHOS_MAXIMO_POR_PROFISSIONAL)`; `:322-323` `status 200` + `toMatchObject({ payload: { texto: 'v2' }, row_version: 2 })`; `:331-332` A 409, B 200 | ✅ PASS (M8: 2 falhas; M19: 1) |
+| T218-3 fluxos reais seguem funcionando | e2e por cliques verde | alegação da tarefa; leitura: o app só usa o tipo `evolucao` (`W/app/evolucao/rascunho.ts:16`), que continua aceito | ⚠️ e2e não rodado por mim |
+| T219-1 rascunhos de 512 KiB passam até o teto e o seguinte responde 409; trocar por menor é aceito | 50 × 512 KiB aceitos (47 + 3), o seguinte 409; soma = 25 MiB; menor/igual sempre 200 | `B/rotas/rascunhos.test.ts:386` `status 200` ×3 e `:387-391` 409 `PROBLEMA_COTA_RASCUNHO`; `:396` `expect(soma).toBe(BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL)`; `:412-413` `200`/`200`; `:414` `toEqual([JSON.stringify({ t: 'menor' }).length])`; maior com teto cheio `:432` `toEqual({ payload: { t: 'pequeno' }, row_version: 1 })`; domínio `D/clinico/rascunho.test.ts:85` `cabeNaCotaDeBytes({ total: 600, atuais: null, novos: 401, … })` `toBe(false)` e `:80-81` `toBe(true)` no limite | ✅ PASS (M10, M11, M12, M13, M14, M17 mortas) |
+| T219-2 tetos documentados no `docs/runbook.md` | seção 7.3 com 512 KiB, 2.000, 25 MiB e 409 | `docs/runbook.md` seção "7.3 Neon: armazenamento e cota de rascunhos" (tabela com os três tetos); é documentação, sem teste | ✅ PASS (lido; a consulta SQL do runbook está declarada "Não executado" contra o Neon) |
+| T220-1 o passo do CI roda a suíte de isolamento e zero testes é falha | `--no-passWithNoTests`; pasta sem testes sai com erro "No test files found" | `S/test-isolamento-script.test.ts:37` `expect(daRaiz).toContain('--no-passWithNoTests')`; `:38` `not.toContain('passWithNoTests')`; `:48-49` passo do CI `pnpm test:isolamento` sem `working-directory`; `:65-66` `expect(resultado.status).not.toBe(0)` / `toMatch(/No test files found/i)` | ✅ PASS (M16: 1 falha). **Executei** `pnpm test:isolamento`: "Test Files 1 passed (1), Tests 19 passed (19)" |
+| T220-2 roda igual da raiz e de `backend/api` | mesmo comando | `S/test-isolamento-script.test.ts:42` `expect(scripts('backend/api')['test:isolamento']).toBe('pnpm -w test:isolamento')`; executado por mim nos dois diretórios: 19 testes cada | ✅ PASS |
+| Migration 0026 (apoio de T219) | coluna `bytes` inteira, `>= 0`; linhas antigas = `octet_length(payload::text)`; RLS forçada mantida | `S/migration-0026-rascunho-bytes.test.ts:132` `expect(linha.bytes, linha.ref).toBe(linha.esperado)`; `:141` `toEqual({ forcada: true, ligada: true, dono: 'evolucao_owner' })` | ✅ PASS (M14: 1 falha) |
+| Gate das tarefas: "contagem sem remoções" | 3362 → 3428 | `pnpm test`: 3428 passaram (215 arquivos); nenhuma linha de teste removida além das duas trocas aprovadas (abaixo) | ✅ PASS |
+
+**Lacunas de precisão da spec (não bloqueiam; registrar)**:
+
+1. **RAS-05 sem números**: `spec.md:429` diz "teto de quantidade ou de bytes", mas 2.000 rascunhos e 25 MiB só estão em `tasks.md:4391,4413`, `backend/contrato/src/clinico.ts` e `docs/runbook.md`. Os testes afirmam 2.000 e 25 MiB (`B/rotas/rascunhos.test.ts:289`, `:368-369`), que são decisões do usuário, não da spec.
+2. **RAS-05 sem status para tipo/ref inválido**: a spec diz só que o `tipo` "SHALL ser um dos tipos conhecidos" e o `ref` "ter o formato do tipo"; o 422 (tipo) e o 400 (ref) saem da decisão do usuário registrada em `tasks.md:4386` (SPEC_DEVIATION do T218).
+
+**Testes existentes alterados nesta fase**: `D/clinico/rascunho.test.ts:28-37` e `B/rotas/rascunhos.test.ts:261-275` (o antigo "outros tipos aceitam a chave" virou "tipo fora da lista: 422"). O motivo (SEC-007) e a aprovação do usuário estão escritos em `tasks.md:4391`; registro apenas, não verifico a aprovação além do que está escrito. Nenhum outro teste foi removido, pulado ou enfraquecido (`git diff -U0 7f126b4..cfa0784` nos arquivos de teste: só essas linhas removidas).
+
+### Discrimination Sensor (ciclo 3)
+
+Profundidade: **P0 manual** (≥ 5 mutações; segurança, isolamento por usuário, entrada externa). Testes alvo por mutação: o arquivo do critério correspondente; original restaurado e conferido.
+
+| Mut. | Arquivo:linha | Falha injetada | Morta? |
+| --- | --- | --- | --- |
+| M1 | `backend/api/src/middleware/limite.ts:71` | `grupoDaRota(c.req.path)` volta a `grupoDaRota(new URL(c.req.url).pathname)` (desfaz a T215) | ✅ 6 falhas |
+| M2 | `limite.ts:54-57` | `%` inválido deixa de ser recusado (o `catch` devolve `false`) | ✅ 4 falhas |
+| M3 | `backend/api/src/rotas/cadastro.ts:40` | o e-mail volta a dizer `Olá, ${nome}.` (desfaz a T217) | ✅ 4 falhas |
+| M4 | `frontend/web/src/sentry.ts:16` | `BREADCRUMBS_DO_DOM` sem `ui.click` | ✅ 4 falhas |
+| M5 | `backend/api/src/sentry.ts:38` | remove `delete limpo.request.query_string` | ✅ 2 falhas |
+| M6 | `frontend/web/src/sentry.ts:68` | remove `beforeBreadcrumb: limparBreadcrumb` | ✅ 2 falhas |
+| M7 | `backend/dominio/src/clinico/rascunho.ts:26` | remove a recusa de tipo desconhecido | ✅ 4 falhas |
+| M8 | `backend/api/src/rotas/rascunhos.ts:124` | `quantidade >= 2000` → `> 2000` (erro de um) | ✅ 2 falhas |
+| **M9** | `backend/api/src/rotas/rascunhos.ts:113` | **remove o `pg_advisory_xact_lock` da contagem da cota** | ❌ **SOBREVIVEU** (49 de 49 testes passam) |
+| M10 | `backend/dominio/src/clinico/rascunho.ts:58` | `novos <= atuais` → `novos < atuais` | ✅ 1 falha |
+| M11 | `backend/dominio/src/clinico/rascunho.ts:59` | `total - (atuais ?? 0) + novos` → `total + novos` | ✅ 2 falhas |
+| M12 | `backend/api/src/rotas/rascunhos.ts:147` | o UPDATE deixa de gravar `bytes` | ✅ 1 falha |
+| M13 | `backend/contrato/src/clinico.ts` (`BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL`) | teto de bytes 25 MiB → 26 MiB | ✅ 5 falhas |
+| M14 | `backend/scripts/migrations/0026_rascunho_bytes.ts:22` | remove o preenchimento das linhas existentes | ✅ 1 falha |
+| M15 | `frontend/web/public/_headers:6` | `max-age=63072000` → `63072001` (diverge do middleware) | ✅ 5 falhas |
+| M16 | `package.json` (script `test:isolamento`) | remove `--no-passWithNoTests` | ✅ 1 falha |
+| M17 | `backend/api/src/rotas/rascunhos.ts:46` | `coalesce(bytes, octet_length(payload::text))` → `coalesce(bytes, 0)` | ✅ 1 falha |
+| M18 | `backend/api/src/rotas/rascunhos.ts:95` | remove o 422 de tipo desconhecido na rota | ✅ 3 falhas |
+| M19 | `backend/api/src/rotas/rascunhos.ts:112` | payload maior em rascunho existente deixa de passar pela cota | ✅ 1 falha |
+| M20 | `backend/api/src/middleware/limite.ts:52` | `if (!includes('%')) return false` → `return true` (recusa tudo) | ✅ 17 falhas |
+| M21 | `backend/api/src/sentry.ts:11` | a regex deixa de casar URL absoluta com query | ✅ 4 falhas |
+
+**Sensor depth**: P0 manual (21 mutações). **Resultado**: 20 de 21 mortas, **1 sobrevivente (M9)** - FAIL ❌.
+
+**Sonda do M9 (só na cópia isolada, descartada)**: teste temporário com 1.990 rascunhos do profissional e `Promise.all` de 20 PUTs de rascunhos novos (o teto deixa passar 10):
+
+| Versão | `200` | `409 DRAFT_QUOTA` | Resultado |
+| --- | --- | --- | --- |
+| `HEAD` (com a trava) | 10 | 10 | `expect(ok).toBe(10)` passa |
+| sem a trava (M9) | **11** | 9 | `expect(ok).toBe(10)` falha |
+
+A trava corrige uma corrida real (sem ela o profissional passa do teto) e um teste de concorrência a distingue. O código documenta essa garantia (`rascunhos.ts:38-39`, "para dois pedidos simultâneos não passarem juntos do teto"), mas a regra do projeto ("toda mudança de comportamento tem teste que falharia sem ela") não é cumprida. O ganho do atacante é pequeno (poucos rascunhos a mais por rajada), mas segue a régua dos ciclos anteriores: o M10 do ciclo 1 também era um mecanismo de proteção sem teste e reprovou.
+
+### Casos limite (Phase 25)
+
+- [x] `%` inválido em `/api/*` (`%zz`, `%` no fim, `%6`, `%E0`): 400 sem consultar o binding (`B/limite.test.ts:221-246`).
+- [x] Variantes codificadas das rotas de grupo e do webhook (`B/limite.test.ts:190-203`).
+- [x] Teto exato: 1.999 → o 2.000º entra, o seguinte não (`B/rotas/rascunhos.test.ts:292-312`); bytes: 25 MiB exatos entram (`:381-397`), 1 byte a mais não (`D/clinico/rascunho.test.ts:85-86`).
+- [x] Upsert de existente com o teto cheio continua 200 (quantidade `:314-324`, bytes `:406-415`); a versão (If-Match) vem antes da cota: 412 em chave nova (`:335-345`).
+- [x] Linha antiga sem `bytes` conta pelo `octet_length` (`:435-445`, M17).
+- [ ] Dois pedidos simultâneos na fronteira do teto: **sem teste** (M9).
+
+### Gate Check (ciclo 3)
+
+- **Comando**: `pnpm lint && pnpm typecheck && pnpm test` (de `.specs/projeto/testes.json`) mais `pnpm --filter @es/web build`.
+- **lint** 0; **typecheck** 0; **build do web** 0 (`dist/_headers` idêntico a `public/_headers`).
+- **`pnpm test`** (cópia isolada, `PG_BIN` apontando o pg_dump 18, uma execução): 215 arquivos, **3428 passaram, 0 falharam, 0 pulados**, 355 s. Antes da fase: 3362 em 212 arquivos; agora **+66 testes, +3 arquivos** (`cabecalhos-assets`, `migration-0026-rascunho-bytes`, `test-isolamento-script`). Nenhum arquivo de teste apagado (`git diff 7f126b4..cfa0784 --diff-filter=D` vazio). A busca por `.skip/.only/.todo/xit` só acha texto dentro de testes que checam outro arquivo (`ci-e2e.test.ts:74,87`) e `skipWaiting` (`offline.test.ts:110`).
+- **`pnpm test:isolamento`** (raiz e `backend/api`): 1 arquivo, 19 testes, verde.
+- Não rodei o e2e nem a trava (`trava-testes.py --rodar`), que a sessão principal executava.
+
+### Code Quality (ciclo 3)
+
+| Princípio | Status |
+| --- | --- |
+| Testes mapeiam critério e não são rasos (amostra: T215, T216, T218/T219) | ✅ asserções exatas; 20 de 21 mutantes mortos |
+| Resultado esperado da spec nas asserções | ✅, com as 2 lacunas de precisão de RAS-05 |
+| Cobertura por camada (domínio 1:1, rotas com feliz + borda + erro) | ✅ exceto a concorrência da cota (M9) |
+| Testes órfãos | nenhum: todos citam SEC-00x, RAS-05 ou T21x |
+| Escopo e padrões | ✅ só os arquivos das tarefas; `TIPOS_COM_UUID` virou `TIPOS_CONHECIDOS` (renomeação coerente) |
+| Diretrizes seguidas | `.specs/projeto/` e `padrao-ljs.md`; SPEC_DEVIATION do T218 registrada no código (`backend/contrato/src/clinico.ts`) e em `tasks.md` |
+
+### Ressalvas e achados novos
+
+- **N1 (bloqueia o PASS) - M9**: ver sensor. Tarefa sugerida T221 abaixo.
+- **N2 (baixo)**: nenhum teste automático garante que o Vite copia `public/_headers` para o `dist`; `cabecalhos-assets.test.ts:44` copia o arquivo à mão. Se a cópia deixasse de existir, nada falharia (conferi à mão que hoje funciona).
+- **N3 (baixo)**: a regex `URL_COM_QUERY` (`backend/api/src/sentry.ts:11`, `frontend/web/src/sentry.ts:14`) só limpa caminho relativo no início do texto ou depois de espaço, aspas, `(` ou `=`. Verifiquei com Node: `erro em url:/api/pacientes?q=Maria` e `falha,/api/pacientes?q=Maria` **mantêm** a query; `(/api/p?q=Maria)` vira `(/api/p` (perde o `)`). Os campos reais (`request.url`, `data.url`) são strings inteiras e saem limpos; a lacuna é de mensagens livres com caminho colado a `:` ou `,`.
+- **N4 (médio, não provado)**: CSP do `_headers` com service worker em Chrome real (ver ressalva 3 do ciclo 2).
+- **N5**: `spec.md` mantém OPS-05, OPS-08, OPS-09 e RAS-05 como "Pending" na tabela de rastreabilidade (não alterei).
+
+---
+
+## Fix Plans (ciclo 3)
+
+### Fix 1 (bloqueante): teste de concorrência da cota de rascunhos (T221)
+
+- **Causa**: a trava `pg_advisory_xact_lock` da cota (`backend/api/src/rotas/rascunhos.ts:113`) não tem teste que falhe sem ela (M9).
+- **Tarefa**: em `backend/api/test/rotas/rascunhos.test.ts`, no `describe('teto de quantidade (RAS-05)')`: semear 1.990 rascunhos do profissional e disparar 20 PUTs de rascunhos novos com `Promise.all`; afirmar exatamente 10 respostas 200 e 10 respostas 409 `DRAFT_QUOTA`, e `count(*) = 2000` no banco. Opcional: o mesmo para bytes (rascunhos de 512 KiB perto do teto).
+- **Verificação**: remover o `pg_advisory_xact_lock` numa cópia e ver o teste falhar (a sonda deste relatório deu 11 em vez de 10 sem a trava). Atenção: a corrida é probabilística; se o teste ficar instável, subir a concorrência ou repetir em laço curto.
+- **Prioridade**: Major (mecanismo de proteção sem teste).
+
+### Fixes menores (opcionais, já listados nos ciclos anteriores)
+
+- Tempo limite explícito no `it` de `backend/api/test/sentry.test.ts:150`; e2e do service worker com a CSP nova; teste de que `dist/_headers` existe após o build; ajuste da regex de N3.
+
+---
+
+## Requirement Traceability Update (ciclo 3)
+
+Não alterei `spec.md`.
+
+| Requisito | Situação anterior | Nova situação |
+| --- | --- | --- |
+| OPS-07 (SEC-003) | Implementing | ✅ Verificado |
+| OPS-08 (SEC-005) | Pending | ✅ Verificado |
+| OPS-09 (SEC-002) | Pending | ✅ Verificado (CSP com SW em Chrome real não provada) |
+| CAD-01, CAD-02 (SEC-006) | Implementing | ✅ Verificado |
+| ISO-01, OPS-05 (T220) | Implementing / Pending | ✅ Verificado |
+| RAS-01 | Implementing | ✅ Verificado |
+| RAS-05 | Pending | ❌ Precisa de correção: cota sem teste de concorrência (M9) e spec sem os números |
+
+---
+
+## Summary (ciclo 3)
+
+**Overall**: ❌ Not Ready (1 correção pequena)
+
+**Spec-anchored check**: todos os critérios de T214 a T220 com asserção igual ao esperado (2 só por alegação da tarefa, sem teste próprio); 2 lacunas de precisão da spec em RAS-05.
+**Sensor**: 20/21 mutações mortas; M9 sobreviveu.
+**Gate**: lint 0, typecheck 0, build 0, `pnpm test` 215 arquivos / 3428 testes verdes, `test:isolamento` 19 verdes.
+
+**What works**: cabeçalhos de segurança nos assets provados num Worker real; limite por IP decidido pelo caminho decodificado (variantes codificadas barradas, `%` inválido = 400); Sentry sem nome de paciente nem query string no app e no Worker; e-mail de cadastro sem eco do nome; rascunhos só de tipos conhecidos, com teto de 2.000 rascunhos e 25 MiB provados nas bordas; migration 0026 com preenchimento e RLS forçada; `test:isolamento` roda de verdade e falha com zero testes.
+
+**Issues found**: N1 (M9) bloqueia; N2 a N5 e as ressalvas 1 a 8 do ciclo 2 seguem como ressalvas.
+
+**Next steps**: criar e executar T221 (um teste de concorrência) e reverificar M9 e a suíte da API. Como este é o ciclo 3 de 3, a decisão de consertar ou aceitar é do usuário (ver retorno).
+
+---
+
+## Ciclo 2 (histórico): PASS ✅ (com ressalvas que não bloqueiam)
 
 **Data**: 2026-10-29
 **Spec**: `.specs/features/evolucao-segura/spec.md` (155 requisitos: 143 P1, 12 P2; PERF-08, ANA-08, OPS-07 e a borda do Neon ajustados em 2026-10-29)
