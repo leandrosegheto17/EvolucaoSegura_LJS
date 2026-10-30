@@ -4322,9 +4322,9 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção: com o binding que sempre nega, as variantes codificadas respondem 429 como o caminho normal
-- [ ] Grupos e limites existentes (10 por minuto nas rotas de acesso, 60 nas demais públicas, webhook) inalterados; testes antigos intactos
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção: com o binding que sempre nega, as variantes codificadas respondem 429 como o caminho normal (10 falhas sem a correção; `%` inválido responde 400 `caminho_invalido` sem chamar o binding)
+- [x] Grupos e limites existentes (10 por minuto nas rotas de acesso, 60 nas demais públicas, webhook) inalterados; testes antigos intactos
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3383 testes, eram 3369)
 
 **Tests**: unit/integração
 **Gate**: full

@@ -161,6 +161,106 @@ describe('contadores separados', () => {
   });
 });
 
+// SEC-003 (T215): o grupo sai do caminho já roteado (decodificado), não do pathname cru da URL.
+// Com um binding que sempre nega, toda variante que chega ao handler de uma rota limitada é 429.
+describe('caminho com percent-encoding (SEC-003)', () => {
+  const nega = { limit: async () => ({ success: false }) };
+  const envQueNega = {
+    ...env,
+    LIMITE_ACESSO: nega,
+    LIMITE_PUBLICO: nega,
+    LIMITE_WEBHOOK: nega,
+  } as unknown as Cloudflare.Env;
+
+  // Mesmo roteamento do app: o handler só responde nas rotas exatas, como as rotas reais.
+  const appRoteado = new Hono<{ Bindings: Cloudflare.Env }>();
+  appRoteado.use('/api/*', limitePorIp);
+  for (const rota of ['/api/auth/entrar', '/api/cadastro', '/api/cadastro/confirmar'])
+    appRoteado.post(rota, (c) => c.json({ ok: true, rota }));
+  appRoteado.post('/api/webhooks/asaas', (c) => c.json({ ok: true }));
+  appRoteado.post('/api/pacientes', (c) => c.json({ ok: true }));
+
+  const pedirNegado = (caminho: string) =>
+    appRoteado.request(
+      caminho,
+      { method: 'POST', headers: { 'CF-Connecting-IP': novoIp() } },
+      envQueNega,
+    );
+
+  it.each([
+    ['/api/auth/entrar', '/api/auth/%65ntrar'],
+    ['/api/auth/entrar', '/api/auth/%65%6E%74%72%61%72'],
+    ['/api/cadastro', '/api/cadastr%6F'],
+    ['/api/cadastro', '/api/%63adastro'],
+    ['/api/cadastro/confirmar', '/api/cadastro/confirma%72'],
+    ['/api/webhooks/asaas', '/api/webhooks/%61saas'],
+  ])('%s e a variante %s recebem 429 do binding que sempre nega', async (normal, variante) => {
+    const respostaNormal = await pedirNegado(normal);
+    const respostaVariante = await pedirNegado(variante);
+
+    expect(respostaNormal.status).toBe(429);
+    expect(respostaVariante.status).toBe(429);
+    expect(await respostaVariante.json()).toMatchObject({ codigo: 'muitas_tentativas' });
+  });
+
+  it('a variante codificada chega ao handler da rota quando o binding deixa passar', async () => {
+    const resposta = await appRoteado.request(
+      '/api/auth/%65ntrar',
+      { method: 'POST', headers: { 'CF-Connecting-IP': novoIp() } },
+      env,
+    );
+
+    expect(resposta.status).toBe(200);
+    expect(await resposta.json()).toEqual({ ok: true, rota: '/api/auth/entrar' });
+  });
+
+  it('rota autenticada codificada continua sem limite por IP', async () => {
+    expect((await pedirNegado('/api/p%61cientes')).status).toBe(200);
+  });
+
+  it.each(['/api/auth/%zzntrar', '/api/auth/entrar%', '/api/cadastr%6', '/api/cadastro%E0'])(
+    '%s (percent-encoding inválido) recebe 400 sem chamar o binding',
+    async (caminho) => {
+      let chamadas = 0;
+      const contaChamadas = {
+        limit: async () => {
+          chamadas += 1;
+          return { success: true };
+        },
+      };
+      const resposta = await appRoteado.request(
+        caminho,
+        { method: 'POST', headers: { 'CF-Connecting-IP': novoIp() } },
+        {
+          ...env,
+          LIMITE_ACESSO: contaChamadas,
+          LIMITE_PUBLICO: contaChamadas,
+          LIMITE_WEBHOOK: contaChamadas,
+        } as unknown as Cloudflare.Env,
+      );
+
+      expect(resposta.status).toBe(400);
+      expect(resposta.headers.get('content-type')).toContain('application/problem+json');
+      expect(await resposta.json()).toMatchObject({ status: 400, codigo: 'caminho_invalido' });
+      expect(chamadas).toBe(0);
+    },
+  );
+
+  it('% válido em rota fora dos grupos não é recusado', async () => {
+    expect((await pedirNegado('/api/pacientes?q=Jo%C3%A3o')).status).toBe(200);
+  });
+
+  it('no app real, a variante codificada de entrar também é barrada', async () => {
+    const resposta = await criarApp().request(
+      '/api/auth/%65ntrar',
+      { method: 'POST', headers: { 'CF-Connecting-IP': novoIp() } },
+      envQueNega,
+    );
+
+    expect(resposta.status).toBe(429);
+  });
+});
+
 describe('no Worker', () => {
   it('o app aplica o limite antes das rotas, com os cabeçalhos de segurança', async () => {
     const ip = novoIp();

@@ -46,8 +46,29 @@ const BINDING: Record<
   webhook: 'LIMITE_WEBHOOK',
 };
 
+// SEC-003 (T215): `%` que não decodifica (fora de %XX ou UTF-8 inválido). O roteador do Hono deixa
+// o trecho como veio; aqui o pedido para antes de chegar a qualquer rota.
+function temPercentInvalido(caminhoCru: string): boolean {
+  if (!caminhoCru.includes('%')) return false;
+  try {
+    decodeURI(caminhoCru);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export const limitePorIp: MiddlewareHandler<{ Bindings: Cloudflare.Env }> = async (c, next) => {
-  const grupo = grupoDaRota(new URL(c.req.url).pathname);
+  if (temPercentInvalido(new URL(c.req.url).pathname)) {
+    return c.json(
+      { tipo: 'about:blank', titulo: 'Caminho inválido', status: 400, codigo: 'caminho_invalido' },
+      400,
+      { 'Content-Type': 'application/problem+json' },
+    );
+  }
+  // SEC-003 (T215): o grupo sai do caminho decodificado, o mesmo que o roteador usa para achar a
+  // rota (c.req.path); o pathname cru deixava /api/auth/%65ntrar chegar a entrar sem limite.
+  const grupo = grupoDaRota(c.req.path);
   if (grupo === null) return next();
   // A Cloudflare preenche CF-Connecting-IP; sem ele (só em teste local), um contador comum.
   const ip = c.req.header('CF-Connecting-IP') ?? 'sem-ip';
