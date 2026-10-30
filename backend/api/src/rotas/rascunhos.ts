@@ -1,13 +1,20 @@
 import {
+  BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
   PROBLEMA_COTA_RASCUNHO,
   PROBLEMA_RASCUNHO_INVALIDO,
   PROBLEMA_TIPO_RASCUNHO,
   PROBLEMA_VERSAO_RASCUNHO,
   RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
   type Rascunho,
+  bytesDoJson,
   esquemaRascunhoEntrada,
 } from '@es/contrato/clinico';
-import { decidirGravacao, lerChaveRascunho, lerIfMatch } from '@es/dominio/clinico/rascunho';
+import {
+  cabeNaCotaDeBytes,
+  decidirGravacao,
+  lerChaveRascunho,
+  lerIfMatch,
+} from '@es/dominio/clinico/rascunho';
 import { Hono } from 'hono';
 import { sql } from 'kysely';
 import { lerCorpo } from '../http.ts';
@@ -30,6 +37,14 @@ import { responderProblemaAgenda as responderProblema } from '../repositorios/se
 //   validacao em `tipo`); criar acima de 2.000 rascunhos do profissional: 409 DRAFT_QUOTA.
 //   Atualizar um rascunho existente não conta como novo. A contagem roda sob um advisory lock da
 //   transação por profissional, para dois pedidos simultâneos não passarem juntos do teto.
+// - RAS-05 (T219): até 25 MiB somados por profissional, na medida do contrato (coluna bytes,
+//   migration 0026): rascunho novo ou payload maior que passaria do teto, 409 DRAFT_QUOTA; trocar
+//   por um payload menor ou igual sempre é aceito.
+
+// RAS-05 (T219): bytes do payload gravados pela API (migration 0026); linha sem a coluna conta pelo
+// tamanho do jsonb em texto, a mesma medida do preenchimento da migration.
+const BYTES_DA_LINHA_SQL = sql<number>`coalesce(bytes, octet_length(payload::text))`;
+const BYTES_DA_LINHA = BYTES_DA_LINHA_SQL.as('bytes');
 
 const COLUNAS = [
   'tipo',
@@ -81,34 +96,47 @@ export const rotasRascunhos = new Hono<AmbienteAutenticado>()
     const leitura = await lerCorpo(c, esquemaRascunhoEntrada);
     if (!leitura.ok) return leitura.resposta;
     const payload = JSON.stringify(leitura.dados.payload);
+    const bytes = bytesDoJson(leitura.dados.payload);
 
     const atual = await trx
       .selectFrom('rascunho')
-      .select(['id', 'row_version'])
+      .select(['id', 'row_version', BYTES_DA_LINHA])
       .where('tipo', '=', chave.tipo)
       .where('ref', '=', chave.ref)
       .forUpdate()
       .executeTakeFirst();
     const decisao = decidirGravacao(atual?.row_version ?? null, ifMatch);
     if (decisao === 'conflito') return responderProblema(c, PROBLEMA_VERSAO_RASCUNHO);
-    if (decisao === 'criar') {
+    const atuais = atual ? Number(atual.bytes) : null;
+    // Trocar por um payload menor ou igual não depende da cota (nem da soma).
+    if (atuais === null || bytes > atuais) {
       await sql`select pg_advisory_xact_lock(hashtextextended(${`rascunho_cota:${usuarioId}`}, 0))`.execute(
         trx,
       );
-      const { total } = await trx
+      const soma = await trx
         .selectFrom('rascunho')
-        .select((eb) => eb.fn.countAll<string>().as('total'))
+        .select((eb) => [
+          eb.fn.countAll<string>().as('quantidade'),
+          sql<string>`coalesce(sum(${BYTES_DA_LINHA_SQL}), 0)`.as('total'),
+        ])
         .where('usuario_id', '=', usuarioId)
         .executeTakeFirstOrThrow();
-      if (Number(total) >= RASCUNHOS_MAXIMO_POR_PROFISSIONAL)
+      if (decisao === 'criar' && Number(soma.quantidade) >= RASCUNHOS_MAXIMO_POR_PROFISSIONAL)
         return responderProblema(c, PROBLEMA_COTA_RASCUNHO);
+      const cabe = cabeNaCotaDeBytes({
+        total: Number(soma.total),
+        atuais,
+        novos: bytes,
+        teto: BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
+      });
+      if (!cabe) return responderProblema(c, PROBLEMA_COTA_RASCUNHO);
     }
 
     const gravado =
       decisao === 'criar'
         ? await trx
             .insertInto('rascunho')
-            .values({ usuario_id: usuarioId, tipo: chave.tipo, ref: chave.ref, payload })
+            .values({ usuario_id: usuarioId, tipo: chave.tipo, ref: chave.ref, payload, bytes })
             .onConflict((oc) => oc.columns(['usuario_id', 'tipo', 'ref']).doNothing())
             .returning(COLUNAS)
             .executeTakeFirst()
@@ -116,6 +144,7 @@ export const rotasRascunhos = new Hono<AmbienteAutenticado>()
             .updateTable('rascunho')
             .set({
               payload,
+              bytes,
               row_version: sql<number>`row_version + 1`,
               atualizado_em: sql<Date>`now()`,
             })

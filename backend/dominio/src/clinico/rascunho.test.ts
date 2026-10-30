@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decidirGravacao, lerChaveRascunho, lerIfMatch } from './rascunho.ts';
+import { cabeNaCotaDeBytes, decidirGravacao, lerChaveRascunho, lerIfMatch } from './rascunho.ts';
 
 // T99 / RAS-01, RAS-02: chave (tipo, ref), If-Match e a decisão do upsert. Testes trazidos de
 // test/draft-key.spec.ts e do parseIfMatch de test/drafts.spec.ts do legado.
@@ -67,5 +67,33 @@ describe('decidirGravacao (RAS-01, RAS-02)', () => {
     expect(decidirGravacao(3, 2)).toBe('conflito');
     expect(decidirGravacao(3, 0)).toBe('conflito');
     expect(decidirGravacao(3, null)).toBe('conflito');
+  });
+});
+
+// RAS-05 (T219, SEC-007): teto de bytes somados dos rascunhos do profissional (25 MiB, decisão do
+// usuário em 2026-10-30). Rascunho novo ou payload maior só entra se o total couber; trocar o
+// payload de um rascunho existente por um menor ou igual sempre é aceito.
+describe('cabeNaCotaDeBytes (RAS-05)', () => {
+  const TETO = 1000;
+
+  it('rascunho novo entra enquanto o total fica no teto, inclusive igual a ele', () => {
+    expect(cabeNaCotaDeBytes({ total: 0, atuais: null, novos: 1000, teto: TETO })).toBe(true);
+    expect(cabeNaCotaDeBytes({ total: 600, atuais: null, novos: 400, teto: TETO })).toBe(true);
+  });
+
+  it('rascunho novo que passaria do teto é recusado, mesmo com 1 byte a mais', () => {
+    expect(cabeNaCotaDeBytes({ total: 600, atuais: null, novos: 401, teto: TETO })).toBe(false);
+    expect(cabeNaCotaDeBytes({ total: 1000, atuais: null, novos: 2, teto: TETO })).toBe(false);
+  });
+
+  it('payload maior num rascunho existente: conta só a diferença', () => {
+    // O total 900 já inclui os 300 do rascunho: 300 -> 400 fecha em 1000; 300 -> 401, em 1001.
+    expect(cabeNaCotaDeBytes({ total: 900, atuais: 300, novos: 400, teto: TETO })).toBe(true);
+    expect(cabeNaCotaDeBytes({ total: 900, atuais: 300, novos: 401, teto: TETO })).toBe(false);
+  });
+
+  it('payload menor ou igual num rascunho existente sempre é aceito, mesmo acima do teto', () => {
+    expect(cabeNaCotaDeBytes({ total: 5000, atuais: 300, novos: 300, teto: TETO })).toBe(true);
+    expect(cabeNaCotaDeBytes({ total: 5000, atuais: 300, novos: 2, teto: TETO })).toBe(true);
   });
 });

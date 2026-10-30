@@ -88,7 +88,8 @@ export interface PaginaEvolucoes {
 // RAS-01: payload JSON (objeto) de até 512 KiB, medido nos bytes UTF-8 do JSON.
 export const PAYLOAD_RASCUNHO_MAXIMO = 512 * 1024;
 // Bytes UTF-8 sem depender de TextEncoder (o pacote não carrega as libs de DOM nem de Node).
-const bytesDoJson = (valor: unknown): number => {
+// Também é a medida que a API grava em rascunho.bytes para o teto de bytes (RAS-05, T219).
+export const bytesDoJson = (valor: unknown): number => {
   let bytes = 0;
   for (const caractere of JSON.stringify(valor)) {
     const ponto = caractere.codePointAt(0)!;
@@ -188,6 +189,9 @@ export const PROBLEMA_TIPO_RASCUNHO: Problema = {
 // RAS-05 (SEC-007, T218): teto de rascunhos por profissional (decisão do usuário, 2026-10-30;
 // sem purga, o rascunho nunca é apagado). Atualizar um rascunho existente não conta como novo.
 export const RASCUNHOS_MAXIMO_POR_PROFISSIONAL = 2000;
+// RAS-05 (SEC-007, T219): teto de bytes somados dos rascunhos do profissional, 50 rascunhos de
+// 512 KiB (decisão do usuário, 2026-10-30), medidos como o limite do payload (bytesDoJson).
+export const BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL = 25 * 1024 * 1024;
 export const PROBLEMA_COTA_RASCUNHO = problema('DRAFT_QUOTA', 409, 'Limite de rascunhos atingido');
 // RAS-03: já existe modelo não arquivado com o mesmo nome (sem diferenciar maiúsculas).
 export const PROBLEMA_NOME_MODELO_EXISTENTE = problema(

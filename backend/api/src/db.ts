@@ -248,6 +248,8 @@ export interface Banco {
     tipo: string;
     ref: string;
     payload: unknown;
+    // Bytes do payload na medida do contrato (migration 0026, T219); nulo só em linha de teste.
+    bytes: number | null;
     row_version: Generated<number>;
     criado_em: Generated<Date>;
     atualizado_em: Generated<Date>;

@@ -579,6 +579,34 @@ boleto nem cartão como alternativa no código.
 
 **Não executado**: exige a conta de produção do Asaas.
 
+### 7.3 Neon: armazenamento e cota de rascunhos
+
+O Neon Free tem cerca de 0,5 GB de armazenamento para o banco inteiro (PREMISSA: limite do plano
+na data da auditoria, SEC-007). Banco cheio para de aceitar escrita para todos os profissionais.
+Os rascunhos são a escrita mais fácil de abusar (o salvamento automático grava até 512 KiB por
+rascunho, e rascunho nunca é apagado). Por isso a API impõe, por profissional (RAS-05, T218 e
+T219, decisão do usuário de 2026-10-30):
+
+| Teto                        | Valor                                                        | Ao passar                                             |
+| --------------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| Tamanho de um rascunho      | 512 KiB (bytes UTF-8 do JSON enviado)                        | `422 validacao`                                       |
+| Quantidade de rascunhos     | 2.000                                                        | `409 DRAFT_QUOTA` ao criar um novo                    |
+| Bytes somados dos rascunhos | 25 MiB (50 rascunhos de 512 KiB), na coluna `rascunho.bytes` | `409 DRAFT_QUOTA` para rascunho novo ou payload maior |
+
+Trocar o payload de um rascunho existente por um menor ou igual sempre é aceito. Não há purga:
+quem chegar ao teto continua lendo e editando os rascunhos que tem, mas não cria outros. Com
+25 MiB por conta, cerca de 20 contas cheias ocupam o Free inteiro: acompanhe o uso no console do
+Neon (Storage) e, se crescer, avalie o plano pago ou uma purga (tarefa nova). Para ver quem mais
+ocupa: a RLS forçada esconde as linhas de toda role sem BYPASSRLS, então rode a consulta como
+superusuário numa restauração do backup (seção 5.2):
+
+```sql
+select usuario_id, count(*) as rascunhos, sum(coalesce(bytes, octet_length(payload::text))) as bytes
+from rascunho group by usuario_id order by bytes desc limit 10;
+```
+
+**Não executado** contra o Neon: exige acesso ao console.
+
 ## 8. Primeiro deploy: roles do Neon e Hyperdrive
 
 As roles `evolucao_owner`, `evolucao_app` e `evolucao_backup_ro` nascem `NOLOGIN` e sem senha na migration 0001 (ADR-005):

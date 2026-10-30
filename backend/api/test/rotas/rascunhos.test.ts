@@ -1,4 +1,6 @@
 import {
+  BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
+  PAYLOAD_RASCUNHO_MAXIMO,
   PROBLEMA_COTA_RASCUNHO,
   PROBLEMA_RASCUNHO_INVALIDO,
   PROBLEMA_TIPO_RASCUNHO,
@@ -339,6 +341,116 @@ describe('teto de quantidade (RAS-05)', LENTO, () => {
       412,
       PROBLEMA_VERSAO_RASCUNHO,
     );
+  });
+});
+
+// RAS-05 (T219, SEC-007): até 25 MiB somados por profissional (decisão do usuário, 2026-10-30),
+// medidos como no limite de 512 KiB (bytes UTF-8 do JSON enviado). Rascunhos de enchimento entram
+// direto no banco com a coluna bytes preenchida; o payload deles não importa para a soma.
+describe('teto de bytes (RAS-05)', LENTO, () => {
+  // JSON.stringify({ t: '...' }) = 8 bytes de moldura + o texto: exatamente 512 KiB.
+  const CHEIO = { t: 'x'.repeat(PAYLOAD_RASCUNHO_MAXIMO - 8) };
+  const encherBytes = (usuarioId: string, quantos: number, bytes: number) =>
+    comoAdmin(
+      `insert into rascunho (usuario_id, tipo, ref, payload, bytes)
+       select $1, 'evolucao', gen_random_uuid()::text, '{}'::jsonb, $3 from generate_series(1, $2)`,
+      [usuarioId, quantos, bytes],
+    );
+  const bytesGravados = async (usuarioId: string) =>
+    (
+      await comoAdmin<{ bytes: number | null }>(
+        'select bytes from rascunho where usuario_id = $1 and payload <> $2::jsonb order by bytes',
+        [usuarioId, '{}'],
+      )
+    ).map((l) => l.bytes);
+
+  it('o teto é 25 MiB, 50 rascunhos de 512 KiB', () => {
+    expect(BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL).toBe(25 * 1024 * 1024);
+    expect(BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL / PAYLOAD_RASCUNHO_MAXIMO).toBe(50);
+  });
+
+  it('a rota grava os bytes do payload com a medida do contrato', async () => {
+    const sessao = await sessaoDeTeste();
+    await gravar(sessao, novaChave(), { payload: CHEIO });
+    await gravar(sessao, novaChave(), { payload: { texto: 'ção' } });
+
+    // {"texto":"ção"}: 12 bytes de moldura + "ção" em UTF-8 (ç e ã com 2 bytes cada, o com 1).
+    expect(await bytesGravados(sessao.usuarioId)).toEqual([17, PAYLOAD_RASCUNHO_MAXIMO]);
+  });
+
+  it('rascunhos de 512 KiB passam até o teto e o seguinte responde 409 DRAFT_QUOTA', async () => {
+    const sessao = await sessaoDeTeste();
+    await encherBytes(sessao.usuarioId, 47, PAYLOAD_RASCUNHO_MAXIMO);
+
+    for (let i = 0; i < 3; i += 1)
+      expect((await gravar(sessao, novaChave(), { payload: CHEIO })).status).toBe(200);
+    await esperarProblema(
+      await gravar(sessao, novaChave(), { payload: { t: 'x' } }),
+      409,
+      PROBLEMA_COTA_RASCUNHO,
+    );
+    const [{ soma }] = (await comoAdmin<{ soma: number }>(
+      'select sum(bytes)::int as soma from rascunho where usuario_id = $1',
+      [sessao.usuarioId],
+    )) as [{ soma: number }];
+    expect(soma).toBe(BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
+  });
+
+  it('vale em bytes mesmo com poucos rascunhos grandes, bem abaixo do teto de quantidade', async () => {
+    const sessao = await sessaoDeTeste();
+    await encherBytes(sessao.usuarioId, 2, BYTES_RASCUNHOS_MAXIMO_POR_PROFISSIONAL / 2);
+
+    expect((await gravar(sessao, novaChave(), { payload: {} })).status).toBe(409);
+  });
+
+  it('com o teto cheio, trocar o payload de um rascunho existente por um menor ou igual é aceito', async () => {
+    const sessao = await sessaoDeTeste();
+    const chave = novaChave();
+    await gravar(sessao, chave, { payload: CHEIO });
+    await encherBytes(sessao.usuarioId, 49, PAYLOAD_RASCUNHO_MAXIMO);
+
+    expect((await gravar(sessao, chave, { payload: CHEIO }, '"1"')).status).toBe(200);
+    expect((await gravar(sessao, chave, { payload: { t: 'menor' } }, '"2"')).status).toBe(200);
+    expect(await bytesGravados(sessao.usuarioId)).toEqual([JSON.stringify({ t: 'menor' }).length]);
+  });
+
+  it('com o teto cheio, trocar por um payload maior responde 409 e o rascunho não muda', async () => {
+    const sessao = await sessaoDeTeste();
+    const chave = novaChave();
+    await gravar(sessao, chave, { payload: { t: 'pequeno' } });
+    await encherBytes(sessao.usuarioId, 50, PAYLOAD_RASCUNHO_MAXIMO);
+
+    await esperarProblema(
+      await gravar(sessao, chave, { payload: { t: 'pequeno, mas maior' } }, '"1"'),
+      409,
+      PROBLEMA_COTA_RASCUNHO,
+    );
+    const [linha] = await comoAdmin<{ payload: unknown; row_version: number }>(
+      'select payload, row_version from rascunho where usuario_id = $1 and ref = $2',
+      [sessao.usuarioId, chave.split('/')[1]],
+    );
+    expect(linha).toEqual({ payload: { t: 'pequeno' }, row_version: 1 });
+  });
+
+  it('linha antiga sem bytes conta pelo tamanho do payload no banco', async () => {
+    const sessao = await sessaoDeTeste();
+    await comoAdmin(
+      `insert into rascunho (usuario_id, tipo, ref, payload)
+       select $1, 'evolucao', gen_random_uuid()::text, jsonb_build_object('t', repeat('x', $2))
+       from generate_series(1, 50)`,
+      [sessao.usuarioId, PAYLOAD_RASCUNHO_MAXIMO - 8],
+    );
+
+    expect((await gravar(sessao, novaChave(), { payload: {} })).status).toBe(409);
+  });
+
+  it('a cota de bytes é por profissional', async () => {
+    const a = await sessaoDeTeste();
+    const b = await sessaoDeTeste();
+    await encherBytes(a.usuarioId, 50, PAYLOAD_RASCUNHO_MAXIMO);
+
+    expect((await gravar(a, novaChave(), { payload: {} })).status).toBe(409);
+    expect((await gravar(b, novaChave(), { payload: CHEIO })).status).toBe(200);
   });
 });
 

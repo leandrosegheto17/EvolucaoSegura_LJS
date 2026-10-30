@@ -44,3 +44,17 @@ export function decidirGravacao(
   if (versaoAtual === null) return ifMatch === null || ifMatch === 0 ? 'criar' : 'conflito';
   return ifMatch === versaoAtual ? 'substituir' : 'conflito';
 }
+
+// RAS-05 (T219): cabe no teto de bytes? `total` é a soma atual do profissional (com o rascunho que
+// será trocado, se houver); `atuais` são os bytes desse rascunho (null se for novo); `novos`, os
+// do payload que chega. Trocar por um payload menor ou igual sempre cabe, mesmo acima do teto.
+export function cabeNaCotaDeBytes(cota: {
+  total: number;
+  atuais: number | null;
+  novos: number;
+  teto: number;
+}): boolean {
+  const { total, atuais, novos, teto } = cota;
+  if (atuais !== null && novos <= atuais) return true;
+  return total - (atuais ?? 0) + novos <= teto;
+}

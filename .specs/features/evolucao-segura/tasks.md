@@ -4406,9 +4406,11 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] Teste: vários rascunhos de 512 KiB passam até o teto de bytes e o seguinte responde 409 `DRAFT_QUOTA` (falha sem a correção); trocar o payload de um rascunho existente por um menor sempre é aceito
-- [ ] Teto de bytes e de quantidade documentados no `docs/runbook.md` (onde o limite de armazenamento do Neon já aparece)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste: vários rascunhos de 512 KiB passam até o teto de bytes e o seguinte responde 409 `DRAFT_QUOTA` (falha sem a correção); trocar o payload de um rascunho existente por um menor sempre é aceito
+- [x] Teto de bytes e de quantidade documentados no `docs/runbook.md` (onde o limite de armazenamento do Neon já aparece): o runbook não tinha seção do armazenamento do Neon; entrou a 7.3
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3423 testes, eram 3406)
+
+**Decisões do usuário (2026-10-30)**: teto de 25 MiB somados por profissional (50 rascunhos de 512 KiB), medidos como o limite do payload (bytes UTF-8 do JSON); migration 0026 com a coluna `rascunho.bytes`, gravada pela rota, e as linhas existentes preenchidas com `octet_length(payload::text)`. A coluna fica sem NOT NULL (as inserções diretas dos testes existentes não a informam); a soma usa `coalesce(bytes, octet_length(payload::text))`.
 
 **Tests**: unit/integração
 **Gate**: full
