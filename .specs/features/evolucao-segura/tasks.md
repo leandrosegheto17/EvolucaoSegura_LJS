@@ -4363,9 +4363,9 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] Teste novo falha sem a correção: `nome` = "Sua conta foi suspensa. https://golpe.exemplo" não aparece no texto nem no HTML dos dois e-mails
-- [ ] Resposta 202 e demais comportamentos do cadastro inalterados; testes antigos intactos (se algum exigir "Olá, <nome>", mudar com motivo registrado e aprovação do usuário)
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste novo falha sem a correção: `nome` = "Sua conta foi suspensa. https://golpe.exemplo" não aparece no texto nem no HTML dos dois e-mails (a mensagem não tem HTML; o teste confere a mensagem inteira serializada, nos casos novo, pendente e confirmado)
+- [x] Resposta 202 e demais comportamentos do cadastro inalterados; testes antigos intactos (nenhum exigia "Olá, <nome>")
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3399 testes, eram 3393; uma rodada teve 1 falha transitória em `auth-2fa-reenviar.test.ts`, 500 no verificar, que passou sozinho e na rodada completa seguinte)
 
 **Tests**: unit/integração
 **Gate**: full

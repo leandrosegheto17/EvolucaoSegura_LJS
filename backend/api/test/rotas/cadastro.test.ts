@@ -379,3 +379,61 @@ describe('validação e política de senha (CAD-01, AUTH-11)', () => {
     expect(resposta.corpo).not.toContain(email);
   });
 });
+
+// SEC-006 (T217): o e-mail não repete o nome digitado. Senão, quem cadastra o e-mail de outra
+// pessoa manda a ela um texto qualquer (phishing) assinado pelo domínio do app.
+describe('e-mail de cadastro sem eco do nome (SEC-006)', () => {
+  const NOMES_DO_ATACANTE = [
+    'Sua conta foi suspensa. https://golpe.exemplo',
+    'Ana\nSua conta foi suspensa. Regularize em https://golpe.exemplo/pagar',
+  ];
+  const TRECHOS = ['golpe.exemplo', 'Sua conta foi suspensa', 'Regularize'];
+
+  const semEco = (mensagem: unknown) => {
+    const tudo = JSON.stringify(mensagem);
+    for (const trecho of TRECHOS) expect(tudo).not.toContain(trecho);
+  };
+
+  it.each(NOMES_DO_ATACANTE)('e-mail novo: a confirmação não traz o nome %j', async (nome) => {
+    const { cadastrar, email: correio } = montar();
+    const email = emailUnico('eco-nome');
+
+    const resposta = await cadastrar(dados(email, { nome }));
+
+    expect(resposta.status).toBe(202);
+    expect(JSON.parse(resposta.corpo)).toEqual({ status: 'aceito' });
+    expect(correio.enviadas).toHaveLength(1);
+    expect(correio.enviadas[0]!.texto.split('\n')[0]).toBe('Olá.');
+    expect(correio.enviadas[0]!.texto).toContain(`${URL_PUBLICA}/confirmar?token=`);
+    semEco(correio.enviadas[0]);
+  });
+
+  it.each(NOMES_DO_ATACANTE)('pendente: o novo link não traz o nome %j', async (nome) => {
+    const { cadastrar, email: correio } = montar();
+    const email = emailUnico('eco-pendente');
+    await cadastrar(dados(email));
+
+    const resposta = await cadastrar(dados(email, { nome }));
+
+    expect(resposta.status).toBe(202);
+    expect(correio.enviadas).toHaveLength(2);
+    expect(correio.enviadas[1]!.texto).toContain(`${URL_PUBLICA}/confirmar?token=`);
+    semEco(correio.enviadas[1]);
+  });
+
+  it.each(NOMES_DO_ATACANTE)(
+    'conta confirmada: "você já tem conta" não traz o nome %j',
+    async (nome) => {
+      const { cadastrar, email: correio } = montar();
+      const email = emailUnico('eco-confirmada');
+      await criarContaConfirmada(email);
+
+      const resposta = await cadastrar(dados(email, { nome }));
+
+      expect(resposta.status).toBe(202);
+      expect(correio.enviadas).toHaveLength(1);
+      expect(correio.enviadas[0]!.assunto).toBe('Você já tem conta no Evolução Segura');
+      semEco(correio.enviadas[0]);
+    },
+  );
+});

@@ -30,12 +30,14 @@ export interface DependenciasCadastro {
   capturarErro: (erro: unknown) => void;
 }
 
-function emailDeConfirmacao(urlPublica: string, para: string, nome: string, token: string) {
+// SEC-006 (T217): o e-mail não repete o nome digitado. Quem cadastra o e-mail de outra pessoa não
+// consegue mandar a ela um texto próprio (phishing) assinado pelo domínio do app.
+function emailDeConfirmacao(urlPublica: string, para: string, token: string) {
   return {
     para,
     assunto: 'Confirme seu e-mail no Evolução Segura',
     texto: [
-      `Olá, ${nome}.`,
+      'Olá.',
       '',
       `Para ativar sua conta, abra o link abaixo em até ${VALIDADE_CONFIRMACAO_MINUTOS} minutos:`,
       `${urlPublica}/confirmar?token=${token}`,
@@ -87,7 +89,7 @@ export function rotasCadastro(deps: DependenciasCadastro) {
         hash,
         validadeMinutos: VALIDADE_CONFIRMACAO_MINUTOS,
       });
-      return emailDeConfirmacao(c.env.URL_PUBLICA, email, nome, token);
+      return emailDeConfirmacao(c.env.URL_PUBLICA, email, token);
     });
 
     try {
