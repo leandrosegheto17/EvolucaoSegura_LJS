@@ -17,7 +17,9 @@ const csp = [
   "frame-ancestors 'none'",
 ].join('; ');
 
-const cabecalhosDeSeguranca: Record<string, string> = {
+// Os assets do front (fora de run_worker_first) recebem os mesmos valores pelo
+// frontend/web/public/_headers; backend/scripts/test/cabecalhos-assets.test.ts falha se divergirem.
+export const cabecalhosDeSeguranca: Record<string, string> = {
   'Content-Security-Policy': csp,
   'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
   'X-Content-Type-Options': 'nosniff',

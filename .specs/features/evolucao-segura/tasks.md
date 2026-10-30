@@ -4301,10 +4301,10 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] `_headers` publicado no build do web, com os valores iguais aos de `cabecalhos.ts` (um teste falha se os dois divergirem)
-- [ ] Teste confere CSP, HSTS, `nosniff`, `Referrer-Policy` e `frame-ancestors` nas respostas de `/`, `/app/inicio` e `/sw.js` (falha sem o arquivo)
-- [ ] A CSP do documento continua permitindo o que o app usa (Sentry, Asaas só onde preciso): o e2e por cliques segue verde
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] `_headers` publicado no build do web, com os valores iguais aos de `cabecalhos.ts` (um teste falha se os dois divergirem): `pnpm build:web` gera `dist/_headers` idêntico ao de `public/`; `backend/scripts/test/cabecalhos-assets.test.ts` compara o arquivo com o objeto exportado do middleware
+- [x] Teste confere CSP, HSTS, `nosniff`, `Referrer-Policy` e `frame-ancestors` nas respostas de `/`, `/app/inicio` e `/sw.js` (falha sem o arquivo): Worker real pelo harness do wrangler, dist de exemplo com o `_headers` do repositório
+- [x] A CSP do documento continua permitindo o que o app usa (Sentry, Asaas só onde preciso): o e2e por cliques segue verde (8 de 8; os 2 do Asaas rodados à parte por causa do limite de 10/min por IP, ressalva já registrada). Observação: o zod testa `Function("")` e gera um aviso `script-src eval` no console, sem efeito no app
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3369 testes, eram 3362)
 
 **Tests**: unit/integração
 **Gate**: full

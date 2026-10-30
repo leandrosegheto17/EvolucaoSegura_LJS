@@ -1,0 +1,8 @@
+# OPS-09 e SEC-002 (T214): os mesmos cabeçalhos de backend/api/src/middleware/cabecalhos.ts, para as
+# páginas e os arquivos do app (que não passam pelo Worker). Mudou lá, mude aqui:
+# backend/scripts/test/cabecalhos-assets.test.ts falha se os dois divergirem.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
