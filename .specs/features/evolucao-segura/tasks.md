@@ -197,7 +197,7 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 ### Phase 24: Correções da validação (fase 7)
 
 ```
-T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> T212
+T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> T212 -> T213
 ```
 
 ---
@@ -4261,6 +4261,25 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 - [x] Gate da tarefa verde e contagem de testes sem remoções (`pnpm test --maxWorkers=6`: 212 arquivos, 3362 testes (+3), 0 falhas; lint e typecheck verdes)
 
 **Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T213: Limitar os workers da suíte da API (falhas transitórias de conexão)
+
+**What**: Limitar o paralelismo do projeto da API no `vitest.config` (ex.: `maxWorkers: 6`), para acabar com as falhas transitórias "connection attempt failed" vistas em 5 de 8 execuções completas da suíte; a suíte inteira passa em 3 execuções seguidas.
+**Estimativa**: 30 min
+**Risco**: baixo
+**Where**: `backend/api/vitest.config.ts` (ou o config do projeto da API)
+**Depends on**: T212
+**Requirement**: OPS-11
+
+**Done when**:
+
+- [ ] Paralelismo da API limitado no config, sem remover, pular nem enfraquecer teste
+- [ ] `pnpm test` completo verde 3 vezes seguidas, com a mesma contagem de testes (3362)
+
+**Tests**: none (configuração; a prova é a suíte estável)
 **Gate**: full
 
 ---
