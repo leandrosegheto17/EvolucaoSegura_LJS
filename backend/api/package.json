@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
-    "test:isolamento": "vitest run --passWithNoTests test/isolamento"
+    "test:isolamento": "pnpm -w test:isolamento"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.7",

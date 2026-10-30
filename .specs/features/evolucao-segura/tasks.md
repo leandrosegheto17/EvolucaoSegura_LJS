@@ -4428,9 +4428,9 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] O passo do CI roda a suíte de isolamento e falha se ela não rodar (zero testes = falha); evidência: saída com a contagem
-- [ ] `pnpm test:isolamento` roda igual da raiz e do CI
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] O passo do CI roda a suíte de isolamento e falha se ela não rodar (zero testes = falha); evidência: saída com a contagem (`pnpm test:isolamento`: "Test Files 1 passed (1) / Tests 19 passed (19)"; pasta sem testes com as mesmas opções sai com erro "No test files found")
+- [x] `pnpm test:isolamento` roda igual da raiz e do CI (e de dentro de `backend/api`, que chama o da raiz). Causa: o script ia para `backend/api`, onde o binário do vitest é outra cópia do pacote (a do par do `@cloudflare/vitest-plugin`), diferente da que os testes importam; a suíte caía com "failed to find the current suite" também pela raiz, e o `--passWithNoTests` não mudava isso, mas deixaria passar zero testes
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3428 testes, eram 3423)
 
 **Tests**: integração
 **Gate**: full

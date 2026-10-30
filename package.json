@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "build:web": "pnpm --filter @es/web build",
     "migrar": "pnpm --filter @es/scripts migrar",
-    "test:isolamento": "pnpm --filter @es/api test:isolamento",
+    "test:isolamento": "vitest run --project @es/api --no-passWithNoTests backend/api/test/isolamento",
     "e2e": "pnpm --filter @es/e2e e2e"
   },
   "devDependencies": {
