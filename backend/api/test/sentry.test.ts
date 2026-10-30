@@ -55,6 +55,54 @@ describe('limparEvento (scrubbing)', () => {
   });
 });
 
+// SEC-005 (T216): a busca GET /api/pacientes?q=<nome> põe o nome do paciente na URL do evento.
+describe('limparEvento sem query string (SEC-005)', () => {
+  function eventoDeBusca(): ErrorEvent {
+    return {
+      type: undefined,
+      message: 'erro em GET /api/pacientes?q=Maria',
+      request: {
+        url: 'https://app.exemplo.com.br/api/pacientes?q=Maria&limit=20',
+        query_string: 'q=Maria&limit=20',
+        method: 'GET',
+      },
+      breadcrumbs: [
+        { category: 'fetch', data: { method: 'GET', url: 'https://api.exemplo.com/x?nome=Maria' } },
+        { category: 'console', message: 'consulta /api/pacientes?q=Maria' },
+      ],
+    };
+  }
+
+  it('request.url sai sem a query string e sem query_string', () => {
+    const { request } = limparEvento(eventoDeBusca());
+
+    expect(request?.url).toBe('https://app.exemplo.com.br/api/pacientes');
+    expect(request?.query_string).toBeUndefined();
+  });
+
+  it('breadcrumbs saem sem a query string', () => {
+    const { breadcrumbs } = limparEvento(eventoDeBusca());
+
+    expect(breadcrumbs?.[0]?.data?.['url']).toBe('https://api.exemplo.com/x');
+    expect(breadcrumbs?.[1]?.message).toBe('consulta /api/pacientes');
+  });
+
+  it('nenhum "Maria" sobra no evento', () => {
+    expect(JSON.stringify(limparEvento(eventoDeBusca()))).not.toContain('Maria');
+  });
+
+  it('o beforeBreadcrumb tira a query string antes de guardar', () => {
+    const { beforeBreadcrumb } = opcoesSentry({});
+
+    expect(
+      beforeBreadcrumb({
+        category: 'fetch',
+        data: { url: 'https://api.exemplo.com/x?nome=Maria' },
+      }),
+    ).toEqual({ category: 'fetch', data: { url: 'https://api.exemplo.com/x' } });
+  });
+});
+
 describe('opcoesSentry', () => {
   it('usa SENTRY_RELEASE como release e SENTRY_DSN como dsn', () => {
     const opcoes = opcoesSentry({

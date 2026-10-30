@@ -4342,10 +4342,10 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] Teste do app: evento com breadcrumb de clique `aria-label="Ver pendências de Maria"` e fetch para `/api/pacientes?q=Maria` sai sem "Maria" (falha sem a correção)
-- [ ] Teste do Worker: `request.url` e breadcrumbs sem query string (falha sem a correção)
-- [ ] A máscara de e-mail existente continua valendo; testes antigos intactos
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste do app: evento com breadcrumb de clique `aria-label="Ver pendências de Maria"` e fetch para `/api/pacientes?q=Maria` sai sem "Maria" (falha sem a correção; `ui.click` e `ui.input` descartados no `beforeSend` e no `beforeBreadcrumb`)
+- [x] Teste do Worker: `request.url` e breadcrumbs sem query string (falha sem a correção)
+- [x] A máscara de e-mail existente continua valendo; testes antigos intactos
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3393 testes, eram 3383)
 
 **Tests**: unit
 **Gate**: full
