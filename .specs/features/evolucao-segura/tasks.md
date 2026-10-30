@@ -4276,8 +4276,8 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 **Done when**:
 
-- [ ] Paralelismo da API limitado no config, sem remover, pular nem enfraquecer teste
-- [ ] `pnpm test` completo verde 3 vezes seguidas, com a mesma contagem de testes (3362)
+- [x] Paralelismo da API limitado no config (`maxWorkers: 6` e `sequence.groupOrder: 1`, exigido pelo vitest por projetos com maxWorkers diferentes), sem remover, pular nem enfraquecer teste
+- [x] `pnpm test` completo verde 3 vezes seguidas, 3362 testes em cada (com `PG_BIN` apontando o pg_dump 18)
 
 **Tests**: none (configuração; a prova é a suíte estável)
 **Gate**: full
