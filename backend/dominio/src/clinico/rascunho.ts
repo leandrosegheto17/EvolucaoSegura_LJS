@@ -7,17 +7,24 @@
 
 const CHAVE = /^[A-Za-z0-9._:-]{1,120}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const TIPOS_COM_UUID = new Set(['anamnese', 'evolucao']);
+// RAS-05 (SEC-007, T218): só os tipos que o app usa, os dois com ref UUID (decisão do usuário,
+// 2026-10-30). Antes, qualquer tipo no formato CHAVE era aceito.
+const TIPOS_CONHECIDOS = new Set(['anamnese', 'evolucao']);
 
 export interface ChaveRascunho {
   tipo: string;
   ref: string;
 }
 
-// Chave válida ou null (a rota responde 400 sem ecoar a chave).
-export function lerChaveRascunho(tipo: string, ref: string): ChaveRascunho | null {
+// Chave válida; null para formato inválido (a rota responde 400 sem ecoar a chave); ou
+// 'tipo_desconhecido' para tipo bem formado fora da lista (a rota responde 422).
+export function lerChaveRascunho(
+  tipo: string,
+  ref: string,
+): ChaveRascunho | null | 'tipo_desconhecido' {
   if (!CHAVE.test(tipo) || !CHAVE.test(ref)) return null;
-  if (TIPOS_COM_UUID.has(tipo) && !UUID.test(ref)) return null;
+  if (!TIPOS_CONHECIDOS.has(tipo)) return 'tipo_desconhecido';
+  if (!UUID.test(ref)) return null;
   return { tipo, ref };
 }
 

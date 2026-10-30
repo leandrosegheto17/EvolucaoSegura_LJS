@@ -1,6 +1,9 @@
 import {
+  PROBLEMA_COTA_RASCUNHO,
   PROBLEMA_RASCUNHO_INVALIDO,
+  PROBLEMA_TIPO_RASCUNHO,
   PROBLEMA_VERSAO_RASCUNHO,
+  RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
   type Rascunho,
   esquemaRascunhoEntrada,
 } from '@es/contrato/clinico';
@@ -23,6 +26,10 @@ import { responderProblemaAgenda as responderProblema } from '../repositorios/se
 // - Nada é apagado: não há rota DELETE, e gravar a evolução não mexe no rascunho (decisão do
 //   usuário). Sem auditoria (como no legado): o payload é texto clínico e não sai daqui.
 // - RLS: B não enxerga a chave de A; para B ela não existe.
+// - RAS-05 (SEC-007, T218): só os tipos evolucao e anamnese (tipo bem formado fora da lista: 422
+//   validacao em `tipo`); criar acima de 2.000 rascunhos do profissional: 409 DRAFT_QUOTA.
+//   Atualizar um rascunho existente não conta como novo. A contagem roda sob um advisory lock da
+//   transação por profissional, para dois pedidos simultâneos não passarem juntos do teto.
 
 const COLUNAS = [
   'tipo',
@@ -70,6 +77,7 @@ export const rotasRascunhos = new Hono<AmbienteAutenticado>()
     const chave = lerChaveRascunho(c.req.param('tipo'), c.req.param('ref'));
     const ifMatch = lerIfMatch(c.req.header('If-Match'));
     if (!chave || ifMatch === 'invalido') return responderProblema(c, PROBLEMA_RASCUNHO_INVALIDO);
+    if (chave === 'tipo_desconhecido') return responderProblema(c, PROBLEMA_TIPO_RASCUNHO);
     const leitura = await lerCorpo(c, esquemaRascunhoEntrada);
     if (!leitura.ok) return leitura.resposta;
     const payload = JSON.stringify(leitura.dados.payload);
@@ -83,6 +91,18 @@ export const rotasRascunhos = new Hono<AmbienteAutenticado>()
       .executeTakeFirst();
     const decisao = decidirGravacao(atual?.row_version ?? null, ifMatch);
     if (decisao === 'conflito') return responderProblema(c, PROBLEMA_VERSAO_RASCUNHO);
+    if (decisao === 'criar') {
+      await sql`select pg_advisory_xact_lock(hashtextextended(${`rascunho_cota:${usuarioId}`}, 0))`.execute(
+        trx,
+      );
+      const { total } = await trx
+        .selectFrom('rascunho')
+        .select((eb) => eb.fn.countAll<string>().as('total'))
+        .where('usuario_id', '=', usuarioId)
+        .executeTakeFirstOrThrow();
+      if (Number(total) >= RASCUNHOS_MAXIMO_POR_PROFISSIONAL)
+        return responderProblema(c, PROBLEMA_COTA_RASCUNHO);
+    }
 
     const gravado =
       decisao === 'criar'

@@ -25,9 +25,14 @@ describe('lerChaveRascunho (legado: draft-key.spec.ts)', () => {
     }
   });
 
-  it('outros tipos aceitam tipo e ref de 1 a 120 de [A-Za-z0-9._:-]', () => {
-    expect(lerChaveRascunho('nota', 'r9')).toEqual({ tipo: 'nota', ref: 'r9' });
-    expect(lerChaveRascunho('x'.repeat(120), 'a.b:c-d_e')).not.toBeNull();
+  // SEC-007 (T218): teste alterado com aprovação do usuário (2026-10-30). Antes, qualquer tipo no
+  // formato [A-Za-z0-9._:-]{1,120} era aceito; agora só evolucao e anamnese (RAS-05). Formato
+  // inválido continua null (400); tipo bem formado fora da lista é 'tipo_desconhecido' (422).
+  it('tipo bem formado fora da lista (evolucao, anamnese) é tipo_desconhecido', () => {
+    expect(lerChaveRascunho('nota', 'r9')).toBe('tipo_desconhecido');
+    expect(lerChaveRascunho('nota', ID)).toBe('tipo_desconhecido');
+    expect(lerChaveRascunho('x'.repeat(120), 'a.b:c-d_e')).toBe('tipo_desconhecido');
+    expect(lerChaveRascunho('Evolucao', ID)).toBe('tipo_desconhecido');
     expect(lerChaveRascunho('x'.repeat(121), 'r')).toBeNull();
     expect(lerChaveRascunho('ev x', 'r9')).toBeNull();
     expect(lerChaveRascunho('nota', '')).toBeNull();

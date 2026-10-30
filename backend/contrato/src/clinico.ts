@@ -177,6 +177,18 @@ export const PROBLEMA_RASCUNHO_INVALIDO = problema(
   400,
   'Chave ou versão do rascunho inválida',
 );
+// RAS-05 (SEC-007, T218): tipo de rascunho bem formado, mas fora dos tipos que o app usa
+// (evolucao e anamnese). SPEC_DEVIATION: o T218 pede 422 também para "ref fora do formato"; por
+// decisão do usuário (2026-10-30), chave em formato inválido segue 400 consulta_invalida
+// (PROBLEMA_RASCUNHO_INVALIDO) e só o tipo fora da lista responde 422.
+export const PROBLEMA_TIPO_RASCUNHO: Problema = {
+  ...problema('validacao', 422, 'Dados inválidos'),
+  campos: ['tipo'],
+};
+// RAS-05 (SEC-007, T218): teto de rascunhos por profissional (decisão do usuário, 2026-10-30;
+// sem purga, o rascunho nunca é apagado). Atualizar um rascunho existente não conta como novo.
+export const RASCUNHOS_MAXIMO_POR_PROFISSIONAL = 2000;
+export const PROBLEMA_COTA_RASCUNHO = problema('DRAFT_QUOTA', 409, 'Limite de rascunhos atingido');
 // RAS-03: já existe modelo não arquivado com o mesmo nome (sem diferenciar maiúsculas).
 export const PROBLEMA_NOME_MODELO_EXISTENTE = problema(
   'TEMPLATE_NAME_EXISTS',

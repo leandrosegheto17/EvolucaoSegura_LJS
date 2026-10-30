@@ -1,6 +1,9 @@
 import {
+  PROBLEMA_COTA_RASCUNHO,
   PROBLEMA_RASCUNHO_INVALIDO,
+  PROBLEMA_TIPO_RASCUNHO,
   PROBLEMA_VERSAO_RASCUNHO,
+  RASCUNHOS_MAXIMO_POR_PROFISSIONAL,
   type Rascunho,
 } from '@es/contrato/clinico';
 import { RESPOSTA_LOGIN_RECUSADO, esquemaProblema } from '@es/contrato/identidade';
@@ -253,9 +256,89 @@ describe('chave (tipo, ref)', LENTO, () => {
     expect(await rascunhosDe(sessao.usuarioId)).toEqual([]);
   });
 
-  it('outros tipos aceitam a chave no formato do legado', async () => {
+  // SEC-007 (T218): teste alterado com aprovação do usuário (2026-10-30). Antes, `nota` no formato
+  // do legado era aceito (200); agora só os tipos que o app usa, evolucao e anamnese (RAS-05).
+  it.each([
+    ['tipo fora da lista no formato do legado', 'nota/a.b:c-d_e'],
+    ['tipo fora da lista com ref UUID', `nota/${crypto.randomUUID()}`],
+    ['tipo com maiúscula', `Evolucao/${crypto.randomUUID()}`],
+  ])('%s: 422 validacao em tipo e nada é gravado', async (_rotulo, caminho) => {
     const sessao = await sessaoDeTeste();
-    expect((await gravar(sessao, 'nota/a.b:c-d_e', { payload: {} })).status).toBe(200);
+    await esperarProblema(
+      await gravar(sessao, caminho, { payload: { texto: SENTINELA } }),
+      422,
+      PROBLEMA_TIPO_RASCUNHO,
+    );
+    expect(await rascunhosDe(sessao.usuarioId)).toEqual([]);
+  });
+});
+
+// RAS-05 (T218, SEC-007): até 2.000 rascunhos por profissional (decisão do usuário, 2026-10-30,
+// sem purga: rascunho nunca é apagado). Os rascunhos de enchimento entram direto no banco.
+describe('teto de quantidade (RAS-05)', LENTO, () => {
+  const encher = (usuarioId: string, quantos: number) =>
+    comoAdmin(
+      `insert into rascunho (usuario_id, tipo, ref, payload)
+       select $1, 'evolucao', gen_random_uuid()::text, '{}'::jsonb from generate_series(1, $2)`,
+      [usuarioId, quantos],
+    );
+
+  it('o teto é 2.000', () => {
+    expect(RASCUNHOS_MAXIMO_POR_PROFISSIONAL).toBe(2000);
+  });
+
+  it('com 1.999 rascunhos, o 2.000º é aceito; o seguinte, 409 DRAFT_QUOTA e nada é gravado', async () => {
+    const sessao = await sessaoDeTeste();
+    await encher(sessao.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL - 1);
+
+    expect((await gravar(sessao, novaChave(), { payload: { texto: 'último' } })).status).toBe(200);
+    await esperarProblema(
+      await gravar(sessao, novaChave(), { payload: { texto: SENTINELA } }),
+      409,
+      PROBLEMA_COTA_RASCUNHO,
+    );
+    await esperarProblema(
+      await gravar(sessao, `anamnese/${crypto.randomUUID()}`, { payload: {} }, '"0"'),
+      409,
+      PROBLEMA_COTA_RASCUNHO,
+    );
+    const [{ total }] = (await comoAdmin<{ total: number }>(
+      'select count(*)::int as total from rascunho where usuario_id = $1',
+      [sessao.usuarioId],
+    )) as [{ total: number }];
+    expect(total).toBe(RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
+  });
+
+  it('com o teto cheio, atualizar um rascunho existente continua 200', async () => {
+    const sessao = await sessaoDeTeste();
+    const chave = novaChave();
+    await gravar(sessao, chave, { payload: { texto: 'v1' } });
+    await encher(sessao.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL - 1);
+
+    const resposta = await gravar(sessao, chave, { payload: { texto: 'v2' } }, '"1"');
+
+    expect(resposta.status).toBe(200);
+    expect(await resposta.json()).toMatchObject({ payload: { texto: 'v2' }, row_version: 2 });
+  });
+
+  it('a cota é por profissional: o teto cheio de A não afeta B', async () => {
+    const a = await sessaoDeTeste();
+    const b = await sessaoDeTeste();
+    await encher(a.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
+
+    expect((await gravar(a, novaChave(), { payload: {} })).status).toBe(409);
+    expect((await gravar(b, novaChave(), { payload: {} })).status).toBe(200);
+  });
+
+  it('a conferência de versão vem antes da cota: If-Match errado em chave nova continua 412', async () => {
+    const sessao = await sessaoDeTeste();
+    await encher(sessao.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
+
+    await esperarProblema(
+      await gravar(sessao, novaChave(), { payload: {} }, '"3"'),
+      412,
+      PROBLEMA_VERSAO_RASCUNHO,
+    );
   });
 });
 

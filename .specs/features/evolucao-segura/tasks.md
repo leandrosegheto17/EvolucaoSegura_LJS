@@ -4383,10 +4383,12 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 **Done when**:
 
-- [ ] Teste: `tipo` fora da lista e `ref` fora do formato respondem 422 (falha sem a correção)
-- [ ] Teste: o rascunho acima do teto responde 409 `DRAFT_QUOTA`; o upsert de um rascunho existente com o teto cheio continua 200; a cota é por profissional (outro profissional não é afetado)
-- [ ] Rascunhos existentes dos fluxos reais (evolução, modelos) seguem funcionando: o e2e por cliques segue verde
-- [ ] Gate da tarefa verde e contagem de testes sem remoções
+- [x] Teste: `tipo` fora da lista e `ref` fora do formato respondem 422 (falha sem a correção). SPEC_DEVIATION (decisão do usuário, 2026-10-30): só o `tipo` bem formado fora da lista responde 422 `validacao` (`campos: ["tipo"]`); chave em formato inválido (ref que não é UUID, tipo com espaço ou acima de 120) continua 400 `consulta_invalida`, e o it.each que já exigia isso não mudou
+- [x] Teste: o rascunho acima do teto responde 409 `DRAFT_QUOTA`; o upsert de um rascunho existente com o teto cheio continua 200; a cota é por profissional (outro profissional não é afetado)
+- [x] Rascunhos existentes dos fluxos reais (evolução, modelos) seguem funcionando: o e2e por cliques segue verde (8 de 8; os 2 do Asaas rodados à parte por causa do limite de 10/min por IP)
+- [x] Gate da tarefa verde e contagem de testes sem remoções (3406 testes, eram 3399)
+
+**Decisões do usuário (2026-10-30)**: tipos conhecidos `evolucao` e `anamnese`, os dois com ref UUID (regra no domínio, `lerChaveRascunho`); teto de 2.000 rascunhos por profissional, sem purga (o rascunho continua nunca apagado); contagem sob advisory lock da transação por profissional. **Testes existentes alterados com aprovação do usuário** (motivo SEC-007: tipo fora da lista passa a ser recusado): `backend/dominio/src/clinico/rascunho.test.ts` ("outros tipos aceitam...", agora exige `tipo_desconhecido`) e `backend/api/test/rotas/rascunhos.test.ts` ("outros tipos aceitam a chave no formato do legado", `nota` → agora 422).
 
 **Tests**: unit/integração
 **Gate**: full
