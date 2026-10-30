@@ -4474,8 +4474,8 @@ T221 -> T222
 
 **Done when**:
 
-- [ ] A asserção do valor do campo "Nome completo" espera o valor (`waitFor`), com a mesma asserção `toHaveProperty('value', 'Dra. Exemplo')`
-- [ ] Nenhum outro teste tocado; gate da tarefa verde
+- [x] A asserção do valor do campo "Nome completo" espera o valor (`waitFor`), com a mesma asserção `toHaveProperty('value', 'Dra. Exemplo')`
+- [x] Nenhum outro teste tocado; gate da tarefa verde (`@es/web`: 633 testes, 50 arquivos; typecheck e lint verdes)
 
 **Teste existente alterado com aprovação do usuário (2026-10-30, via AskUserQuestion)**: motivo, teste intermitente sob carga (asserção sem espera). A aprovação vale só para esta linha.
 

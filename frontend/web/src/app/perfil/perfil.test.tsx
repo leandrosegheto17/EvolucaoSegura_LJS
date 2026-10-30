@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -74,7 +74,10 @@ describe('Perfil (legado)', () => {
     stub({ ...base, 'GET /api/perfil': () => json(P) });
     const { container } = setup();
     expect(screen.getByText('Carregando perfil')).toBeTruthy();
-    expect(await screen.findByLabelText(/Nome completo/)).toHaveProperty('value', 'Dra. Exemplo');
+    // T222: espera o valor (o campo aparece antes de ser preenchido; falhava sob carga). Alterado
+    // com aprovação do usuário em 2026-10-30.
+    const nome = await screen.findByLabelText(/Nome completo/);
+    await waitFor(() => expect(nome).toHaveProperty('value', 'Dra. Exemplo'));
     expect(container.textContent).not.toMatch(/Preferências|IA para pré-texto|inatividade/i);
     expect(container.textContent).not.toMatch(/histórico/i);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Meu perfil profissional');
