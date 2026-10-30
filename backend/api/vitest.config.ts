@@ -26,5 +26,10 @@ export default defineConfig({
   resolve: { alias: aliasPg },
   // maxWorkers limita o paralelismo: sem isso, a suíte completa esgota as conexões do Postgres de teste
   // e falha de forma transitória com "connection attempt failed" (T213).
-  test: { passWithNoTests: true, globalSetup: ['./test/preparar-banco.ts'], maxWorkers: 6, sequence: { groupOrder: 1 } },
+  test: {
+    passWithNoTests: true,
+    globalSetup: ['./test/preparar-banco.ts'],
+    maxWorkers: 6,
+    sequence: { groupOrder: 1 },
+  },
 });
