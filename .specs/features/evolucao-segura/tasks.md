@@ -200,6 +200,12 @@ T161 -> T188 -> T189 -> T190 -> T162 -> T191 -> T163 -> T192 -> T164 -> T193 -> 
 T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> T212 -> T213
 ```
 
+### Phase 25: Correções da auditoria de segurança (fase 7, ciclo 2)
+
+```
+T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
+```
+
 ---
 
 ## Task Breakdown
@@ -4284,10 +4290,153 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 
 ---
 
+### T214: Cabeçalhos de segurança nas páginas e no JS do app (SEC-002)
+
+**What**: Gerar `frontend/web/public/_headers` com os mesmos valores de `backend/api/src/middleware/cabecalhos.ts` (CSP, HSTS, `nosniff`, `Referrer-Policy: no-referrer`, `frame-ancestors 'none'`) para `/*`, e um teste que confira os cabeçalhos em `/`, `/app/*` e `/sw.js`.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `frontend/web/public/_headers`, `backend/api/test/cabecalhos.test.ts` (ou teste novo ao lado)
+**Depends on**: T213
+**Requirement**: OPS-09
+
+**Done when**:
+
+- [ ] `_headers` publicado no build do web, com os valores iguais aos de `cabecalhos.ts` (um teste falha se os dois divergirem)
+- [ ] Teste confere CSP, HSTS, `nosniff`, `Referrer-Policy` e `frame-ancestors` nas respostas de `/`, `/app/inicio` e `/sw.js` (falha sem o arquivo)
+- [ ] A CSP do documento continua permitindo o que o app usa (Sentry, Asaas só onde preciso): o e2e por cliques segue verde
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T215: Limite por IP decidido pelo caminho já roteado (SEC-003)
+
+**What**: Em `backend/api/src/middleware/limite.ts`, decidir o grupo do limite pelo caminho decodificado e roteado (`c.req.path`), não por `new URL(c.req.url).pathname`; recusar com 400 caminho com `%` inválido em `/api/*`. Teste com as variantes `/api/auth/%65ntrar` e `/api/cadastr%6F`.
+**Estimativa**: 1h
+**Risco**: alto
+**Where**: `backend/api/src/middleware/limite.ts`, `backend/api/test/limite.test.ts`
+**Depends on**: T214
+**Requirement**: OPS-07
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção: com o binding que sempre nega, as variantes codificadas respondem 429 como o caminho normal
+- [ ] Grupos e limites existentes (10 por minuto nas rotas de acesso, 60 nas demais públicas, webhook) inalterados; testes antigos intactos
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T216: Sentry sem nome de paciente (SEC-005)
+
+**What**: No app e no Worker, descartar breadcrumbs `ui.click` (ou apagar o `message`) e tirar a query string das URLs de breadcrumbs, de `request.url` e dos eventos; teste com um evento que contenha `aria-label` com nome e `?q=<nome>`.
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `frontend/web/src/sentry.ts`, `backend/api/src/sentry.ts` e os testes de `sentry`
+**Depends on**: T215
+**Requirement**: OPS-08
+
+**Done when**:
+
+- [ ] Teste do app: evento com breadcrumb de clique `aria-label="Ver pendências de Maria"` e fetch para `/api/pacientes?q=Maria` sai sem "Maria" (falha sem a correção)
+- [ ] Teste do Worker: `request.url` e breadcrumbs sem query string (falha sem a correção)
+- [ ] A máscara de e-mail existente continua valendo; testes antigos intactos
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit
+**Gate**: full
+
+---
+
+### T217: E-mail de cadastro não repete o nome digitado (SEC-006)
+
+**What**: O e-mail de confirmação e o de "você já tem conta" deixam de ecoar `nome` (saudação "Olá."); teste prova que um `nome` com URL e quebra de linha não aparece no corpo do e-mail enviado.
+**Estimativa**: 45 min
+**Risco**: alto
+**Where**: `backend/api/src/rotas/cadastro.ts`, `backend/api/test/rotas/cadastro.test.ts`
+**Depends on**: T216
+**Requirement**: CAD-01, CAD-02
+
+**Done when**:
+
+- [ ] Teste novo falha sem a correção: `nome` = "Sua conta foi suspensa. https://golpe.exemplo" não aparece no texto nem no HTML dos dois e-mails
+- [ ] Resposta 202 e demais comportamentos do cadastro inalterados; testes antigos intactos (se algum exigir "Olá, <nome>", mudar com motivo registrado e aprovação do usuário)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T218: Rascunhos: tipo e ref validados e teto de rascunhos por profissional (SEC-007)
+
+**What**: Validar `tipo` contra a lista de tipos que o app usa e `ref` como UUID (ou o formato real de cada tipo); limitar o número de rascunhos por profissional (RAS-05); responder 409 `DRAFT_QUOTA` ao passar do teto. Atualizar rascunho já existente nunca conta como novo.
+**Estimativa**: 2h
+**Risco**: alto
+**Where**: `backend/api/src/rotas/rascunhos.ts`, `backend/contrato/src/clinico.ts`, `backend/api/test/rotas/rascunhos.test.ts`
+**Depends on**: T217
+**Requirement**: RAS-01, RAS-05
+
+**Done when**:
+
+- [ ] Teste: `tipo` fora da lista e `ref` fora do formato respondem 422 (falha sem a correção)
+- [ ] Teste: o rascunho acima do teto responde 409 `DRAFT_QUOTA`; o upsert de um rascunho existente com o teto cheio continua 200; a cota é por profissional (outro profissional não é afetado)
+- [ ] Rascunhos existentes dos fluxos reais (evolução, modelos) seguem funcionando: o e2e por cliques segue verde
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T219: Rascunhos: teto de bytes totais por profissional (SEC-007)
+
+**What**: Somar os bytes dos rascunhos do profissional e recusar com 409 `DRAFT_QUOTA` o que ultrapassar o teto (RAS-05); o teto vale em bytes mesmo com poucos rascunhos grandes.
+**Estimativa**: 1,5h
+**Risco**: alto
+**Where**: `backend/api/src/rotas/rascunhos.ts`, `backend/dominio/src/clinico/rascunho.ts`, `backend/api/test/rotas/rascunhos.test.ts`
+**Depends on**: T218
+**Requirement**: RAS-05
+
+**Done when**:
+
+- [ ] Teste: vários rascunhos de 512 KiB passam até o teto de bytes e o seguinte responde 409 `DRAFT_QUOTA` (falha sem a correção); trocar o payload de um rascunho existente por um menor sempre é aceito
+- [ ] Teto de bytes e de quantidade documentados no `docs/runbook.md` (onde o limite de armazenamento do Neon já aparece)
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: unit/integração
+**Gate**: full
+
+---
+
+### T220: Passo `test:isolamento` do CI confirmado (observação da auditoria)
+
+**What**: `pnpm test:isolamento` falhou localmente com "failed to find the current suite" quando rodado de dentro da pasta e passa pela raiz. Conferir o passo no `ci.yml`, corrigir o script ou o diretório para o passo rodar a suíte de verdade, e provar com a saída (19 testes) numa execução.
+**Estimativa**: 1h
+**Risco**: alto
+**Where**: `.github/workflows/ci.yml`, `package.json` (script `test:isolamento`)
+**Depends on**: T219
+**Requirement**: OPS-05, ISO-01
+
+**Done when**:
+
+- [ ] O passo do CI roda a suíte de isolamento e falha se ela não rodar (zero testes = falha); evidência: saída com a contagem
+- [ ] `pnpm test:isolamento` roda igual da raiz e do CI
+- [ ] Gate da tarefa verde e contagem de testes sem remoções
+
+**Tests**: integração
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23 -> Phase 24
+Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23 -> Phase 24 -> Phase 25
 ```
 
 Passagem entre fases (a primeira tarefa de cada fase depende da última da anterior):
@@ -4316,6 +4465,7 @@ T153 -> T154
 T157 -> T158
 T187 -> T161
 T165 -> T202
+T213 -> T214
 ```
 
 Execução estritamente sequencial; uma tarefa por vez, em ordem, com um commit atômico cada.

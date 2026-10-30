@@ -426,6 +426,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 2. [RAS-02] IF o `If-Match` do rascunho não confere com a versão atual THEN a API SHALL responder 412; rascunho inexistente aceita `If-Match` ausente ou "0".
 3. The API SHALL aceitar modelos de texto do tipo `evolucao` com nome de 1 a 200 único sem diferenciar maiúsculas e corpo até 50.000 caracteres, arquiváveis. [RAS-03]
 4. [RAS-04] WHEN a sessão expira com texto não salvo THEN o app SHALL oferecer restaurar o rascunho no próximo acesso.
+5. [RAS-05] IF o profissional já tem rascunhos no teto de quantidade ou de bytes THEN a API SHALL responder 409 `DRAFT_QUOTA` para um rascunho novo ou para um payload maior; atualizar um rascunho existente para um payload menor ou igual continua aceito. O `tipo` SHALL ser um dos tipos conhecidos e o `ref` SHALL ter o formato do tipo (auditoria SEC-007, 2026-10-30).
 
 **Independent Test**: digitar uma evolução, expirar a sessão, entrar e ver o texto oferecido.
 
@@ -615,6 +616,7 @@ O profissional de saúde autônomo (psicólogo, nutricionista, fisioterapeuta) p
 | RAS-02 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-03 | P2: Rascunhos e modelos | Tasks | Implementing |
 | RAS-04 | P2: Rascunhos e modelos | Tasks | Implementing |
+| RAS-05 | P2: Rascunhos e modelos | Tasks | Pending |
 | PUSH-01 | P2: Push | Tasks | Pending |
 | PUSH-02 | P2: Push | Tasks | Pending |
 | PUSH-03 | P2: Push | Tasks | Pending |

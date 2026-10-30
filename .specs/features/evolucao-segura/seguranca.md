@@ -196,3 +196,10 @@ Nenhum indício de invasão em curso nem de dado já vazado. Nenhum segredo real
    - (a) Turnstile + limite por destinatário e orçamento reservado para 2FA (recomendado): resolve o abuso sem custo fixo.
    - (b) Plano pago ou conta Resend exclusiva: aumenta a cota, mas o abuso continua barato.
    - (c) Aceitar o risco no lançamento: qualquer pessoa derruba o login de todos por um dia com cerca de 100 requisições.
+
+## Decisões do usuário (2026-10-30)
+
+- **SEC-001 (alto): risco ACEITO por escrito pelo usuário para o lançamento.** Sem Turnstile, sem limite por destinatário e sem cota reservada ao 2FA. Qualquer pessoa pode esgotar a cota de 100 e-mails/dia do Resend, compartilhada com os outros apps LJS, e derrubar o login de todos por um dia. Reavaliar se houver abuso ou antes de ter mais clientes.
+- **SEC-004 (médio): risco ACEITO por escrito.** O dump cifrado com age continua em artefato do Actions de repositório público (retenção de 30 dias). Tudo depende da chave privada age, que precisa de cópia fora do GitHub e de dois guardiões.
+- **Environment `producao`:** o usuário informou que restringe a branch `main` e exige revisor (não verificado pelo auditor; conferir no GitHub). SEC-015 permanece baixo.
+- **Correções planejadas:** SEC-002 (T214), SEC-003 (T215), SEC-005 (T216), SEC-006 (T217), SEC-007 (T218 e T219) e a observação do `test:isolamento` (T220), na Phase 25. Os baixos (SEC-008 a SEC-018) ficam como pendências registradas, sem tarefa.
