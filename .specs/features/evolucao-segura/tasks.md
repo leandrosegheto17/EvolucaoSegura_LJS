@@ -206,6 +206,12 @@ T202 -> T203 -> T204 -> T205 -> T206 -> T207 -> T208 -> T209 -> T210 -> T211 -> 
 T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 ```
 
+### Phase 26: Correções da validação (fase 7, ciclo 3)
+
+```
+T221 -> T222
+```
+
 ---
 
 ## Task Breakdown
@@ -4437,10 +4443,51 @@ T214 -> T215 -> T216 -> T217 -> T218 -> T219 -> T220
 
 ---
 
+### T221: Teste de concorrência da cota de rascunhos (M9, validação ciclo 3)
+
+**What**: Teste novo em `rascunhos.test.ts`: semear 1.990 rascunhos de um profissional, disparar 20 PUTs de rascunhos novos simultâneos (`Promise.all`) e afirmar 10 respostas 200, 10 respostas 409 `DRAFT_QUOTA` e `count(*) = 2000` no banco.
+**Estimativa**: 1h
+**Risco**: alto
+**Where**: `backend/api/test/rotas/rascunhos.test.ts`
+**Depends on**: T220
+**Requirement**: RAS-05
+
+**Done when**:
+
+- [x] Teste: com 1.990 rascunhos, 20 PUTs simultâneos de rascunhos novos dão 10 × 200, 10 × 409 `DRAFT_QUOTA` e `count(*) = 2000` (a corrida roda em 5 rodadas, cada uma com um profissional novo)
+- [x] O teste falha quando o `pg_advisory_xact_lock` de `backend/api/src/rotas/rascunhos.ts` é removido. Com uma rodada só, sem a trava o teste passou em 3 de 13 execuções (detector fraco); com 5 rodadas, sem a trava falhou em 10 de 10 execuções. A trava foi restaurada (`git checkout`) e não sai do commit
+- [x] Teste novo, nenhum teste existente alterado; gate da tarefa verde (`@es/api`: 1281 testes, 86 arquivos; `rascunhos.test.ts` 38 de 38 em 3 execuções seguidas; typecheck e lint verdes)
+
+**Tests**: integração
+**Gate**: full
+
+---
+
+### T222: Teste intermitente do perfil espera o valor do campo (validação ciclo 3)
+
+**What**: Em `frontend/web/src/app/perfil/perfil.test.tsx`, "mostra carregando e depois o formulário; sem preferências nem histórico": `findByLabelText(/Nome completo/)` acha o campo antes de o valor ser preenchido e `toHaveProperty('value', 'Dra. Exemplo')` falhou sob carga (passa isolado). Esperar o valor com `waitFor`, mesma asserção e mesmo valor esperado.
+**Estimativa**: 15 min
+**Risco**: baixo
+**Where**: `frontend/web/src/app/perfil/perfil.test.tsx`
+**Depends on**: T221
+**Requirement**: PERF-01
+
+**Done when**:
+
+- [ ] A asserção do valor do campo "Nome completo" espera o valor (`waitFor`), com a mesma asserção `toHaveProperty('value', 'Dra. Exemplo')`
+- [ ] Nenhum outro teste tocado; gate da tarefa verde
+
+**Teste existente alterado com aprovação do usuário (2026-10-30, via AskUserQuestion)**: motivo, teste intermitente sob carga (asserção sem espera). A aprovação vale só para esta linha.
+
+**Tests**: unit
+**Gate**: quick
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23 -> Phase 24 -> Phase 25
+Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9 -> Phase 10 -> Phase 11 -> Phase 12 -> Phase 13 -> Phase 14 -> Phase 15 -> Phase 16 -> Phase 17 -> Phase 18 -> Phase 19 -> Phase 20 -> Phase 21 -> Phase 22 -> Phase 23 -> Phase 24 -> Phase 25 -> Phase 26
 ```
 
 Passagem entre fases (a primeira tarefa de cada fase depende da última da anterior):
@@ -4470,6 +4517,7 @@ T157 -> T158
 T187 -> T161
 T165 -> T202
 T213 -> T214
+T220 -> T221
 ```
 
 Execução estritamente sequencial; uma tarefa por vez, em ordem, com um commit atômico cada.

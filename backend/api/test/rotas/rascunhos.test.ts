@@ -332,6 +332,32 @@ describe('teto de quantidade (RAS-05)', LENTO, () => {
     expect((await gravar(b, novaChave(), { payload: {} })).status).toBe(200);
   });
 
+  // T221 (M9, validação ciclo 3): dois pedidos simultâneos não passam juntos do teto. Faltando 10
+  // para o teto, 20 rascunhos novos ao mesmo tempo: exatamente 10 entram e 10 recebem 409.
+  // Uma corrida só nem sempre se manifesta sem a trava (passou em 3 de 13 rodadas sem o advisory
+  // lock); 5 rodadas, cada uma com um profissional novo, tornam a falha sem a trava praticamente
+  // certa.
+  it('20 rascunhos novos simultâneos com 10 vagas: 10 × 200, 10 × 409 DRAFT_QUOTA e o banco fica no teto', async () => {
+    for (let rodada = 0; rodada < 5; rodada += 1) {
+      const sessao = await sessaoDeTeste();
+      await encher(sessao.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL - 10);
+
+      const respostas = await Promise.all(
+        Array.from({ length: 20 }, () => gravar(sessao, novaChave(), { payload: { texto: 'x' } })),
+      );
+
+      const status = respostas.map((r) => r.status).sort();
+      expect(status).toEqual([...Array(10).fill(200), ...Array(10).fill(409)]);
+      for (const resposta of respostas.filter((r) => r.status === 409))
+        await esperarProblema(resposta, 409, PROBLEMA_COTA_RASCUNHO);
+      const [{ total }] = (await comoAdmin<{ total: number }>(
+        'select count(*)::int as total from rascunho where usuario_id = $1',
+        [sessao.usuarioId],
+      )) as [{ total: number }];
+      expect(total).toBe(RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
+    }
+  });
+
   it('a conferência de versão vem antes da cota: If-Match errado em chave nova continua 412', async () => {
     const sessao = await sessaoDeTeste();
     await encher(sessao.usuarioId, RASCUNHOS_MAXIMO_POR_PROFISSIONAL);
